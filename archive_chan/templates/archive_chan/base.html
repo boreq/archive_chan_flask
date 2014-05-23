@@ -1,0 +1,50 @@
+{% load staticfiles %}
+{% load i18n %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+    <head>
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <meta charset="UTF-8">
+        <meta name="Robots" content="INDEX,FOLLOW">
+
+        <link rel="stylesheet" href="{% static 'archive_chan/css/main.css' %}">
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+        <script src="{% static 'archive_chan/js/main.js' %}"></script>
+
+        <title>{% block title %}Archive Chan{% endblock %}</title>
+        {% block inner_head %}{% endblock %}
+    </head>
+
+    {# This is set just to highlight the current page in navigation menu. #}
+    {% if body_id|length > 0 %}
+        <body id="{{ body_id }}">
+    {% else %}
+        <body>
+    {% endif %}
+
+        <div id="site">
+          <header>
+            <div class="wrapper">
+                <div class="logo"><a href="{% url 'archive_chan:index' %}">ARCHIVE CHAN</a>{% block header_link %}{% endblock %}</div>
+                <ul class="nav">
+                    <li><a class="nav-home" href="{% url 'archive_chan:index' %}">{% trans "Home" noop %}</a></li>
+                </ul>
+            </div>
+          </header>
+
+          {% block content %}{% endblock %}
+
+        </div>
+        <footer>
+          <div class="wrapper">
+            All content is generated automatically and originates from <a href="http://4chan.org">4chan</a>.
+            <span class="generated"><i class="fa fa-linux"></i> <span>Generated {% now "Y-m-d G:i:s e" %}</span></span>
+          </div>
+        </footer>
+    </body>
+</html>

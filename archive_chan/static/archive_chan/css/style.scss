@@ -1,0 +1,637 @@
+$primary-color: #65c6bb;
+$background-color: #eee;
+$border-color: #dadfe1;
+
+.clearfix:before, .clearfix:after,
+.post:before, .post:after,
+.thread-filters:before, .thread-filters:after{
+    content: " ";
+    display: table;
+}
+
+.clearfix:after,
+.post:after,
+.thread-filters:after{
+    clear: both;
+}
+
+/*   Main.   */
+html, body{
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    padding: 0;
+    margin: 0;
+    color: #000;
+    height: 100%;
+}
+
+div#site{
+    min-height: 100%;
+}
+
+header div.wrapper, div.about div.wrapper, div#projects div.wrapper, footer div.wrapper, div.content div.wrapper{
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+#body-home,
+#body-board,
+#body-thread{
+    background-color: $background-color;
+}
+
+
+/*   Header & footer.   */
+header, footer{
+    display: block;
+    padding: 1em;
+    line-height: 1;
+}
+
+header{
+    background-color: #242424;
+    color: #fff;
+}
+
+footer{
+    color: #999;
+}
+
+header div.wrapper div.language{
+    float: right;
+}
+
+footer{
+    margin-top: -3em;
+    position: relative;
+    text-align: right;
+}
+
+div#site>div:last-child{
+    padding-bottom: 4em; /* 3em footer + 1em padding */
+}
+
+.logo{
+    font-family: 'Oswald', sans-serif;
+    font-size: 28px;
+    display: inline-block;
+    height: 30px;
+}
+
+.logo a{
+    color: #fff;
+    text-decoration: none;
+    display: inline-block;
+    margin: 0 0 0 .5em;
+}
+
+.logo a:first-child{
+    margin: 0;
+}
+
+/*   Nav.   */
+body#body-home .nav-home{
+    text-decoration: underline;
+}
+
+.nav{
+    color: #fff;
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+    display: inline-block;
+    float: right;
+    margin: 8px 0 0 0;
+}
+
+.nav li{
+    display: inline-block;
+}
+
+.nav li:after{
+    content: "|";
+    margin: 1em 0;
+}
+
+.nav li:last-child:after{
+    display: none;
+}
+
+.nav li a{
+    display: inline-block;
+    text-decoration: none;
+    padding: 0 1em;
+    color: #fff;
+}
+
+.nav li a:hover{
+    color: $primary-color;
+}
+
+/*   Footer.   */
+footer{
+    .generated{
+        i{
+            color: #ddd;
+        }
+        
+        span{
+            display: none;
+        }
+    }
+
+    .generated:hover{
+        i{
+            color: #999;
+        }
+
+        span{
+            display: inline;
+        }
+    }
+}
+
+
+/*   Headers.   */
+h2, h3{
+  margin: 0;
+  line-height: 1;
+  margin:  0 0 1em;
+}
+
+h2{
+  font-size: 20px;
+}
+
+h3{
+  font-size: 18px;
+}
+
+    
+/* Pagination. */
+.pagination{
+    text-align: center;
+}
+
+.pagination a{
+    display: block;
+    height: 40px;
+    width: 40px;
+    font-size: 16px;
+    text-align: center;
+}
+
+.pagination .page-prev{
+    float: left;
+}
+
+.pagination .page-next{
+    float: right;
+}
+
+.pagination i{
+    vertical-align: middle;
+    line-height: 40px;
+    font-size: 25px;
+} 
+
+.pagination .page-current{
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 40px;
+    font-size: 16px;
+} 
+
+.pagination a:hover{
+    color: #fff;
+    background-color: $primary-color;
+}
+
+/*   General.  */
+p{
+  display: block;
+  line-height: 1.2em;
+}
+
+a{
+  text-decoration: underline;
+  color: #000;
+  cursor: pointer;
+}
+
+a:hover{
+  color: $primary-color;
+}
+
+i{
+  font-style: italic;
+}
+
+/*   Content.   */
+div.content{
+  padding: 1em;
+}
+
+div.content p{
+  margin: 1em 0;
+}
+
+/*   Boards.   */
+#boards{
+    li{
+        display: block;
+        float: left;
+        width: 33%;
+        box-sizing: border-box;
+        border: 5px solid $background-color;
+        vertical-align: top;
+    }
+
+    a{
+        padding: .5em;
+        display: block;
+        background-color: #fff;
+        border: 1px solid $border-color;
+
+        text-decoration: none;
+        font-size: 50px;
+        text-align: center;
+    }
+
+    a:hover{
+        color: #fff;
+        background-color: $primary-color;
+    }
+}
+
+/*   Parameters.   */
+.thread-filters{
+    float: right;
+    width: 160px;
+    padding: 0 0 0 1em;
+    vertical-align: top;
+    box-sizing: border-box;
+}
+
+.thread-filters h3{
+    margin: .5em 0 .5em; 
+}
+
+.thread-filters a{
+   text-decoration: none; 
+}
+
+.thread-filters .current-selection{
+   text-decoration: underline; 
+}
+
+/*   Threads.   */
+#threads{
+    display: block;
+    margin-right: 160px;
+}
+
+#threads li{
+    display: block;
+    float: left;
+    width: 25%;
+    box-sizing: border-box;
+    border: 5px solid $background-color;
+}
+
+#threads a{
+    padding: 1em;
+    display: block;
+    text-decoration: none;
+    text-align: center;
+    vertical-align: top;
+
+    max-height: 300px;
+    overflow: hidden;
+
+    background-color: #fff;
+    border: 1px solid $border-color;
+}
+
+#threads .thread-saved a{
+    background-color: #67809f;
+    color: #ecf0f1;
+}
+
+#threads a:hover{
+    color: #fff;
+    background-color: $primary-color;
+}
+
+#threads .img-container{
+    max-height: 150px;
+    overflow: hidden;
+}
+
+#threads .img-container img{
+    max-width: 100%;
+    max-height: 100%;
+}
+
+#threads .thread-info{
+    font-size: 12px;
+}
+
+#threads .thread-info div{
+    margin: .2em 0;
+}
+
+#threads .thread-tags{
+    font-size: 11px;
+    margin: .2em 0;
+}
+
+#threads .thread-tags div{
+    display: inline-block;
+    margin: .2em;
+    padding: .4em;
+    background-color: $primary-color;
+    color: #fff;
+    border-radius: 3px;
+}
+
+#threads .thread-subject{
+    font-weight: bold;
+}
+
+/*   Posts.   */
+#posts .post{
+    padding: 1em;
+
+    border: 1px solid $border-color;
+    margin-bottom: 10px;
+    background-color: #fff;
+}
+
+.post{ /* .post needs a spearate class instead of #posts>li because it is also displayed in a tooltip. */
+    width: 100%;
+    transition: background-color 3s;
+    box-sizing: border-box;
+}
+
+#posts .post .post-image{ /* Lets avoid wasting space in the tooltip. */
+    width: 200px;
+}
+
+#posts .post .post-content{ /* Lets avoid wasting space in the tooltip. */
+    margin-left: 200px;
+}
+
+.post .post-image{
+    float: left;
+    padding: 0 1em 0 0;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.post .post-image img{
+    max-width: 100%;
+}
+
+.post .post-header{
+}
+
+.post .post-header li{
+    display: inline-block;
+}
+
+.post .post-subject{
+    font-weight: bold;
+}
+
+.post .post-author{
+}
+
+.post .post-author-name, .post .post-author-trip{
+    color: #117743;
+}
+
+.post .post-time{
+    color: #555;
+}
+
+.post .post-number a{
+   text-decoration: none; 
+}
+
+.post .post-backlinks{
+    display: inline;
+}
+
+.post .post-backlinks li{
+    padding: 0 0 0 .5em;
+}
+
+.post-highlight{
+    background-color: #c8f7c5 !important;
+}
+
+/*   Post content.   */
+.post .post-comment{
+    padding: 1em 0;
+}
+
+.post .post-comment .post-link{
+    color: #c0392b;
+}
+
+.post .post-comment .post-link:hover{
+    color: #e74c3c;
+}
+
+.post-link-dead{
+    text-decoration: line-through;
+}
+
+.greentext{
+    color: #4daf7c;
+}
+
+.post pre{
+    margin: .5em 0;
+}
+
+/*   Tags.   */
+.tags li{
+    display: block;
+    padding: .4em .6em;
+    text-align: left;
+}
+
+.tags .tag-link{
+    text-decoration: none;
+}
+
+.tags .tag-link:hover{
+    text-decoration: underline;
+    color: #fff;
+}
+
+.remove-tag{
+    display: none;
+    float: right;
+    color: #fff;
+}
+
+.remove-tag:hover{
+    color: #e74c3c;
+}
+
+.tags li:hover{
+    background-color: $primary-color;
+    color: #fff;
+}
+
+.tags li:hover .tag-link{
+    color: #fff;
+}
+
+.tags li:hover .remove-tag{
+    display: inline-block;
+}
+
+#add-tag-input{
+    display: block;
+    width: 100%;
+    padding: .2em;
+    margin: 1em 0;
+    border: 1px solid $border-color;
+    transition: border 1s;
+}
+
+#add-tag-input:focus{
+    border: 1px solid $primary-color;
+}
+
+.autocomplete-suggestions{
+    background-color: #fff;
+    border: 1px solid $border-color;
+    border-top: 0;
+}
+
+.autocomplete-suggestion{
+    padding: .2em 0;
+}
+
+.autocomplete-selected{
+    color: #fff;
+    background-color: $primary-color;
+}
+
+/*   Buttons.   */
+.button{
+    display: block;
+    text-align: center;
+    padding: 1em;
+    margin: 1em 0;
+    text-transform: uppercase;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.button-green{
+    background-color: #16a085;
+}
+
+.button-green:hover{
+    background-color: #1abc9c;
+}
+
+.button-red{
+    background-color: #c0392b;
+}
+
+.button-red:hover{
+    background-color: #e74c3c;
+}
+
+/*   Error page.   */
+.error-image{
+    max-width: 100%;
+    display: block;
+    margin: 0 auto;
+}
+
+/*   Responsive.   */
+
+/*   Thread.   */
+@media screen and (max-width: 500px){
+    #posts .post .post-image{
+        float: none;
+        margin: 0 auto;
+        padding: 1em 0;
+    }
+
+    #posts .post .post-content{
+        margin-left: 0;
+    }
+}
+
+/*   Catalog.   */
+@media screen and (max-width: 820px){
+    #threads li{
+        width: 33%;
+    }
+}
+
+@media screen and (max-width: 670px){
+    #threads li{
+        width: 50%;
+    }
+}
+
+@media screen and (max-width: 520px){
+    #threads{
+        margin-right: 0;
+    }
+
+    .thread-filters{
+        float: none;
+        width: 100%;
+    }
+
+    .thread-filters div{
+        float: left;
+        width: 33%;
+    }
+}
+
+@media screen and (max-width: 350px){
+    .thread-filters div{
+        float: none;
+        width: 100%;
+    }
+
+    #threads li{
+        width: 100%;
+    }
+}
+
+/*   Index.   */
+@media screen and (max-width: 600px){
+    #boards li{
+        width: 100%;
+    }
+}
+
+/*   Nav/header.   */
+@media screen and (max-width: 360px){
+    .logo{
+        display: block;
+        text-align: center;
+        margin: 0 auto;
+    }
+
+    .nav{
+        float: none;
+        text-align: center;
+        display: block;
+        margin: 1em auto;
+    }
+}

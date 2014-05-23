@@ -1,0 +1,16 @@
+{% extends "archive_chan/base.html" %}
+{% load i18n %}
+
+{% block content %}
+    <div class="content">
+        <div class="wrapper clearfix">
+            <ul id="boards">
+                {% for board in board_list %}
+                    <li>
+                        <a href="{% url 'archive_chan:board' board.name %}">{{ board }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}

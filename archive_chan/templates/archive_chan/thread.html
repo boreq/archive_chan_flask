@@ -1,0 +1,115 @@
+{% extends "archive_chan/base.html" %}
+{% load i18n %}
+{% load archive_chan_filters %}
+
+{% block header_link %}<a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>{% endblock %}
+
+{% block inner_head %}
+    <script>
+        var info_data = {
+            board_name: '{{ board_name }}',
+            thread_number: {{ thread_number }},
+            board_url: '{% url 'archive_chan:board' board_name %}',
+            thread_url: '{% url 'archive_chan:thread' board_name thread_number %}',
+            ajax_url_save: '{% url 'archive_chan:ajax_save_thread' %}',
+            ajax_url_get_parent_thread: '{% url 'archive_chan:ajax_get_parent_thread' %}',
+            ajax_url_suggest_tag: '{% url 'archive_chan:ajax_suggest_tag' %}',
+            ajax_url_add_tag: '{% url 'archive_chan:ajax_add_tag' %}',
+            ajax_url_remove_tag: '{% url 'archive_chan:ajax_remove_tag' %}'
+        };
+    </script>
+{% endblock %}
+
+
+{% block content %}
+    <div class="content">
+        <div class="wrapper clearfix">
+            <ul id="posts">
+                {% for post in post_list %}
+                    <li class="post" id="post-{{ post.number }}">
+                        <div class="post-image">
+                            {% with post.image as image %}
+                                {% if image.thumbnail %}
+                                    <a href="{{ image.image.url }}" target="_blank"><img src="{{ image.thumbnail.url }}"></a>
+                                {% endif %}
+                            {% endwith %}
+
+                            {# If this is a top post. #}
+                            {% if post.number == thread_number %}
+                                {# If user is logged in show a save button. #}
+                                {% if  user.is_authenticated %}
+                                    {% if thread_saved %}
+                                        <div class="button button-red button-unsave">Unsave thread</div>
+                                    {% else %}
+                                        <div class="button button-green button-save">Save thread</div>
+                                    {% endif %}
+                                {% endif %}
+
+                                {# Show tags in the main post. #}
+                                <ul class="tags">
+                                    {% for tagtothread in thread_tags %}
+                                        <li>
+                                            {% if tagtothread.automatically_added %}
+                                                <i class="fa fa-fw fa-tags" title="Tag added automatically"></i>
+                                            {% else %}
+                                                <i class="fa fa-fw fa-tag" title="Tag added by the user"></i>
+                                            {% endif %}
+
+                                            <a class="tag-link" href="{% url 'archive_chan:board' board_name %}?tag={{ tagtothread.tag.name }}">{{ tagtothread.tag.name }}</a>
+
+                                            {% if user.is_authenticated %}
+                                                <a class="remove-tag" title="Remove the tag"><i class="fa fa-times"></i></a>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                {% if  user.is_authenticated %}
+                                    <input id="add-tag-input" type="text" name="new-tag" placeholder="New tag">
+                                {% endif %}
+                            {% endif %}
+                        </div>
+
+                        <div class="post-content">
+                            <ul class="post-header">
+
+                                {# Post subject. #}
+                                {% if post.subject %}
+                                    <li class="post-subject">{{ post.subject }}</li>
+                                {% endif %}
+
+                                {# Post author. #}
+                                <li class="post-author">
+                                    <span class="post-author-name">
+                                        {% if post.name %}
+                                            {{ post.name }}
+                                        {% else %}
+                                            Anonymous
+                                        {% endif %}
+                                    </span>
+
+                                    {% if post.trip %}
+                                        <span class="post-author-trip">{{ post.trip }}</span>
+                                    {% endif %}
+                                </li>
+
+                                {# Post time. #}
+                                <li class="post-time">
+                                    <time class="timeago" datetime="{{ post.time|date:"c" }}">{{ post.time }}</time>
+                                </li>
+
+                                {# Post number. #}
+                                <li class="post-number">
+                                    <a href="{% url 'archive_chan:thread' board_name thread_number %}#post-{{ post.number }}">#{{ post.number }}</a>
+                                </li>
+                            </ul>
+                            {% if post.comment %}
+                                <div class="post-comment">{{ post.comment|force_escape|formatpost|safe|linebreaksbr }}</div>
+                            {% endif %}
+                        </div>
+
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}
