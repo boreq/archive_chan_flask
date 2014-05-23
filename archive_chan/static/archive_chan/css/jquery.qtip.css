@@ -77,8 +77,6 @@
 		}
 
 		.qtip-icon, .qtip-icon .ui-icon{
-			-moz-border-radius: 3px;
-			-webkit-border-radius: 3px;
 			border-radius: 3px;
 			text-decoration: none;
 		}
@@ -105,8 +103,8 @@
 /* Default tooltip style */
 .qtip-default{
 	border-width: 1px;
-	border-style: dotted;
-	border-color: #000;
+	border-style: solid;
+	border-color: #dadfe1;
 
 	background-color: #fff;
 	color: #555;

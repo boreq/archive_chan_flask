@@ -421,10 +421,6 @@ div.content{
         padding: 0 0 0 .5em;
     }
 
-    .post-highlight{
-        background-color: #c8f7c5 !important;
-    }
-
     /*   Post content.   */
     .post-comment{
         padding: 1em 0;
@@ -442,6 +438,11 @@ div.content{
         text-decoration: line-through;
     }
 }
+
+.post-highlight{
+    background-color: #c8f7c5 !important;
+}
+
 
 .greentext{
     color: #4daf7c;

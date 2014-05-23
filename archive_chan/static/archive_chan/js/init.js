@@ -49,28 +49,29 @@ $(document).ready(function(){
         }
     }
 
-    // Save threads when the button is clicked.
-    $('.post').on('click', '.button-save, .button-unsave', function(event){
-        ajax_save(event.target);
-    });
+    if ($("#body-thread").length){
+        // Save threads when the button is clicked.
+        $('.post').on('click', '.button-save, .button-unsave', function(event){
+            ajax_save(event.target);
+        });
 
-    // Add autocomplete to a 'new tag' input.
-    $('#add-tag-input').autocomplete({
-        serviceUrl: info_data.ajax_url_suggest_tag,
-        minChars: 2
-    });
+        // Add autocomplete to a 'new tag' input.
+        $('#add-tag-input').autocomplete({
+            serviceUrl: info_data.ajax_url_suggest_tag,
+            minChars: 2
+        });
 
-    // Add a tag to a thread after user presses enter in an input.
-    $('.post').on('keypress', '#add-tag-input', function(event){
-        if (event.which == 13){
-            ajax_add_tag(event.target);
-        }
-    });
+        // Add a tag to a thread after user presses enter in an input.
+        $('.post').on('keypress', '#add-tag-input', function(event){
+            if (event.which == 13){
+                ajax_add_tag(event.target);
+            }
+        });
 
-    // Remove tag after user clicks a button.
-    $('.post').on('click', '.remove-tag', function(event){
-        ajax_remove_tag(event.target);
-    });
-
+        // Remove tag after user clicks a button.
+        $('.post').on('click', '.remove-tag', function(event){
+            ajax_remove_tag(event.target);
+        });
+    }
 });
 
