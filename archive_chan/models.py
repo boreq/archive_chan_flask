@@ -9,7 +9,7 @@ class Board(models.Model):
     )
     store_threads_for = models.IntegerField(
         default=48,
-        help_text='[hours] After that much time passes from the last reply NOT SAVED thread will be deleted.'
+        help_text='[hours] After that much time passes from the last reply in a NOT SAVED thread it will be deleted. Set to 0 to preserve threads forever.'
     )
     replies_threshold = models.IntegerField(
         default=20,

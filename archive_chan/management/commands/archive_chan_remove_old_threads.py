@@ -9,7 +9,7 @@ class Command(BaseCommand):
     help = 'Remove old, unsaved threads. This command should be run periodically to clean the database.'
 
     def handle(self, *args, **options):
-        boards = Board.objects.all()
+        boards = Board.objects.filter(store_threads_for__gt=0)
 
         for board in boards:
             processing_start = datetime.datetime.now()
