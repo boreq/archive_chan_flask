@@ -1,6 +1,8 @@
 # Archive Chan
 Archive Chan is a 4chan archive implemented as a Django application.
 
+![Board view - catalog](/boreq/archive_chan/raw/master/screens/readme.png "Board view - catalog")
+
 ## Installation
 ### Required software versions
 Application was written with Python 3 and Django 1.6+ in mind. At this point in does not support Python 2.
