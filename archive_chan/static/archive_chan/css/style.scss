@@ -56,13 +56,6 @@ header{
 
 footer{
     color: #999;
-}
-
-header div.wrapper div.language{
-    float: right;
-}
-
-footer{
     margin-top: -3em;
     position: relative;
     text-align: right;
@@ -77,17 +70,17 @@ div#site>div:last-child{
     font-size: 28px;
     display: inline-block;
     height: 30px;
-}
 
-.logo a{
-    color: #fff;
-    text-decoration: none;
-    display: inline-block;
-    margin: 0 0 0 .5em;
-}
+    a{
+        color: #fff;
+        text-decoration: none;
+        display: inline-block;
+        margin: 0 0 0 .5em;
+    }
 
-.logo a:first-child{
-    margin: 0;
+    a:first-child{
+        margin: 0;
+    }
 }
 
 /*   Nav.   */
@@ -102,31 +95,32 @@ body#body-home .nav-home{
     display: inline-block;
     float: right;
     margin: 8px 0 0 0;
+
+    li{
+        display: inline-block;
+    }
+
+    li:after{
+        content: "|";
+        margin: 1em 0;
+    }
+
+    li:last-child:after{
+        display: none;
+    }
+
+    li a{
+        display: inline-block;
+        text-decoration: none;
+        padding: 0 1em;
+        color: #fff;
+    }
+
+    li a:hover{
+        color: $primary-color;
+    }
 }
 
-.nav li{
-    display: inline-block;
-}
-
-.nav li:after{
-    content: "|";
-    margin: 1em 0;
-}
-
-.nav li:last-child:after{
-    display: none;
-}
-
-.nav li a{
-    display: inline-block;
-    text-decoration: none;
-    padding: 0 1em;
-    color: #fff;
-}
-
-.nav li a:hover{
-    color: $primary-color;
-}
 
 /*   Footer.   */
 footer{
@@ -171,69 +165,69 @@ h3{
 /* Pagination. */
 .pagination{
     text-align: center;
-}
 
-.pagination a{
-    display: block;
-    height: 40px;
-    width: 40px;
-    font-size: 16px;
-    text-align: center;
-}
+    a{
+        display: block;
+        height: 40px;
+        width: 40px;
+        font-size: 16px;
+        text-align: center;
+    }
 
-.pagination .page-prev{
-    float: left;
-}
+    a:hover{
+        color: #fff;
+        background-color: $primary-color;
+    }
 
-.pagination .page-next{
-    float: right;
-}
+    .page-prev{
+        float: left;
+    }
 
-.pagination i{
-    vertical-align: middle;
-    line-height: 40px;
-    font-size: 25px;
-} 
+    .page-next{
+        float: right;
+    }
 
-.pagination .page-current{
-    display: inline-block;
-    vertical-align: middle;
-    line-height: 40px;
-    font-size: 16px;
-} 
+    i{
+        vertical-align: middle;
+        line-height: 40px;
+        font-size: 25px;
+    } 
 
-.pagination a:hover{
-    color: #fff;
-    background-color: $primary-color;
+    .page-current{
+        display: inline-block;
+        vertical-align: middle;
+        line-height: 40px;
+        font-size: 16px;
+    } 
 }
 
 /*   General.  */
 p{
-  display: block;
-  line-height: 1.2em;
+    display: block;
+    line-height: 1.2em;
 }
 
 a{
-  text-decoration: underline;
-  color: #000;
-  cursor: pointer;
+    text-decoration: underline;
+    color: #000;
+    cursor: pointer;
 }
 
 a:hover{
-  color: $primary-color;
+    color: $primary-color;
 }
 
 i{
-  font-style: italic;
+    font-style: italic;
 }
 
 /*   Content.   */
 div.content{
-  padding: 1em;
-}
+    padding: 1em;
 
-div.content p{
-  margin: 1em 0;
+    p{
+        margin: 1em 0;
+    }
 }
 
 /*   Boards.   */
@@ -271,93 +265,94 @@ div.content p{
     padding: 0 0 0 1em;
     vertical-align: top;
     box-sizing: border-box;
-}
 
-.thread-filters h3{
-    margin: .5em 0 .5em; 
-}
+    h3{
+        margin: .5em 0 .5em; 
+    }
 
-.thread-filters a{
-   text-decoration: none; 
-}
+    a{
+       text-decoration: none; 
+    }
 
-.thread-filters .current-selection{
-   text-decoration: underline; 
+    .current-selection{
+       text-decoration: underline; 
+    }
 }
 
 /*   Threads.   */
 #threads{
     display: block;
     margin-right: 160px;
+
+    li{
+        display: block;
+        float: left;
+        width: 25%;
+        box-sizing: border-box;
+        border: 5px solid $background-color;
+    }
+
+    a{
+        padding: 1em;
+        display: block;
+        text-decoration: none;
+        text-align: center;
+        vertical-align: top;
+
+        max-height: 300px;
+        overflow: hidden;
+
+        background-color: #fff;
+        border: 1px solid $border-color;
+    }
+
+    .thread-saved a{
+        background-color: #67809f;
+        color: #ecf0f1;
+    }
+
+    a:hover{
+        color: #fff;
+        background-color: $primary-color;
+    }
+
+    .img-container{
+        max-height: 150px;
+        overflow: hidden;
+
+        img{
+            max-width: 100%;
+            max-height: 100%;
+        }
+    }
+
+    .thread-info{
+        font-size: 12px;
+
+        div{
+            margin: .2em 0;
+        }
+    }
+
+    .thread-tags{
+        font-size: 11px;
+        margin: .2em 0;
+
+        div{
+            display: inline-block;
+            margin: .2em;
+            padding: .4em;
+            background-color: $primary-color;
+            color: #fff;
+            border-radius: 3px;
+        }
+    }
+
+    .thread-subject{
+        font-weight: bold;
+    }
 }
 
-#threads li{
-    display: block;
-    float: left;
-    width: 25%;
-    box-sizing: border-box;
-    border: 5px solid $background-color;
-}
-
-#threads a{
-    padding: 1em;
-    display: block;
-    text-decoration: none;
-    text-align: center;
-    vertical-align: top;
-
-    max-height: 300px;
-    overflow: hidden;
-
-    background-color: #fff;
-    border: 1px solid $border-color;
-}
-
-#threads .thread-saved a{
-    background-color: #67809f;
-    color: #ecf0f1;
-}
-
-#threads a:hover{
-    color: #fff;
-    background-color: $primary-color;
-}
-
-#threads .img-container{
-    max-height: 150px;
-    overflow: hidden;
-}
-
-#threads .img-container img{
-    max-width: 100%;
-    max-height: 100%;
-}
-
-#threads .thread-info{
-    font-size: 12px;
-}
-
-#threads .thread-info div{
-    margin: .2em 0;
-}
-
-#threads .thread-tags{
-    font-size: 11px;
-    margin: .2em 0;
-}
-
-#threads .thread-tags div{
-    display: inline-block;
-    margin: .2em;
-    padding: .4em;
-    background-color: $primary-color;
-    color: #fff;
-    border-radius: 3px;
-}
-
-#threads .thread-subject{
-    font-weight: bold;
-}
 
 /*   Posts.   */
 #posts .post{
@@ -366,133 +361,135 @@ div.content p{
     border: 1px solid $border-color;
     margin-bottom: 10px;
     background-color: #fff;
+
+    .post-image{ /* Lets avoid wasting space in the tooltip. */
+        width: 200px;
+    }
+
+    .post-content{ /* Lets avoid wasting space in the tooltip. */
+        margin-left: 200px;
+    }
 }
 
-.post{ /* .post needs a spearate class instead of #posts>li because it is also displayed in a tooltip. */
+.post{ /* .post needs a spearate class instead of #posts>li because it is also displayed in tooltips. */
     width: 100%;
     transition: background-color 3s;
     box-sizing: border-box;
-}
 
-#posts .post .post-image{ /* Lets avoid wasting space in the tooltip. */
-    width: 200px;
-}
+    .post-image{
+        float: left;
+        padding: 0 1em 0 0;
+        box-sizing: border-box;
+        text-align: center;
 
-#posts .post .post-content{ /* Lets avoid wasting space in the tooltip. */
-    margin-left: 200px;
-}
+        img{
+            max-width: 100%;
+        }
+    }
 
-.post .post-image{
-    float: left;
-    padding: 0 1em 0 0;
-    box-sizing: border-box;
-    text-align: center;
-}
+    .post-header{
+    }
 
-.post .post-image img{
-    max-width: 100%;
-}
+    .post-header li{
+        display: inline-block;
+    }
 
-.post .post-header{
-}
+    .post-subject{
+        font-weight: bold;
+    }
 
-.post .post-header li{
-    display: inline-block;
-}
+    .post-author{
+    }
 
-.post .post-subject{
-    font-weight: bold;
-}
+    .post-author-name, .post-author-trip{
+        color: #117743;
+    }
 
-.post .post-author{
-}
+    .post-time{
+        color: #555;
+    }
 
-.post .post-author-name, .post .post-author-trip{
-    color: #117743;
-}
+    .post-number a{
+       text-decoration: none; 
+    }
 
-.post .post-time{
-    color: #555;
-}
+    .post-backlinks{
+        display: inline;
+    }
 
-.post .post-number a{
-   text-decoration: none; 
-}
+    .post-backlinks li{
+        padding: 0 0 0 .5em;
+    }
 
-.post .post-backlinks{
-    display: inline;
-}
+    .post-highlight{
+        background-color: #c8f7c5 !important;
+    }
 
-.post .post-backlinks li{
-    padding: 0 0 0 .5em;
-}
+    /*   Post content.   */
+    .post-comment{
+        padding: 1em 0;
 
-.post-highlight{
-    background-color: #c8f7c5 !important;
-}
+        .post-link{
+            color: #c0392b;
+        }
 
-/*   Post content.   */
-.post .post-comment{
-    padding: 1em 0;
-}
+        .post-link:hover{
+            color: #e74c3c;
+        }
+    }
 
-.post .post-comment .post-link{
-    color: #c0392b;
-}
-
-.post .post-comment .post-link:hover{
-    color: #e74c3c;
-}
-
-.post-link-dead{
-    text-decoration: line-through;
+    .post-link-dead{
+        text-decoration: line-through;
+    }
 }
 
 .greentext{
     color: #4daf7c;
 }
 
-.post pre{
+pre{
     margin: .5em 0;
 }
 
 /*   Tags.   */
-.tags li{
-    display: block;
-    padding: .4em .6em;
-    text-align: left;
-}
+.tags{
+    li{
+        display: block;
+        padding: .4em .6em;
+        text-align: left;
+    }
 
-.tags .tag-link{
-    text-decoration: none;
-}
+    .tag-link{
+        text-decoration: none;
+    }
 
-.tags .tag-link:hover{
-    text-decoration: underline;
-    color: #fff;
-}
+    .tag-link:hover{
+        text-decoration: underline;
+        color: #fff;
+    }
 
-.remove-tag{
-    display: none;
-    float: right;
-    color: #fff;
-}
+    .remove-tag{
+        display: none;
+        float: right;
+        color: #fff;
+    }
 
-.remove-tag:hover{
-    color: #e74c3c;
-}
+    .remove-tag:hover{
+        color: #e74c3c;
+    }
 
-.tags li:hover{
-    background-color: $primary-color;
-    color: #fff;
-}
+    li:hover{
+        background-color: $primary-color;
+        color: #fff;
+    }
 
-.tags li:hover .tag-link{
-    color: #fff;
-}
+    li:hover .tag-link{
+        color: #fff;
+    }
 
-.tags li:hover .remove-tag{
-    display: inline-block;
+    li:hover .remove-tag{
+        display: inline-block;
+    }
 }
 
 #add-tag-input{
