@@ -1,3 +1,6 @@
+/* This file is responsible for actually executing or scheduling an execution of all other functions or plugins.
+*/
+
 $(document).ready(function(){
     // Make threads in the board view (catalog) equal in height.
     equalizeHeight('#threads .img-container');
@@ -32,7 +35,7 @@ $(document).ready(function(){
         addPostTooltip(event.target, postId);
     });
 
-    // Temporary higlight a post after clicking on a local link.
+    // Temporary higlight a post after clicking on a local link (within the same thread).
     $('#posts').on('click', '.post-link', function(event){
         var postId = $(event.target).attr("post_id");
         var selector = '#post-' + postId;
@@ -51,18 +54,20 @@ $(document).ready(function(){
         ajax_save(event.target);
     });
 
-    // Add autocomplete to 'new tag' input.
+    // Add autocomplete to a 'new tag' input.
     $('#add-tag-input').autocomplete({
         serviceUrl: info_data.ajax_url_suggest_tag,
         minChars: 2
     });
 
+    // Add a tag to a thread after user presses enter in an input.
     $('.post').on('keypress', '#add-tag-input', function(event){
         if (event.which == 13){
             ajax_add_tag(event.target);
         }
     });
 
+    // Remove tag after user clicks a button.
     $('.post').on('click', '.remove-tag', function(event){
         ajax_remove_tag(event.target);
     });

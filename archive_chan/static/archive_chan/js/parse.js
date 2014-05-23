@@ -1,3 +1,6 @@
+/* This file contains functions which  dynamically generate elements like post links.
+*/
+
 // Call this on load to generate links to the comments in the thread view (>>1234).
 function createPostLinks(){
     $('.post-link').each(function(index, element){
@@ -84,6 +87,7 @@ function addPostTooltip(element, postId){
     });
 }
 
+// Highlights the specified post (for example after clicking an anchor linking to it).
 function higlightPost(selector){
     $(selector).addClass('post-highlight');
 
