@@ -305,12 +305,11 @@ div.content{
 
     .img-container{
         min-height: 100px;
-        max-height: 150px;
         overflow: hidden;
 
         img{
             max-width: 100%;
-            max-height: 100%;
+            max-height: 150px;
         }
     }
 
