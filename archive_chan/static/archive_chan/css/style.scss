@@ -2,19 +2,6 @@ $primary-color: #65c6bb;
 $background-color: #eee;
 $border-color: #dadfe1;
 
-.clearfix:before, .clearfix:after,
-.post:before, .post:after,
-.thread-filters:before, .thread-filters:after{
-    content: " ";
-    display: table;
-}
-
-.clearfix:after,
-.post:after,
-.thread-filters:after{
-    clear: both;
-}
-
 /*   Main.   */
 html, body{
     font-family: 'Open Sans', sans-serif;
@@ -69,7 +56,6 @@ div#site>div:last-child{
     font-family: 'Oswald', sans-serif;
     font-size: 28px;
     display: inline-block;
-    height: 30px;
 
     a{
         color: #fff;
@@ -165,6 +151,7 @@ h3{
 /* Pagination. */
 .pagination{
     text-align: center;
+    display: flex;
 
     a{
         display: block;
@@ -179,14 +166,6 @@ h3{
         background-color: $primary-color;
     }
 
-    .page-prev{
-        float: left;
-    }
-
-    .page-next{
-        float: right;
-    }
-
     i{
         vertical-align: middle;
         line-height: 40px;
@@ -194,6 +173,7 @@ h3{
     } 
 
     .page-current{
+        flex: 1;
         display: inline-block;
         vertical-align: middle;
         line-height: 40px;
@@ -232,13 +212,14 @@ div.content{
 
 /*   Boards.   */
 #boards{
+    display: flex;
+    flex-flow: row wrap;
+
     li{
         display: block;
-        float: left;
         width: 33%;
         box-sizing: border-box;
         border: 5px solid $background-color;
-        vertical-align: top;
     }
 
     a{
@@ -258,12 +239,16 @@ div.content{
     }
 }
 
-/*   Parameters.   */
+/*   Threads.   */
+
+.board-wrapper{
+    display: flex;
+    flex-flow: row nowrap;
+}
+
 .thread-filters{
-    float: right;
     width: 160px;
     padding: 0 0 0 1em;
-    vertical-align: top;
     box-sizing: border-box;
 
     h3{
@@ -279,28 +264,30 @@ div.content{
     }
 }
 
-/*   Threads.   */
 #threads{
-    display: block;
-    margin-right: 160px;
+    flex: 1;
+
+    display: flex;
+    flex-flow: row wrap;
 
     li{
         display: block;
-        float: left;
         width: 25%;
         box-sizing: border-box;
         border: 5px solid $background-color;
     }
 
     a{
+        display: flex;
+        flex-flow: column nowrap;
+
+        box-sizing: border-box;
+        height: 100%;
         padding: 1em;
-        display: block;
+        overflow: hidden;
+
         text-decoration: none;
         text-align: center;
-        vertical-align: top;
-
-        max-height: 300px;
-        overflow: hidden;
 
         background-color: #fff;
         border: 1px solid $border-color;
@@ -317,7 +304,8 @@ div.content{
     }
 
     .img-container{
-        height: 150px;
+        min-height: 100px;
+        max-height: 150px;
         overflow: hidden;
 
         img{
@@ -351,6 +339,11 @@ div.content{
     .thread-subject{
         font-weight: bold;
     }
+
+    .thread-comment{
+        max-height: 100px;
+        overflow: hidden;
+    }
 }
 
 
@@ -365,10 +358,6 @@ div.content{
     .post-image{ /* Lets avoid wasting space in the tooltip. */
         width: 200px;
     }
-
-    .post-content{ /* Lets avoid wasting space in the tooltip. */
-        margin-left: 200px;
-    }
 }
 
 .post{ /* .post needs a spearate class instead of #posts>li because it is also displayed in tooltips. */
@@ -376,8 +365,10 @@ div.content{
     transition: background-color 3s;
     box-sizing: border-box;
 
+    display: flex;
+    flex-flow: row nowrap;
+
     .post-image{
-        float: left;
         padding: 0 1em 0 0;
         box-sizing: border-box;
         text-align: center;
@@ -387,11 +378,14 @@ div.content{
         }
     }
 
-    .post-header{
+    .post-content{
+        flex: 1;
     }
 
-    .post-header li{
-        display: inline-block;
+    .post-header{
+        li{
+            display: inline-block;
+        }
     }
 
     .post-subject{
@@ -459,13 +453,14 @@ code{
 /*   Tags.   */
 .tags{
     li{
-        display: block;
+        display: flex;
         padding: .4em .6em;
         text-align: left;
     }
 
     .tag-link{
         text-decoration: none;
+        flex: 1;
     }
 
     .tag-link:hover{
@@ -475,7 +470,6 @@ code{
 
     .remove-tag{
         display: none;
-        float: right;
         color: #fff;
     }
 
@@ -564,14 +558,17 @@ code{
 
 /*   Thread.   */
 @media screen and (max-width: 500px){
-    #posts .post .post-image{
-        float: none;
-        margin: 0 auto;
-        padding: 1em 0;
-    }
+    #posts .post{
+        flex-flow: column nowrap;
 
-    #posts .post .post-content{
-        margin-left: 0;
+        .post-image{
+            width: 100%;
+            padding: 1em;
+        }
+        
+        .post-content{
+            margin-left: 0;
+        }
     }
 }
 
@@ -593,20 +590,23 @@ code{
         margin-right: 0;
     }
 
+    .board-wrapper{
+        flex-flow: column-reverse nowrap;
+    }
+
     .thread-filters{
-        float: none;
         width: 100%;
+        display: flex;
+        flex-flow: row wrap;
     }
 
     .thread-filters div{
-        float: left;
         width: 33%;
     }
 }
 
 @media screen and (max-width: 350px){
     .thread-filters div{
-        float: none;
         width: 100%;
     }
 

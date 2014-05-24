@@ -14,97 +14,8 @@
 
 {% block content %}
     <div class="content">
-        <div class="wrapper clearfix">
-
-            <div class="thread-filters">
-                <div>
-                    <h3>Order by</h3>
-                    <ul class="fa-ul">
-                        {% for item in available_parameters.sort %}
-                            <li>
-                                {% if item.0 == parameters.sort %}
-                                    {% if parameters.sort_reverse %}  
-                                        <i class="fa-li fa fa-sort-amount-desc"></i>
-                                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "sort" item.0 %}" class="current-selection">{{ item.1 }}</a>
-                                    {% else %}
-                                        <i class="fa-li fa fa-sort-amount-asc"></i>
-                                        {% with value="-"|add:item.0 %}
-                                            <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "sort" value %}" class="current-selection">{{ item.1 }}</a>
-                                        {% endwith %}
-                                    {% endif %}
-                                {% else %}
-                                        {% with value="-"|add:item.0 %}
-                                            <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "sort" value %}">{{ item.1 }}</a>
-                                        {% endwith %}
-                                {% endif %}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-
-                <div>
-                    <h3>Saved</h3>
-                    <ul class="fa-ul">
-                        {% for item in available_parameters.saved %}
-                            <li>
-                                {% if item.0 == parameters.saved %}
-                                    <i class="fa-li fa fa-check"></i>
-                                    <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "saved" item.0 %}" class="current-selection">{{ item.1 }}</a>
-                                {% else %}
-                                    <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "saved" item.0 %}">{{ item.1 }}</a>
-                                {% endif %}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-
-                <div>
-                    <h3>Last reply</h3>
-                    <ul class="fa-ul">
-                        {% for item in available_parameters.last_reply %}
-                            <li>
-                                {% if item.0 == parameters.last_reply %}
-                                    <i class="fa-li fa fa-check"></i>
-                                    <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "last_reply" item.0 %}" class="current-selection">{{ item.1 }}</a>
-                                {% else %}
-                                    <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "last_reply" item.0 %}">{{ item.1 }}</a>
-                                {% endif %}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-
-                <div>
-                    <h3>Tagged</h3>
-                    <ul class="fa-ul">
-                        {% for item in available_parameters.tagged %}
-                            <li>
-                                {% if item.0 == parameters.tagged %}
-                                    <i class="fa-li fa fa-check"></i>
-                                    <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "tagged" item.0 %}" class="current-selection">{{ item.1 }}</a>
-                                {% else %}
-                                    <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "tagged" item.0 %}">{{ item.1 }}</a>
-                                {% endif %}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-
-                {% if parameters.tag %}
-                    <div>
-                        <h3>Tag</h3>
-                        <ul class="tags">
-                            {% for name in parameters.tag %}
-                                <li>
-                                    <i class="fa fa-fw fa-tag"></i>
-                                    <a class="tag-link" href="{% url 'archive_chan:board' board_name %}?tag={{ name }}">{{ name }}</a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% endif %}
-            </div>
-
+        <div class="wrapper board-wrapper">
+            
             <ul id="threads">
                 {% for thread in thread_list %}
                     {% if thread.saved %}
@@ -150,6 +61,9 @@
                     </li>
                 {% endfor %}
             </ul>
+
+            {% include "archive_chan/board_filters.html" %}
+
         </div>
     </div>
 
@@ -160,14 +74,14 @@
                     {% if page_obj.has_previous %}
                         <a href="{% url 'archive_chan:board' board_name %}{% board_url_query  %}&page={{ page_obj.previous_page_number }}" class="page-prev" title="{% trans "Previous page" %}"><i class="fa fa-angle-left"></i></a>
                     {% endif %}
-                    {% if page_obj.has_next %}
-                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query  %}&page={{ page_obj.next_page_number }}" class="page-next" title="{% trans "Next page" %}"><i class="fa fa-angle-right"></i></a>
-                    {% endif %}
                     <div class="page-current">
                         {% blocktrans with current_page=page_obj.number all_pages=page_obj.paginator.num_pages %}
                             Page {{ current_page }} of {{ all_pages }}
                         {% endblocktrans %}
                     </div>
+                    {% if page_obj.has_next %}
+                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query  %}&page={{ page_obj.next_page_number }}" class="page-next" title="{% trans "Next page" %}"><i class="fa fa-angle-right"></i></a>
+                    {% endif %}
                 </div>
             </div>
         </div>

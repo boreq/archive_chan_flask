@@ -14,16 +14,3 @@ function equalizeHeight(selector){
 
     $(selector).height(maxHeight);
 }
-
-// Ensures that the specified element's bottom border isn't below its parent's bottom border.
-function limitHeight(selector){
-    $(selector).each(function(){
-        var parentHeight = $(this).parent().height();
-        var parentOuterHeight = $(this).parent().outerHeight();
-
-        var parentOffset = $(this).parent().offset().top;
-        var thisOffset = $(this).offset().top;
-
-        $(this).height(parentHeight - (thisOffset - parentOffset) + ((parentOuterHeight - parentHeight) / 2));
-    });
-}

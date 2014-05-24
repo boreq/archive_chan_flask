@@ -3,11 +3,8 @@
 
 $(document).ready(function(){
     // Make threads in the board view (catalog) equal in height.
+    equalizeHeight('#threads .img-container');
     equalizeHeight('#threads a');
-
-    // Comment's overflow in board view (catalog) stretches the div beyond the parent bottom margin.
-    // Fix that or the overflowed text will be visible behind the padding.
-    limitHeight('#threads .thread-comment');
 
     // Finish comments in a thread view with three dots...
     $('#threads .thread-comment').dotdotdot({
