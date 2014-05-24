@@ -26,7 +26,7 @@ function createPostLinks(){
                 cache: true
             }).done(function(response){
                 if (response['error']){
-                    $(element).attr('href', '');
+                    $(element).removeAttr('href');
                     $(element).addClass('post-link-dead');
                 }else{
                     link = info_data.thread_url.replace('/' + info_data.board_name + '/', '/' + linkedPostBoard + '/')
