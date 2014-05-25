@@ -24,7 +24,8 @@ header div.wrapper, div.about div.wrapper, div#projects div.wrapper, footer div.
 
 #body-home,
 #body-board,
-#body-thread{
+#body-thread,
+#body-board-stats{
     background-color: $background-color;
 }
 
@@ -110,6 +111,31 @@ body#body-home .nav-home{
 
 /*   Footer.   */
 footer{
+    .wrapper{
+        display: flex;
+        flex-flow: row wrap;
+    }
+
+    .additional-links{
+        li{
+            display: inline-block;
+            margin: 0 .5em;
+
+            a{
+                text-decoration: none;
+                color: inherit;
+            }
+
+            a:hover{
+                color: $primary-color;
+            }
+        }
+    }
+
+    .footer-main{
+        flex-grow: 1;
+    }
+
     .generated{
         i{
             color: #ddd;
@@ -246,21 +272,23 @@ div.content{
     flex-flow: row nowrap;
 }
 
-.thread-filters{
+.board-sidebar{
     width: 160px;
     padding: 0 0 0 1em;
     box-sizing: border-box;
+}
 
+.thread-filters{
     h3{
         margin: .5em 0 .5em; 
     }
 
     a{
-       text-decoration: none; 
+        text-decoration: none; 
     }
 
     .current-selection{
-       text-decoration: underline; 
+        text-decoration: underline; 
     }
 }
 
@@ -497,6 +525,7 @@ code{
     margin: 1em 0;
     border: 1px solid $border-color;
     transition: border 1s;
+    box-sizing: border-box;
 }
 
 #add-tag-input:focus{
@@ -546,6 +575,62 @@ code{
     background-color: #e74c3c;
 }
 
+/* Stats. */
+.chart-container{
+    border: 5px solid $background-color;
+
+    .chart{
+        width: 100%;
+        border: 1px solid $border-color;
+        padding: 1em;
+        box-sizing: border-box;
+        background-color: #fff;
+    }
+
+    #chart{
+        height: 300px;
+    }
+}
+
+.stats{
+    display: flex;
+    flex-flow: row wrap;
+
+    li{
+        flex-grow: 1;
+        border: 5px solid $background-color;
+        min-width: 33.33%;
+        box-sizing: border-box;
+
+        >div{
+            box-sizing: border-box;
+            background-color: #fff;
+            padding: 1em;
+            border: 1px solid $border-color;
+            height: 100%;
+        }
+
+        .value{
+            text-align: center;
+            font-size: 30px;
+        }
+    }
+}
+
+.last-update-info{
+    padding: 5px;
+    text-align: right;
+    color: #999;
+
+    a{
+        color: #999;
+    }
+
+    a:hover{
+        color: $primary-color;
+    }
+}
+
 /*   Error page.   */
 .error-image{
     max-width: 100%;
@@ -593,20 +678,24 @@ code{
         flex-flow: column-reverse nowrap;
     }
 
-    .thread-filters{
+    .board-sidebar{
         width: 100%;
-        display: flex;
-        flex-flow: row wrap;
     }
 
-    .thread-filters div{
-        width: 33%;
+    .thread-filters{
+        display: flex;
+        flex-flow: row wrap;
+
+        div{
+            min-width: 33%;
+            flex-grow: 1;
+        }
     }
 }
 
 @media screen and (max-width: 350px){
     .thread-filters div{
-        width: 100%;
+        min-width: 100%;
     }
 
     #threads li{
@@ -620,6 +709,20 @@ code{
         width: 100%;
     }
 }
+
+/*   Stats.   */
+@media screen and (max-width: 700px){
+    .stats li{
+        min-width: 50%;
+    }
+}
+
+@media screen and (max-width: 500px){
+    .stats li{
+        min-width: 100%;
+    }
+}
+
 
 /*   Nav/header.   */
 @media screen and (max-width: 360px){

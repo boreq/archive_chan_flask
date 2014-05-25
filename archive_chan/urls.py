@@ -5,6 +5,9 @@ urlpatterns = patterns('',
     url(r'^$', views.IndexView.as_view(), name='index'),
     url(r'^board/(?P<name>[a-z]+)/$', views.BoardView.as_view(), name='board'),
     url(r'^board/(?P<name>[a-z]+)/thread/(?P<number>[0-9]+)/$', views.ThreadView.as_view(), name='thread'),
+    url(r'^board/(?P<name>[a-z]+)/stats/$', views.board_stats, name='board_stats'),
+
+    url(r'^ajax/board/(?P<name>[a-z]+)/stats/$', views.ajax_board_stats, name='ajax_board_stats'),
 
     url(r'^ajax/save/$', views.ajax_save_thread, name='ajax_save_thread'),
     url(r'^ajax/get_parent_thread/$', views.ajax_get_parent_thread, name='ajax_get_parent_thread'),

@@ -42,8 +42,11 @@
         </div>
         <footer>
           <div class="wrapper">
-            All content is generated automatically and originates from <a href="http://4chan.org">4chan</a>.
-            <span class="generated"><i class="fa fa-linux"></i> <span>Generated {% now "Y-m-d G:i:s e" %}</span></span>
+            {% block inner_footer %}{% endblock %}
+            <div class="footer-main">
+                All content is generated automatically and originates from <a href="http://4chan.org">4chan</a>.
+                <span class="generated"><i class="fa fa-linux"></i> <span>{% now "Y-m-d G:i:s e" %}</span></span>
+            </div>
           </div>
         </footer>
     </body>

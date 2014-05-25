@@ -62,8 +62,9 @@
                 {% endfor %}
             </ul>
 
-            {% include "archive_chan/board_filters.html" %}
-
+            <div class="board-sidebar">
+                {% include "archive_chan/board_filters.html" %}
+            </div>
         </div>
     </div>
 
@@ -86,4 +87,11 @@
             </div>
         </div>
     {% endif %}
+{% endblock %}
+
+
+{% block inner_footer %}
+    <ul class="additional-links">
+        <li><a href="{% url 'archive_chan:board_stats' board_name %}"><i class="fa fa-bar-chart-o fa-fw"></i> Board statistics</a></li>
+    </ul>
 {% endblock %}
