@@ -46,9 +46,19 @@ function drawStats(data) {
   $('#value-total-posts').text(data.total_posts);
   $('#value-total-text').text(data.total_posts - data.total_image_posts);
   $('#value-total-image').text(data.total_image_posts);
-  $('#value-percent-image').text(Math.round(data.total_image_posts / data.total_posts * 100) + '%');
   $('#value-average-hour').text(Math.round(data.recent_posts / data.recent_posts_timespan));
-  $('#value-average-thread').text(Math.round(data.total_posts / data.total_threads));
+
+  if (data.total_threads > 0){
+      $('#value-average-thread').text(Math.round(data.total_posts / data.total_threads));
+  }else{
+      $('#value-average-thread').text('0');
+  }
+
+  if (data.total_posts > 0){
+      $('#value-percent-image').text(Math.round(data.total_image_posts / data.total_posts * 100) + '%');
+  }else{
+      $('#value-percent-image').text('0%');
+  }
 }
 
 // Function drawing the chart.

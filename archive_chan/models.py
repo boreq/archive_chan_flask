@@ -27,6 +27,9 @@ class Thread(models.Model):
     auto_saved = models.BooleanField(default=False) # Was this thread saved automatically by a trigger?
     tags = models.ManyToManyField('Tag', through='TagToThread')
 
+    class Meta:
+        unique_together = ('board', 'number')
+
     # Used by scraper.
     def last_reply_time(self):
         last = self.post_set.last()

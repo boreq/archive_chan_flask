@@ -323,16 +323,7 @@ class Scraper:
             thread_json = self.get_thread_json(thread_info.number)
 
         except:
-            # Could not update the thread and there are no posts in the saved one.
-            # That means that something got corrupted. Remove it because it might not exist anymore.
-            if not thread is None and thread.pk and thread.post_set.count() == 0:
-                thread.delete()
-
-            raise ScrapError('Unable to download thread data. It might not exist anymore.')
-
-        # Do not save earlier or you might end up with a thread without posts after a download error.
-        if not thread.pk:
-            thread.save()
+            raise ScrapError('Unable to download the thread data. It might not exist anymore.')
 
         # Create a list for downloaded post numbers.
         # We will later check if something from our database is missing in this list and remove it.
@@ -362,6 +353,10 @@ class Scraper:
 
                     # Save post in the database.
                     with transaction.atomic():
+                        # Do not save earlier or you might end up with a thread without posts after an error.
+                        if not thread.pk:
+                            thread.save()
+
                         # Save post.
                         post = Post(
                             thread=thread,
