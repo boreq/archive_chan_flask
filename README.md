@@ -8,7 +8,10 @@ Archive Chan is a 4chan archive implemented as a Django application.
 Application was written with Python 3 and Django 1.6+ in mind. At this point in does not support Python 2.
 
 ### Dependencies
-This application requires the [requests](http://docs.python-requests.org/en/latest/) package.
+This application requires following packages:
+
+* [requests](http://docs.python-requests.org/en/latest/)
+* [tendo](https://pypi.python.org/pypi/tendo/0.2.4)
 
 ### Installing the application
 Installation is exactly the same as an installation of any Django application. Simply copy `archive_chan` directory to your project directory and add `archive_chan` to the `INSTALLED_APPS` list in the project settings file.

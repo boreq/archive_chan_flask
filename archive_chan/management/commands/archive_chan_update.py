@@ -1,8 +1,13 @@
+import datetime, sys
+from optparse import make_option
+
 from django.core.management.base import BaseCommand, CommandError
+
+from tendo import singleton
+
 from archive_chan.models import Board
 from archive_chan.lib.scraper import Scraper
-from optparse import make_option
-import datetime
+from archive_chan.settings import AppSettings
 
 class Command(BaseCommand):
     args = ''
@@ -16,7 +21,11 @@ class Command(BaseCommand):
         ),
     )
 
+
     def handle(self, *args, **options):
+        # Prevent multiple instances. Apparently fcntl.lockf is very useful and does completely nothing.
+        me = singleton.SingleInstance()
+
         boards = Board.objects.filter(active=True)
 
         # Show progress?
