@@ -14,3 +14,9 @@
         </div>
     </div>
 {% endblock %}
+
+{% block inner_footer %}
+    <ul class="additional-links">
+        <li><a href="{% url 'archive_chan:stats' %}"><i class="fa fa-bar-chart-o fa-fw"></i> Global statistics</a></li>
+    </ul>
+{% endblock %}

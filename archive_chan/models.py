@@ -16,6 +16,9 @@ class Board(models.Model):
         help_text='Store threads after they reach that many replies.'
     )
 
+    class Meta:
+        ordering = ['name']
+
     def __str__(self):
         return format("/%s/" % self.name)
 

@@ -5,17 +5,23 @@
 {% block inner_head %}
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script>
-        var dataUrl = "{% url 'archive_chan:ajax_board_stats' board_name %}";
+        {% if board_name %}
+            var dataUrl = "{% url 'archive_chan:ajax_stats' %}?board={{ board_name }}";
+        {% else %}
+            var dataUrl = "{% url 'archive_chan:ajax_stats' %}";
+        {% endif %}
     </script>
     <script src="{% static 'archive_chan/js/board_stats.js' %}"></script>
 {% endblock %}
 
-{% block header_link %}<a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>{% endblock %}
+{% block header_link %}
+    {% if board_name %}<a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>{% endif %}
+{% endblock %}
 
 {% block content %}
     <div class="content">
         <div class="wrapper">
-            <noscript><p>This view is updated automatically and requires JavaScript.</p></noscript>
+            <noscript><p>This page is updated automatically and requires JavaScript.</p></noscript>
             <ul class="stats">
                 <li>
                     <div>
