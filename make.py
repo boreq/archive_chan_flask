@@ -15,6 +15,12 @@ js_concat = [
             'init.js',
         ],
         'main.js'
+    ],
+    [
+        [
+            'board_stats_draw.js',
+        ],
+        'board_stats.js'
     ]
 ] 
 

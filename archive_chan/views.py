@@ -1,4 +1,4 @@
-import json, datetime
+import json, datetime, time
 
 from django.shortcuts import render, get_object_or_404, get_list_or_404
 from django.template import RequestContext
@@ -8,6 +8,7 @@ from django.db.models import Max, Min, Count
 from django.views.generic import ListView
 
 from archive_chan.models import Board, Thread, Post, Tag, TagToThread
+from archive_chan.settings import AppSettings
 
 
 class IndexView(ListView):
@@ -228,6 +229,75 @@ class ThreadView(ListView):
         context['thread_tags'] = self.thread.tagtothread_set.select_related('tag').all().order_by('tag__name')
         context['body_id'] = 'body-thread'
         return context
+
+
+def board_stats(request, name):
+    """Statistics for a board."""
+
+    context = {
+        'body_id': 'body-board-stats',
+        'board_name': name
+    }
+
+    return render(request, 'archive_chan/board_stats.html', context)
+
+
+def ajax_board_stats(request, name):
+    """JSON data with statistics."""
+    context = {}
+
+    # This time is used when selecting data for a chart and recent posts.
+    # It is supposed to prevent drawing to much data on the chart and ensures correct results when calculating posts per hour
+    # (saved threads which do not get deleted would alter the results).
+    board = Board.objects.get(name=name)
+    timespan = board.store_threads_for if board.store_threads_for > 0 else AppSettings.get('RECENT_POSTS_AGE')
+    timespan_time = datetime.datetime.now().replace(tzinfo=utc) - datetime.timedelta(hours=timespan)
+
+    # Prepare data for the chart. It is necessary to convert it to a format required by Google Charts.
+    posts = Post.objects.filter(thread__board=name).extra({
+        'date': 'date("time")',
+        'hour': "date_part(\'hour\', \"time\")"
+    }).values('date', 'hour').order_by('date', 'hour').annotate(amount=Count('id')).filter(time__gt=timespan_time)
+
+    chart_data = {
+        'cols': [{'label': 'Date', 'type': 'datetime'}, {'label': 'Posts', 'type': 'number'}],
+        'rows': []
+    }
+
+    for entry in posts:
+        entry_time = datetime.datetime.combine(
+            entry['date'],
+            datetime.time(hour=int(entry['hour']))
+        )
+
+        value_string = format("Date(%s, %s, %s, %s, %s, %s)" % (
+            entry_time.year,
+            entry_time.month,
+            entry_time.day,
+            entry_time.hour,
+            entry_time.minute,
+            entry_time.second
+        ))
+
+        label_string = entry_time.strftime('%Y-%m-%d %H:%M')
+
+        chart_data['rows'].append({
+            'c': [{'v': value_string, 'f': label_string}, {'v': entry['amount']}]
+        })
+
+    context['chart_data'] = chart_data
+
+    # Posts.
+    context['total_posts'] = Post.objects.filter(thread__board=name).count()
+    context['total_image_posts'] = Post.objects.filter(thread__board=name).exclude(image=None).count()
+
+    context['recent_posts'] = Post.objects.filter(thread__board=name, time__gt=timespan_time).count()
+    context['recent_posts_timespan'] = timespan
+
+    # Threads.
+    context['total_threads'] = Thread.objects.filter(board=name).count()
+
+    return HttpResponse(json.dumps(context), content_type='application/json')
 
 
 def ajax_save_thread(request):

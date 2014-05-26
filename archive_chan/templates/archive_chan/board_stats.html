@@ -1,0 +1,84 @@
+{% extends "archive_chan/base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block inner_head %}
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script>
+        var dataUrl = "{% url 'archive_chan:ajax_board_stats' board_name %}";
+    </script>
+    <script src="{% static 'archive_chan/js/board_stats.js' %}"></script>
+{% endblock %}
+
+{% block header_link %}<a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>{% endblock %}
+
+{% block content %}
+    <div class="content">
+        <div class="wrapper">
+            <noscript><p>This view is updated automatically and requires JavaScript.</p></noscript>
+            <ul class="stats">
+                <li>
+                    <div>
+                        <h3>Total posts</h3>
+                        <div class="value" id="value-total-posts"></div>
+                    </div>
+                </li>
+                
+                <li>
+                    <div>
+                        <h3>Text posts</h3>
+                        <div class="value" id="value-total-text"></div>
+                    </div>
+                </li>
+
+                <li>
+                    <div>
+                        <h3>Image posts</h3>
+                        <div class="value" id="value-total-image"></div>
+                    </div>
+                </li>
+
+                <li>
+                    <div>
+                        <h3>Total threads</h3>
+                        <div class="value" id="value-total-threads"></div>
+                    </div>
+                </li>
+
+                <li>
+                    <div>
+                        <h3>Posts per thread</h3>
+                        <div class="value" id="value-average-thread"></div>
+                    </div>
+                </li>
+
+                <li>
+                    <div>
+                        <h3>Posts per hour</h3>
+                        <div class="value" id="value-average-hour"></div>
+                    </div>
+                </li>
+
+                <li>
+                    <div>
+                        <h3>Percent of image posts</h3>
+                        <div class="value" id="value-percent-image"></div>
+                    </div>
+                </li>
+
+            </ul>
+
+            <div class="chart-container">
+                <div class="chart">
+                    <h3>Posts over time</h3>
+                    <div id="chart"></div>
+                </div>
+            </div>
+
+            <div class="last-update-info">
+                Last update: <time id="last-update">Never</time>
+                <a id="update-now"><i class="fa fa-refresh"></i></a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
