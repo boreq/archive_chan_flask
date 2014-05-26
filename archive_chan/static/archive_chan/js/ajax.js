@@ -2,19 +2,22 @@
 */
 
 // Function saving the thread.
-// Executed when user clicks a button.
+// Executed when user clicks the save thread button.
 function ajax_save(clicked_button){
     // Decide if the code should request saving or unsaving the thread.
     state = $(clicked_button).hasClass('button-save');
-    
+
     $.ajax({
         url: info_data.ajax_url_save,
+        beforeSend: function (request){
+            request.setRequestHeader('X-CSRFToken', $.cookie('csrftoken'));
+        },
         data: {
             thread: info_data.thread_number, // Those are set in the template 
             board: info_data.board_name,     // to make things easier.
             state: state
         },
-        type: 'GET',
+        type: 'POST',
         cache: false
     }).done(function(response){
         if (response['error']){
@@ -43,12 +46,15 @@ function ajax_add_tag(input){
 
     $.ajax({
         url: info_data.ajax_url_add_tag,
+        beforeSend: function (request){
+            request.setRequestHeader('X-CSRFToken', $.cookie('csrftoken'));
+        },
         data: {
             thread: info_data.thread_number, // Those are set in the template
             board: info_data.board_name,     // to make things easier.
             tag: input.value
         },
-        type: 'GET',
+        type: 'POST',
         cache: false
     }).done(function(response){
         if (response['error']){
@@ -63,16 +69,19 @@ function ajax_add_tag(input){
 }
 
 // Function removing a tag assigned to a thread.
-// Executed wneh user clicks remove tag button on a tag list next to a main post in a thread.
+// Executed when user clicks remove tag button.
 function ajax_remove_tag(sender){
     $.ajax({
         url: info_data.ajax_url_remove_tag,
+        beforeSend: function (request){
+            request.setRequestHeader('X-CSRFToken', $.cookie('csrftoken'));
+        },
         data: {
             thread: info_data.thread_number, // Those are set in the template
             board: info_data.board_name,     // to make things easier.
             tag: $(sender).closest('li').find('.tag-link').text()
         },
-        type: 'GET',
+        type: 'POST',
         cache: false
     }).done(function(response){
         if (response['error']){

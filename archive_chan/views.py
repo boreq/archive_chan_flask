@@ -204,7 +204,6 @@ class BoardView(ListView):
         context['body_id'] = 'body-board'
         return context
 
-
 class ThreadView(ListView):
     """View showing all posts in a specified thread."""
     model = Thread
@@ -271,9 +270,9 @@ def ajax_save_thread(request):
 
     if request.user.is_authenticated():
         try:
-            thread_number = int(request.GET['thread'])
-            board_name = request.GET['board']
-            state = request.GET['state']
+            thread_number = int(request.POST['thread'])
+            board_name = request.POST['board']
+            state = request.POST['state']
 
             state = (state == 'true')
 
@@ -286,6 +285,7 @@ def ajax_save_thread(request):
             }
 
         except:
+            raise
             response = {
                 'error': 'Error.'
             }
@@ -347,9 +347,9 @@ def ajax_add_tag(request):
 
     if request.user.is_authenticated():
         try:
-            thread_number = int(request.GET['thread'])
-            board_name = request.GET['board']
-            tag = request.GET['tag']
+            thread_number = int(request.POST['thread'])
+            board_name = request.POST['board']
+            tag = request.POST['tag']
 
             exists = TagToThread.objects.filter(
                 thread__number=thread_number, 
@@ -359,14 +359,7 @@ def ajax_add_tag(request):
 
             if not exists:
                 thread = Thread.objects.get(number=thread_number, board__name=board_name)
-
-                try:
-                    tag = Tag.objects.get(name=tag)
-
-                except: # Create new.
-                    tag = Tag(name=tag)
-                    tag.save()
-
+                tag, created_new_tag = Tag.objects.get_or_create(name=tag)
                 tag_to_thread = TagToThread(thread=thread, tag=tag)
                 tag_to_thread.save()
 
@@ -396,9 +389,9 @@ def ajax_remove_tag(request):
 
     if request.user.is_authenticated():
         try:
-            thread_number = int(request.GET['thread'])
-            board_name = request.GET['board']
-            tag = request.GET['tag']
+            thread_number = int(request.POST['thread'])
+            board_name = request.POST['board']
+            tag = request.POST['tag']
 
             TagToThread.objects.get(
                 thread__number=thread_number, 

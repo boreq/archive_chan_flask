@@ -7,6 +7,7 @@ js_concat = [
             'lib/jquery.timeago.js',
             'lib/highlight.pack.js',
             'lib/jquery.qtip.js',
+            'lib/jquery.cookie.js',
             'lib/jquery.dotdotdot.min.js',
             'lib/jquery.autocomplete.js',
             'manipulate_height.js',
