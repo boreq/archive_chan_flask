@@ -1,0 +1,62 @@
+{
+    "path": "../",
+    "tasks": [
+        {
+            "input": [
+                "archive_chan/static/archive_chan/js/lib/jquery.timeago.js",
+                "archive_chan/static/archive_chan/js/lib/highlight.pack.js",
+                "archive_chan/static/archive_chan/js/lib/jquery.qtip.js",
+                "archive_chan/static/archive_chan/js/lib/jquery.cookie.js",
+                "archive_chan/static/archive_chan/js/lib/jquery.dotdotdot.min.js",
+                "archive_chan/static/archive_chan/js/lib/jquery.autocomplete.js",
+                "archive_chan/static/archive_chan/js/src/manipulate_height.js",
+                "archive_chan/static/archive_chan/js/src/parse.js",
+                "archive_chan/static/archive_chan/js/src/ajax.js",
+                "archive_chan/static/archive_chan/js/src/init.js"
+            ],
+            "output": "archive_chan/static/archive_chan/js/main.js"
+        },
+        {
+            "input": [
+                "archive_chan/static/archive_chan/js/src/stats.js"
+            ],
+            "output": "archive_chan/static/archive_chan/js/stats.js"
+        },
+        {
+            "input": [
+                "archive_chan/static/archive_chan/css/src/import.css",
+                "archive_chan/static/archive_chan/css/src/reset.css",
+                "archive_chan/static/archive_chan/css/src/style.scss",
+                "archive_chan/static/archive_chan/css/lib/highlight.css",
+                "archive_chan/static/archive_chan/css/lib/jquery.qtip.css"
+            ],
+            "output": "archive_chan/static/archive_chan/css/main.css"
+        }
+    ],
+    "chains": [
+        [
+            {
+                "extension": ".scss",
+                "tool": "sass %s %s"
+            },
+            {
+                "extension": ".css",
+                "tool": "yui-compressor %s > %s"
+            },
+            {
+                "extension": ".min.css",
+                "tool": null
+            }
+        ],
+        [
+            {
+                "extension": ".js",
+                "tool": "yui-compressor %s > %s"
+            },
+            {
+                "extension": ".min.js",
+                "tool": null
+            }
+        ]
+    ]
+}
