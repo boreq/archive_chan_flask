@@ -9,16 +9,16 @@
                     {% if item.0 == parameters.sort %}
                         {% if parameters.sort_reverse %}  
                             <i class="fa-li fa fa-sort-amount-desc"></i>
-                            <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "sort" item.0 %}" class="current-selection">{{ item.1 }}</a>
+                            <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "sort" item.0 %}" class="current-selection">{{ item.1.0 }}</a>
                         {% else %}
                             <i class="fa-li fa fa-sort-amount-asc"></i>
                             {% with value="-"|add:item.0 %}
-                                <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "sort" value %}" class="current-selection">{{ item.1 }}</a>
+                                <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "sort" value %}" class="current-selection">{{ item.1.0 }}</a>
                             {% endwith %}
                         {% endif %}
                     {% else %}
                             {% with value="-"|add:item.0 %}
-                                <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "sort" value %}">{{ item.1 }}</a>
+                                <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "sort" value %}">{{ item.1.0 }}</a>
                             {% endwith %}
                     {% endif %}
                 </li>
@@ -33,9 +33,9 @@
                 <li>
                     {% if item.0 == parameters.saved %}
                         <i class="fa-li fa fa-check"></i>
-                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "saved" item.0 %}" class="current-selection">{{ item.1 }}</a>
+                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "saved" item.0 %}" class="current-selection">{{ item.1.0 }}</a>
                     {% else %}
-                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "saved" item.0 %}">{{ item.1 }}</a>
+                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "saved" item.0 %}">{{ item.1.0 }}</a>
                     {% endif %}
                 </li>
             {% endfor %}
@@ -49,9 +49,9 @@
                 <li>
                     {% if item.0 == parameters.last_reply %}
                         <i class="fa-li fa fa-check"></i>
-                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "last_reply" item.0 %}" class="current-selection">{{ item.1 }}</a>
+                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "last_reply" item.0 %}" class="current-selection">{{ item.1.0 }}</a>
                     {% else %}
-                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "last_reply" item.0 %}">{{ item.1 }}</a>
+                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "last_reply" item.0 %}">{{ item.1.0 }}</a>
                     {% endif %}
                 </li>
             {% endfor %}
@@ -65,9 +65,9 @@
                 <li>
                     {% if item.0 == parameters.tagged %}
                         <i class="fa-li fa fa-check"></i>
-                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "tagged" item.0 %}" class="current-selection">{{ item.1 }}</a>
+                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "tagged" item.0 %}" class="current-selection">{{ item.1.0 }}</a>
                     {% else %}
-                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "tagged" item.0 %}">{{ item.1 }}</a>
+                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query "tagged" item.0 %}">{{ item.1.0 }}</a>
                     {% endif %}
                 </li>
             {% endfor %}

@@ -8,6 +8,7 @@ from django.db.models import Max, Min, Count
 from django.views.generic import ListView
 
 from archive_chan.models import Board, Thread, Post, Tag, TagToThread
+import archive_chan.lib.modifiers as modifiers
 
 
 class IndexView(ListView):
@@ -34,146 +35,70 @@ class BoardView(ListView):
 
     available_parameters = {
         'sort': (
-            ('last_reply', 'Last reply'),
-            ('creation_date', 'Creation date'),
-            ('replies', 'Replies'),
+            ('last_reply', ('Last reply', 'last_reply', None)),
+            ('creation_date', ('Creation date', 'first_reply', {'first_reply': Min('post__time')})),
+            ('replies', ('Replies', 'replies', {'replies': Count('post')})),
         ),
         'saved': (
-            ('all', 'All'),
-            ('yes', 'Yes'),
-            ('no',  'No'),
+            ('all', ('All', None)),
+            ('yes', ('Yes', {'saved': True})),
+            ('no',  ('No', {'saved': False})),
         ),
         'last_reply': (
-            ('always', 'Always'),
-            ('quarter', '15 minutes'),
-            ('hour', 'Hour'),
-            ('day', 'Day'),
-            ('week', 'Week'),
-            ('month', 'Month'),
+            ('always', ('Always', None)),
+            ('quarter', ('15 minutes', 0.25)),
+            ('hour', ('Hour', 1)),
+            ('day', ('Day', 24)),
+            ('week', ('Week', 24 * 7)),
+            ('month', ('Month', 24 * 30)),
         ),
         'tagged': (
-            ('all', 'All'),
-            ('yes', 'Yes'),
-            ('auto', 'Automatically'),
-            ('user', 'Manually'),
-            ('no', 'No'),
+            ('all', ('All', None)),
+            ('yes', ('Yes', {'tags__isnull': False})),
+            ('auto', ('Automatically', {'tagtothread__automatically_added': True})),
+            ('user', ('Manually', {'tagtothread__automatically_added': False})),
+            ('no', ('No', {'tags__isnull': True})),
         )
-    }
-
-    # Used to quickly translate text to a value. [hours]
-    last_reply_times = {
-        'quarter': 0.25,
-        'hour': 1,
-        'day': 24,
-        'week': 24 * 7,
-        'month': 24 * 30,
     }
 
     def get_parameters(self):
         """Extracts parameters related to filtering and sorting from a request object."""
         parameters = {}
 
-        parameters['sort'] = self.request.GET.get('sort', None)
-        parameters['sort_reverse'] = True
+        self.modifiers = {}
 
-        # Reverse sorting?
-        if not parameters['sort'] is None:
-            parameters['sort_reverse'] = parameters['sort'].startswith("-")
-            parameters['sort'] = parameters['sort'].strip('-')
+        self.modifiers['sort'] = modifiers.SimpleSort(
+            self.available_parameters['sort'],
+            self.request.GET.get('sort', None)
+        )
 
-        # Default sorting.
-        if not parameters['sort'] in dict(self.available_parameters['sort']):
-            parameters['sort'] = 'last_reply'
-            parameters['sort_reverse'] = True
+        self.modifiers['saved'] = modifiers.SimpleFilter(
+            self.available_parameters['saved'],
+            self.request.GET.get('saved', None)
+        )
 
-        # This makes template rendering easier - it is possible to just display this value directly.
-        parameters['sort_with_operator'] = '-' + parameters['sort'] if parameters['sort_reverse'] else parameters['sort']
+        self.modifiers['tagged'] = modifiers.SimpleFilter(
+            self.available_parameters['tagged'],
+            self.request.GET.get('tagged', None)
+        )
 
-        # Default saved filter.
-        parameters['saved'] = self.request.GET.get('saved', None)
-        if not parameters['saved'] in dict(self.available_parameters['saved']):
-            parameters['saved'] = 'all'
+        self.modifiers['last_reply'] = modifiers.TimeFilter(
+            self.available_parameters['last_reply'],
+            self.request.GET.get('last_reply', None)
+        )
 
-        # Default last reply.
-        parameters['last_reply'] = self.request.GET.get('last_reply', None)
-        if not parameters['last_reply'] in dict(self.available_parameters['last_reply']):
-            parameters['last_reply'] = 'always'
+        self.modifiers['tag'] = modifiers.TagFilter(
+            self.request.GET.get('tag', None)
+        )
 
-        # Default tagged.
-        parameters['tagged'] = self.request.GET.get('tagged', None)
-        if not parameters['tagged'] in dict(self.available_parameters['tagged']):
-            parameters['tagged'] = 'all'
-
-        # Tags.
-        parameters['tag'] = self.request.GET.get('tag', None)
-        if parameters['tag'] is not None:
-            parameters['tag'] = parameters['tag'].split()
+        parameters['sort'], parameters['sort_reverse'] = self.modifiers['sort'].get()
+        parameters['sort_with_operator'] = self.modifiers['sort'].get_full()
+        parameters['saved'] = self.modifiers['saved'].get()
+        parameters['tagged'] = self.modifiers['tagged'].get()
+        parameters['last_reply'] = self.modifiers['last_reply'].get()
+        parameters['tag'] = self.modifiers['tag'].get()
 
         return parameters
-
-    def filter_saved(self, queryset):
-        """Apply requested filter to the queryset."""
-        # Saved.
-        if self.parameters['saved'] == 'yes':
-            queryset = queryset.filter(saved=True)
-
-        if self.parameters['saved'] == 'no':
-            queryset = queryset.filter(saved=False)
-
-        return queryset
-
-    def filter_tagged(self, queryset):
-        """Apply requested filter to the queryset."""
-        # Tagged.
-        if self.parameters['tagged'] == 'yes':
-            queryset = queryset.filter(tags__isnull=False)
-
-        if self.parameters['tagged'] == 'auto':
-            queryset = queryset.filter(tagtothread__automatically_added=True)
-
-        if self.parameters['tagged'] == 'user':
-            queryset = queryset.filter(tagtothread__automatically_added=False)
-
-        if self.parameters['tagged'] == 'no':
-            queryset = queryset.filter(tags__isnull=True)
-
-        return queryset
-
-    def filter_last_reply(self, queryset):
-        """Apply requested filter to the queryset."""
-        # Last reply.
-        if not self.parameters['last_reply'] == 'always':
-            time_threshold = datetime.datetime.now().replace(tzinfo=utc) - datetime.timedelta(
-                hours=self.last_reply_times[self.parameters['last_reply']]
-            )
-            queryset = queryset.filter(last_reply__gt=time_threshold)
-
-        return queryset
-
-    def filter_tag(self, queryset):
-        """Apply requested filter to the queryset."""
-        if not self.parameters['tag'] is None:
-            for tag in self.parameters['tag']:
-                queryset = queryset.filter(tags__name=tag)
-
-        return queryset
-
-    def sort(self, queryset):
-        """Apply requested sorting to the queryset."""
-        if self.parameters['sort'] == 'last_reply':
-            queryset = queryset.order_by('-last_reply' if self.parameters['sort_reverse'] else 'last_reply')
-
-        if self.parameters['sort'] == 'creation_date':
-            queryset = queryset.annotate(first_reply=Min('post__time')).order_by(
-                '-first_reply' if self.parameters['sort_reverse'] else 'first_reply'
-            )
-
-        if self.parameters['sort'] == 'replies':
-            queryset = queryset.annotate(
-                replies=Count('post')).order_by('-replies' if self.parameters['sort_reverse'] else 'replies'
-            )
-
-        return queryset
 
     def get_queryset(self):
         name = self.kwargs['name']
@@ -187,12 +112,8 @@ class BoardView(ListView):
             last_reply=Max('post__time'),
         ).filter(replies_count__gte=1)
 
-        queryset = self.filter_saved(queryset)
-        queryset = self.filter_tagged(queryset)
-        queryset = self.filter_last_reply(queryset)
-        queryset = self.filter_tag(queryset)
-
-        queryset = self.sort(queryset)
+        for key, modifier in self.modifiers.items():
+            queryset = modifier.execute(queryset)
 
         return queryset
 
