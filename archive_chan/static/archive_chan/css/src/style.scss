@@ -245,7 +245,7 @@ div.content{
         display: block;
         width: 33%;
         box-sizing: border-box;
-        border: 5px solid $background-color;
+        padding: 5px;
     }
 
     a{
@@ -302,7 +302,7 @@ div.content{
         display: block;
         width: 25%;
         box-sizing: border-box;
-        border: 5px solid $background-color;
+        padding: 5px;
     }
 
     a{
@@ -578,7 +578,7 @@ code{
 
 /* Stats. */
 .chart-container{
-    border: 5px solid $background-color;
+    padding: 5px;
 
     .chart{
         width: 100%;
@@ -599,7 +599,7 @@ code{
 
     li{
         flex-grow: 1;
-        border: 5px solid $background-color;
+        padding: 5px;
         min-width: 33.33%;
         box-sizing: border-box;
 
