@@ -85,7 +85,7 @@ def get_posts_chart_data(queryset):
 
         value_string = format("Date(%s, %s, %s, %s, %s, %s)" % (
             entry_time.year,
-            entry_time.month,
+            entry_time.month - 1, # JavaScript months start at 0.
             entry_time.day,
             entry_time.hour,
             entry_time.minute,
