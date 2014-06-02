@@ -727,17 +727,19 @@ code{
 
 
 /*   Nav/header.   */
-@media screen and (max-width: 360px){
+@media screen and (max-width: 450px){
     .logo{
-        display: block;
         text-align: center;
         margin: 0 auto;
+        flex-flow: column nowrap;
+        align-items: center;
+
+        >a, >a:first-child{
+            margin: .5em 0;
+        }
     }
 
     .nav{
-        float: none;
-        text-align: center;
-        display: block;
         margin: 1em auto;
     }
 }
