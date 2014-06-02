@@ -1,6 +1,8 @@
 /* This file is responsible for actually executing or scheduling an execution of all other functions or plugins.
 */
 
+var magnificPopup;
+
 $(document).ready(function(){
     // Make threads in the board view (catalog) equal in height.
     equalizeHeight('#threads .img-container');
@@ -31,17 +33,22 @@ $(document).ready(function(){
         addPostTooltip(event.target, postId);
     });
 
-    // Temporary higlight a post after clicking on a local link (within the same thread).
-    $('#posts').on('click', '.post-link', function(event){
-        var postId = $(event.target).attr("post_id");
-        var selector = '#post-' + postId;
-        higlightPost(selector);
+    // Slowly move to the target post. It allows to spot the relative postion of two posts in a thread.
+    $('body').on('click', '.post-link', function(event){
+        var selector = $.attr(this, 'href');
+
+        // Don't prevent the default beaviour on external links.
+        if (selector.match(/#post-[0-9]+/) !== null){
+            highlightPost(selector);
+            goToAnchor(selector);
+            event.preventDefault();
+        }
     });
 
-    // Temporary higlight a post after loading a page with the #anchor in the link.
+    // Temporary highlight a post after loading a page with the #anchor in the link.
     if (window.location.hash){
         if (window.location.hash.match(/#post-[0-9]+/) !== null){
-            higlightPost(window.location.hash);
+            highlightPost(window.location.hash);
         }
     }
 
@@ -69,5 +76,25 @@ $(document).ready(function(){
             ajax_remove_tag(event.target);
         });
     }
-});
 
+    // Additional event handling for the popup gallery link - it is necessary to close it before scrolling the page.
+    $('body').on('click', '.gallery-post-link', function(event){
+        $.magnificPopup.instance.close();
+        event.preventDefault();
+    });
+
+    // Popup image gallery.
+    magnificPopup = $('.post-image').magnificPopup({
+        type:'image',
+        gallery:{
+            enabled: true,
+            preload: [0, 1]
+        },
+        image:{
+            titleSrc: function(item){
+                var postId = item.el.closest('.post').attr('id');
+                return '<a class="post-link gallery-post-link" href="#' + postId + '">&gt;&gt;' + postId.split("-")[1];  + '</a>';
+            }
+        }
+    });
+});

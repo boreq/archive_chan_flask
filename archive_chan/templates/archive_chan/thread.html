@@ -1,4 +1,4 @@
-{% extends "archive_chan/base.html" %}
+{% extends "archive_chan/base.html" %},
 {% load i18n %}
 {% load archive_chan_filters %}
 
@@ -27,10 +27,10 @@
             <ul id="posts">
                 {% for post in post_list %}
                     <li class="post" id="post-{{ post.number }}">
-                        <div class="post-image">
+                        <div class="post-image-container">
                             {% with post.image as image %}
                                 {% if image.thumbnail %}
-                                    <a href="{{ image.image.url }}" target="_blank"><img src="{{ image.thumbnail.url }}"></a>
+                                    <a href="{{ image.image.url }}" target="_blank" class="post-image"><img src="{{ image.thumbnail.url }}"></a>
                                 {% endif %}
                             {% endwith %}
 

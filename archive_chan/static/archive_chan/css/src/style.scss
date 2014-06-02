@@ -383,7 +383,7 @@ div.content{
     margin-bottom: 10px;
     background-color: #fff;
 
-    .post-image{ /* Lets avoid wasting space in the tooltip. */
+    .post-image-container{ /* Lets avoid wasting space in the tooltip. */
         width: 200px;
     }
 }
@@ -396,7 +396,7 @@ div.content{
     display: flex;
     flex-flow: row nowrap;
 
-    .post-image{
+    .post-image-container{
         padding: 0 1em 0 0;
         box-sizing: border-box;
         text-align: center;
@@ -443,17 +443,8 @@ div.content{
         padding: 0 0 0 .5em;
     }
 
-    /*   Post content.   */
     .post-comment{
         padding: 1em 0;
-
-        .post-link{
-            color: #c0392b;
-        }
-
-        .post-link:hover{
-            color: #e74c3c;
-        }
     }
 
     .post-link-dead{
@@ -465,6 +456,13 @@ div.content{
     background-color: #c8f7c5 !important;
 }
 
+.post-comment .post-link, .gallery-post-link{
+    color: #c0392b;
+}
+
+.post-comment post-link:hover, .gallery-post-link:hover{
+    color: #e74c3c;
+}
 
 .greentext{
     color: #4daf7c;
@@ -646,7 +644,7 @@ code{
     #posts .post{
         flex-flow: column nowrap;
 
-        .post-image{
+        .post-image-container{
             width: 100%;
             padding: 1em;
         }

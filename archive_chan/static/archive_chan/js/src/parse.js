@@ -88,7 +88,7 @@ function addPostTooltip(element, postId){
 }
 
 // Highlights the specified post (for example after clicking an anchor linking to it).
-function higlightPost(selector){
+function highlightPost(selector){
     $(selector).addClass('post-highlight');
 
     var delay = setTimeout(function(){
