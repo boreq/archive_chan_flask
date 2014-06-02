@@ -25,7 +25,8 @@ header div.wrapper, div.about div.wrapper, div#projects div.wrapper, footer div.
 #body-home,
 #body-board,
 #body-thread,
-#body-stats{
+#body-stats,
+#body-gallery{
     background-color: $background-color;
 }
 
@@ -544,6 +545,32 @@ code{
 .autocomplete-selected{
     color: #fff;
     background-color: $primary-color;
+}
+
+/*   Gallery.   */
+#gallery-images{
+    display: flex;
+    flex-flow: row wrap;
+
+    li{
+        display: block;
+        width: 33.3%;
+        padding: 5px;
+        box-sizing: border-box;
+
+        >div{
+            padding: 1em;
+            background-color: #fff;
+            border: 1px solid $border-color;
+        }
+
+        img, video{
+            width: 100%;
+        }
+
+        .post-link{
+        }
+    }
 }
 
 /*   Buttons.   */

@@ -26,6 +26,12 @@
         },
         {
             "input": [
+                "archive_chan/static/archive_chan/js/src/gallery.js"
+            ],
+            "output": "archive_chan/static/archive_chan/js/gallery.js"
+        },
+        {
+            "input": [
                 "archive_chan/static/archive_chan/css/src/import.css",
                 "archive_chan/static/archive_chan/css/src/reset.css",
                 "archive_chan/static/archive_chan/css/src/style.scss",

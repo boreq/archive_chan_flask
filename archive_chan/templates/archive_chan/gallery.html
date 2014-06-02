@@ -1,0 +1,34 @@
+{% extends "archive_chan/base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block inner_head %}
+    <script src="{% static 'archive_chan/js/lib/imagesloaded.min.js' %}"></script>
+    <script src="{% static 'archive_chan/js/lib/jquery.masonry.min.js' %}"></script>
+    <script src="{% static 'archive_chan/js/gallery.js' %}"></script>
+{% endblock %}
+
+{% block header_link %}
+    {% if board_name %}<a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="content">
+        <div class="wrapper">
+            <ul id="gallery-images">
+                {% for image in image_list %}
+                    <li class="gallery-image-container">
+                        <div>
+                            {% if image.is_webm %}
+                                <video src="{{ image.image.url }}" controls></video>
+                            {% else %}
+                                <a href="{{ image.image.url }}" target="_blank"><img src="{{ image.image.url }}"></a>
+                            {% endif %}
+                            <a class="post-link" href="{% url 'archive_chan:thread' image.post.thread.board.name  image.post.thread.number %}#post-{{ image.post.number }}">&gt;&gt;{{ image.post.number }}</a>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}

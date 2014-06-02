@@ -1,3 +1,5 @@
+import os
+
 from django.db import models
 
 
@@ -81,6 +83,10 @@ class Image(models.Model):
     post = models.OneToOneField('Post')
     image = models.FileField(upload_to = "post_images") # It is impossible to use ImageField to store webm.
     thumbnail = models.FileField(upload_to = "post_thumbnails")
+
+    def is_webm(self):
+        name, extension = os.path.splitext(self.image.name)
+        return (extension == '.webm')
 
 
 class Trigger(models.Model):

@@ -3,7 +3,7 @@
 
 // Call this on load to generate links to the comments in the thread view (>>1234).
 function createPostLinks(){
-    $('.post-link').each(function(index, element){
+    $('#posts .post-link').each(function(index, element){
         var ownerPost = $(element).closest("#posts>li");
         var ownerPostId = $(ownerPost).attr("id").split("-")[1];
 

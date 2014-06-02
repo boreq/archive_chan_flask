@@ -59,10 +59,12 @@ $(document).ready(function(){
         });
 
         // Add autocomplete to a 'new tag' input.
-        $('#add-tag-input').autocomplete({
-            serviceUrl: info_data.ajax_url_suggest_tag,
-            minChars: 2
-        });
+        if ($('#add-tag-input').length){
+            $('#add-tag-input').autocomplete({
+                serviceUrl: info_data.ajax_url_suggest_tag,
+                minChars: 2
+            });
+        }
 
         // Add a tag to a thread after user presses enter in an input.
         $('.post').on('keypress', '#add-tag-input', function(event){

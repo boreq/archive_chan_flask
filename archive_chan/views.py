@@ -7,7 +7,7 @@ from django.utils.timezone import utc
 from django.db.models import Max, Min, Count
 from django.views.generic import ListView
 
-from archive_chan.models import Board, Thread, Post, Tag, TagToThread
+from archive_chan.models import Board, Thread, Post, Tag, TagToThread, Image
 import archive_chan.lib.modifiers as modifiers
 
 
@@ -147,6 +147,36 @@ class ThreadView(ListView):
         context['thread_saved'] = self.thread.saved
         context['thread_tags'] = self.thread.tagtothread_set.select_related('tag').all().order_by('tag__name')
         context['body_id'] = 'body-thread'
+        return context
+
+
+class GalleryView(ListView):
+    """View showing all posts in a specified thread."""
+    model = Image
+    context_object_name = 'image_list'
+    template_name = 'archive_chan/gallery.html'
+    paginate_by = 50
+
+    def get_queryset(self):
+        queryset = Image.objects.select_related('post', 'post__thread', 'post__thread__board')
+        
+        if 'name' in self.kwargs:
+            queryset = queryset.filter(
+                post__thread__board=self.kwargs['name']
+            )
+
+        if 'number' in self.kwargs:
+            queryset = queryset.filter(
+                post__thread__number=self.kwargs['number']
+            )
+
+        return get_list_or_404(queryset.order_by('-post__time'))
+
+    def get_context_data(self, **kwargs):
+        context = super(GalleryView, self).get_context_data(**kwargs)
+        context['board_name'] = self.kwargs.get('name', None)
+        context['thread_number'] = int(self.kwargs['number']) if 'number' in self.kwargs else None
+        context['body_id'] = 'body-gallery'
         return context
 
 

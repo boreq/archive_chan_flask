@@ -1,0 +1,1 @@
+$(function(){var a=$("#gallery-images");a.imagesLoaded(function(){a.masonry({itemSelector:".gallery-image-container"})})});
