@@ -41,13 +41,23 @@ class Command(BaseCommand):
             processing_start = datetime.datetime.now()
 
             # Actual update.
-            scraper.update()
+            try:
+                scraper.update()
+
+            except Exception as e:
+                sys.stderr.write('%s\n' % (e))
 
             # Everything below is just info.
             processing_time = datetime.datetime.now() - processing_start
 
-            wait_percent = round(scraper.total_wait / processing_time.seconds * 100)
-            downloading_percent = round(scraper.total_download_time / processing_time.seconds * 100)
+            try:
+                wait_percent = round(scraper.total_wait / processing_time.seconds * 100)
+                downloading_percent = round(scraper.total_download_time / processing_time.seconds * 100)
+
+            except:
+                # Division by zero. Set 0 for the statistics.
+                wait_percent = 0
+                downloading_percent = 0
 
             print('%s Board: %s Time passed: %s seconds (%s%% waiting, %s%% downloading files) Processed threads: %s Added posts: %s Removed posts: %s Downloaded images: %s Downloaded thumbnails: %s Downloaded threads: %s' % (
                 datetime.datetime.now(),

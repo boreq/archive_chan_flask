@@ -255,6 +255,7 @@ class Scraper:
     def get_catalog_json(self):
         """Get the catalog data from an official API."""
         url = format("https://a.4cdn.org/%s/catalog.json" % (self.board.name))
+        print(url)
         self.api_wait()
         return self.get_url(url).json()
 
@@ -407,8 +408,12 @@ class Scraper:
 
     def update(self):
         """Call this to update the database."""
+        
+        try:
+            catalog = self.get_catalog_json()
 
-        catalog = self.get_catalog_json()
+        except:
+            raise ScrapError('Unable to download or parse the catalog data. Board update stopped.')
 
         for page in catalog:
             for thread in page['threads']:
