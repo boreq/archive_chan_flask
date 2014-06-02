@@ -30,10 +30,15 @@
         <div id="site">
           <header>
             <div class="wrapper">
-                <div class="logo"><a href="{% url 'archive_chan:index' %}">ARCHIVE CHAN</a>{% block header_link %}{% endblock %}</div>
-                <ul class="nav">
-                    <li><a class="nav-home" href="{% url 'archive_chan:index' %}">{% trans "Home" noop %}</a></li>
-                </ul>
+                <div class="logo">
+                    <a href="{% url 'archive_chan:index' %}">ARCHIVE CHAN</a>
+                    {% block header_link %}{% endblock %}
+                    <ul class="nav">
+                        {% block nav_link %}
+                            {% include 'archive_chan/nav_base.html' %}
+                        {% endblock %}
+                    </ul>
+                </div>
             </div>
           </header>
 
@@ -42,11 +47,8 @@
         </div>
         <footer>
           <div class="wrapper">
-            {% block inner_footer %}{% endblock %}
-            <div class="footer-main">
-                All content is generated automatically and originates from <a href="http://4chan.org">4chan</a>.
-                <span class="generated"><i class="fa fa-linux"></i> <span>{% now "Y-m-d G:i:s e" %}</span></span>
-            </div>
+            All content is generated automatically and originates from <a href="http://4chan.org">4chan</a>.
+            <span class="generated"><i class="fa fa-linux"></i> <span>{% now "Y-m-d G:i:s e" %}</span></span>
           </div>
         </footer>
     </body>

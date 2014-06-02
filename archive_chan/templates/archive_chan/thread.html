@@ -2,7 +2,14 @@
 {% load i18n %}
 {% load archive_chan_filters %}
 
-{% block header_link %}<a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>{% endblock %}
+{% block header_link %}
+    <a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>
+    <a href="{% url 'archive_chan:thread' board_name thread_number %}">#{{ thread_number }}</a>
+{% endblock %}
+
+{% block nav_link %}
+    {% include 'archive_chan/nav_thread.html' %}
+{% endblock %}
 
 {% block inner_head %}
     <script>

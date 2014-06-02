@@ -56,45 +56,45 @@ div#site>div:last-child{
 
 .logo{
     font-family: 'Oswald', sans-serif;
-    font-size: 28px;
-    display: inline-block;
+    font-size: 20px;
+    display: flex;
+    align-items: flex-end;
 
-    a{
+    >a{
         color: #fff;
         text-decoration: none;
-        display: inline-block;
+        display: block;
         margin: 0 0 0 .5em;
     }
 
-    a:first-child{
+    >a:first-child{
         margin: 0;
+        font-size: 28px;
     }
 }
 
 /*   Nav.   */
-body#body-home .nav-home{
-    text-decoration: underline;
+body#body-home .nav-home,
+body#body-board .nav-home,
+body#body-thread .nav-home,
+body#body-stats .nav-stats,
+body#body-gallery .nav-gallery{
+    color: $primary-color;
 }
 
 .nav{
+    display: flex;
+    flex-grow: 1;
+    justify-content: flex-end;
+
     color: #fff;
     font-family: 'Oswald', sans-serif;
+    font-size: 14px;
     text-transform: uppercase;
-    display: inline-block;
-    float: right;
-    margin: 8px 0 0 0;
+    margin: 0 0 7px;
 
     li{
         display: inline-block;
-    }
-
-    li:after{
-        content: "|";
-        margin: 1em 0;
-    }
-
-    li:last-child:after{
-        display: none;
     }
 
     li a{
@@ -112,31 +112,6 @@ body#body-home .nav-home{
 
 /*   Footer.   */
 footer{
-    .wrapper{
-        display: flex;
-        flex-flow: row wrap;
-    }
-
-    .additional-links{
-        li{
-            display: inline-block;
-            margin: 0 .5em;
-
-            a{
-                text-decoration: none;
-                color: inherit;
-            }
-
-            a:hover{
-                color: $primary-color;
-            }
-        }
-    }
-
-    .footer-main{
-        flex-grow: 1;
-    }
-
     .generated{
         i{
             color: #ddd;
@@ -569,6 +544,7 @@ code{
         }
 
         .post-link{
+            display: none;
         }
     }
 }

@@ -10,6 +10,19 @@
 
 {% block header_link %}
     {% if board_name %}<a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>{% endif %}
+    {% if thread_number %}<a href="{% url 'archive_chan:thread' board_name thread_number %}">#{{ thread_number }}</a>{% endif %}
+{% endblock %}
+
+{% block nav_link %}
+    {% if thread_number %}
+        {% include 'archive_chan/nav_thread.html' %}
+    {% else %}
+        {% if board_name %}
+            {% include 'archive_chan/nav_board.html' %}
+        {% else %}
+            {% include 'archive_chan/nav_base.html' %}
+        {% endif %}
+    {% endif %}
 {% endblock %}
 
 {% block content %}
@@ -17,14 +30,14 @@
         <div class="wrapper">
             <ul id="gallery-images">
                 {% for image in image_list %}
-                    <li class="gallery-image-container">
+                    <li board="{{ image.post.thread.board.name }}" post="{{ image.post.number }}">
                         <div>
                             {% if image.is_webm %}
-                                <video src="{{ image.image.url }}" controls></video>
+                                <video class="gallery-image" src="{{ image.image.url }}" controls></video>
                             {% else %}
-                                <a href="{{ image.image.url }}" target="_blank"><img src="{{ image.image.url }}"></a>
+                                <a class="gallery-image" href="{{ image.image.url }}" target="_blank"><img src="{{ image.image.url }}"></a>
                             {% endif %}
-                            <a class="post-link" href="{% url 'archive_chan:thread' image.post.thread.board.name  image.post.thread.number %}#post-{{ image.post.number }}">&gt;&gt;{{ image.post.number }}</a>
+                            <a class="post-link" href="{% url 'archive_chan:thread' image.post.thread.board.name  image.post.thread.number %}#post-{{ image.post.number }}">&gt;&gt;{{ image.post.thread.board }}{{ image.post.number }}</a>
                         </div>
                     </li>
                 {% endfor %}

@@ -18,6 +18,14 @@
     {% if board_name %}<a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>{% endif %}
 {% endblock %}
 
+{% block nav_link %}
+    {% if board_name %}
+        {% include 'archive_chan/nav_board.html' %}
+    {% else %}
+        {% include 'archive_chan/nav_base.html' %}
+    {% endif %}
+{% endblock %}
+
 {% block content %}
     <div class="content">
         <div class="wrapper">

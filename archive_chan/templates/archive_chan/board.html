@@ -4,6 +4,10 @@
 
 {% block header_link %}<a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>{% endblock %}
 
+{% block nav_link %}
+    {% include 'archive_chan/nav_board.html' %}
+{% endblock %}
+
 {% block inner_head %}
     <script>
         var info_data = {

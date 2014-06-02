@@ -1,1 +1,1 @@
-$(function(){var a=$("#gallery-images");a.imagesLoaded(function(){a.masonry({itemSelector:".gallery-image-container"})})});
+$(function(){var a=$("#gallery-images");a.imagesLoaded(function(){a.masonry({itemSelector:"li"})});magnificPopup=$(".gallery-image").magnificPopup({type:"image",gallery:{enabled:true,preload:[0,1]},image:{titleSrc:function(d){var b=d.el.closest("li");var c=$(b).find(".post-link");return'<a class="post-link gallery-post-link" href="'+c.attr("href")+'">&gt;&gt;/'+$(b).attr("board")+"/"+$(b).attr("post")+"</a>"}}})});
