@@ -25,7 +25,8 @@ header div.wrapper, div.about div.wrapper, div#projects div.wrapper, footer div.
 #body-home,
 #body-board,
 #body-thread,
-#body-stats{
+#body-stats,
+#body-gallery{
     background-color: $background-color;
 }
 
@@ -55,45 +56,45 @@ div#site>div:last-child{
 
 .logo{
     font-family: 'Oswald', sans-serif;
-    font-size: 28px;
-    display: inline-block;
+    font-size: 20px;
+    display: flex;
+    align-items: flex-end;
 
-    a{
+    >a{
         color: #fff;
         text-decoration: none;
-        display: inline-block;
+        display: block;
         margin: 0 0 0 .5em;
     }
 
-    a:first-child{
+    >a:first-child{
         margin: 0;
+        font-size: 28px;
     }
 }
 
 /*   Nav.   */
-body#body-home .nav-home{
-    text-decoration: underline;
+body#body-home .nav-home,
+body#body-board .nav-home,
+body#body-thread .nav-home,
+body#body-stats .nav-stats,
+body#body-gallery .nav-gallery{
+    color: $primary-color;
 }
 
 .nav{
+    display: flex;
+    flex-grow: 1;
+    justify-content: flex-end;
+
     color: #fff;
     font-family: 'Oswald', sans-serif;
+    font-size: 14px;
     text-transform: uppercase;
-    display: inline-block;
-    float: right;
-    margin: 8px 0 0 0;
+    margin: 0 0 7px;
 
     li{
         display: inline-block;
-    }
-
-    li:after{
-        content: "|";
-        margin: 1em 0;
-    }
-
-    li:last-child:after{
-        display: none;
     }
 
     li a{
@@ -111,31 +112,6 @@ body#body-home .nav-home{
 
 /*   Footer.   */
 footer{
-    .wrapper{
-        display: flex;
-        flex-flow: row wrap;
-    }
-
-    .additional-links{
-        li{
-            display: inline-block;
-            margin: 0 .5em;
-
-            a{
-                text-decoration: none;
-                color: inherit;
-            }
-
-            a:hover{
-                color: $primary-color;
-            }
-        }
-    }
-
-    .footer-main{
-        flex-grow: 1;
-    }
-
     .generated{
         i{
             color: #ddd;
@@ -383,7 +359,7 @@ div.content{
     margin-bottom: 10px;
     background-color: #fff;
 
-    .post-image{ /* Lets avoid wasting space in the tooltip. */
+    .post-image-container{ /* Lets avoid wasting space in the tooltip. */
         width: 200px;
     }
 }
@@ -396,7 +372,7 @@ div.content{
     display: flex;
     flex-flow: row nowrap;
 
-    .post-image{
+    .post-image-container{
         padding: 0 1em 0 0;
         box-sizing: border-box;
         text-align: center;
@@ -443,17 +419,8 @@ div.content{
         padding: 0 0 0 .5em;
     }
 
-    /*   Post content.   */
     .post-comment{
         padding: 1em 0;
-
-        .post-link{
-            color: #c0392b;
-        }
-
-        .post-link:hover{
-            color: #e74c3c;
-        }
     }
 
     .post-link-dead{
@@ -465,6 +432,13 @@ div.content{
     background-color: #c8f7c5 !important;
 }
 
+.post-comment .post-link, .gallery-post-link{
+    color: #c0392b;
+}
+
+.post-comment post-link:hover, .gallery-post-link:hover{
+    color: #e74c3c;
+}
 
 .greentext{
     color: #4daf7c;
@@ -546,6 +520,38 @@ code{
 .autocomplete-selected{
     color: #fff;
     background-color: $primary-color;
+}
+
+/*   Gallery.   */
+#gallery-images{
+    display: flex;
+    flex-flow: row wrap;
+
+    li{
+        display: block;
+        width: 33.3%;
+        padding: 5px;
+        box-sizing: border-box;
+
+        >div{
+            padding: 1em;
+            background-color: #fff;
+            border: 1px solid $border-color;
+        }
+
+        img, video{
+            width: 100%;
+        }
+
+        .post-link{
+            display: none;
+        }
+    }
+}
+
+.gallery-end{
+    color: #999;
+    text-align: center;
 }
 
 /*   Buttons.   */
@@ -646,7 +652,7 @@ code{
     #posts .post{
         flex-flow: column nowrap;
 
-        .post-image{
+        .post-image-container{
             width: 100%;
             padding: 1em;
         }
@@ -726,17 +732,19 @@ code{
 
 
 /*   Nav/header.   */
-@media screen and (max-width: 360px){
+@media screen and (max-width: 450px){
     .logo{
-        display: block;
         text-align: center;
         margin: 0 auto;
+        flex-flow: column nowrap;
+        align-items: center;
+
+        >a, >a:first-child{
+            margin: .5em 0;
+        }
     }
 
     .nav{
-        float: none;
-        text-align: center;
-        display: block;
         margin: 1em auto;
     }
 }

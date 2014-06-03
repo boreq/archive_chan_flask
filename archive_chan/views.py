@@ -5,9 +5,10 @@ from django.template import RequestContext
 from django.http import HttpResponse
 from django.utils.timezone import utc
 from django.db.models import Max, Min, Count
-from django.views.generic import ListView
+from django.views.generic import ListView, TemplateView
+from django.core.urlresolvers import reverse
 
-from archive_chan.models import Board, Thread, Post, Tag, TagToThread
+from archive_chan.models import Board, Thread, Post, Tag, TagToThread, Image
 import archive_chan.lib.modifiers as modifiers
 
 
@@ -150,6 +151,17 @@ class ThreadView(ListView):
         return context
 
 
+class GalleryView(TemplateView):
+    """View displaying gallery template. Data is loaded via AJAX calls."""
+    template_name = 'archive_chan/gallery.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(GalleryView, self).get_context_data(**kwargs)
+        context['board_name'] = self.kwargs.get('name', None)
+        context['thread_number'] = int(self.kwargs['number']) if 'number' in self.kwargs else None
+        context['body_id'] = 'body-gallery'
+        return context
+
 def stats(request):
     """Global statistics."""
 
@@ -183,6 +195,54 @@ def ajax_stats(request):
         context = get_board_stats(board_name)
 
     return HttpResponse(json.dumps(context), content_type='application/json')
+
+
+def ajax_gallery(request):
+    """JSON data with gallery images."""
+
+    board_name = request.GET.get('board', None)
+    thread_number = request.GET.get('thread', None)
+    last = request.GET.get('last', None)
+
+    queryset = Image.objects.select_related('post', 'post__thread', 'post__thread__board')
+    
+    # Board specific gallery?
+    if board_name is not None:
+        queryset = queryset.filter(
+            post__thread__board=board_name
+        )
+
+    # Thread specific gallery?
+    if thread_number is not None:
+        queryset = queryset.filter(
+            post__thread__number=thread_number
+        )
+
+    # If more images is requested we have to fetch the new ones, not those already present in the gallery.
+    if last is not None:
+        queryset = queryset.filter(
+            id__lt=last
+        )
+
+    queryset = queryset.order_by('-post__time')[:10]
+
+    # Prepare the data.
+    json_data = {
+        'images': []
+    }
+
+    for image in queryset:
+        json_data['images'].append({
+            'id': image.id,
+            'board': image.post.thread.board.name,
+            'thread': image.post.thread.number,
+            'post': image.post.number,
+            'video': image.is_webm(),
+            'url': image.image.url,
+            'post_url': reverse('archive_chan:thread', args=(image.post.thread.board.name, image.post.thread.number)) + format('#post-%s' % image.post.number)
+        })
+
+    return HttpResponse(json.dumps(json_data), content_type='application/json')
 
 
 def ajax_save_thread(request):
