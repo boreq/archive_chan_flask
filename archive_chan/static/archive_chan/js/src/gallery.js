@@ -1,21 +1,39 @@
+var resizeTimeout;
+
 $(function(){
     // Get first images.
     getImages();
 
     // Detect scrolling.
     $(window).scroll(function(){ 
-        var windowBottom = $(window).scrollTop() + $(window).height();
-        var listBottom = $("#gallery-images").offset().top + $("#gallery-images").outerHeight();
+        checkRefresh();
+    });
 
-        // Fetch more images if user is getting close to the bottom of the list.
-        if (windowBottom > listBottom - 500){
-            getImages();
-        }
+    // Reposiiton masonry on windows resize.
+    $(window).on('resize', function(){
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(repositionMasonry, 200);
     });
 });
 
+function repositionMasonry(){
+    if ("object" === typeof $('#gallery-images').data('masonry')){
+        $('#gallery-images').masonry();
+    }
+}
 
 var lastImage = null, update = false, end = false;
+
+// Check if more content should be loaded and trigger the update function if necessary.
+function checkRefresh(){
+    var windowBottom = $(window).scrollTop() + $(window).height();
+    var listBottom = $("#gallery-images").offset().top + $("#gallery-images").outerHeight();
+
+    // Fetch more images if user is getting close to the bottom of the list.
+    if (windowBottom > listBottom - 500){
+        getImages();
+    }
+}
 
 // Init popup image gallery.
 function popup(){
@@ -102,19 +120,22 @@ function addImages(response){
     if ("object" === typeof $('#gallery-images').data('masonry')){
         // Update.
         $('#gallery-images').append(images).imagesLoaded(function(){
-            $('#gallery-images').masonry('appended', images);
+            $('#gallery-images').masonry('appended', images, true);
             popup();
             update = false;
+            checkRefresh();
         });
     }else{
         // Initialize.
         $('#gallery-images').append(images).imagesLoaded(function(){
             var $container = $('#gallery-images');
             $container.masonry({
-                itemSelector : 'li'
+                itemSelector: 'li',
+                isAnimated: true
             });
             popup();
             update = false;
+            checkRefresh();
         });
     }
 }
