@@ -162,25 +162,16 @@ class GalleryView(TemplateView):
         context['body_id'] = 'body-gallery'
         return context
 
-def stats(request):
-    """Global statistics."""
 
-    context = {
-        'body_id': 'body-stats'
-    }
+class StatsView(TemplateView):
+    """View displaying stats template. Data is loaded via AJAX calls."""
+    template_name = 'archive_chan/stats.html'
 
-    return render(request, 'archive_chan/stats.html', context)
-
-
-def board_stats(request, name):
-    """Statistics for a board."""
-
-    context = {
-        'body_id': 'body-stats',
-        'board_name': name
-    }
-
-    return render(request, 'archive_chan/stats.html', context)
+    def get_context_data(self, **kwargs):
+        context = super(StatsView, self).get_context_data(**kwargs)
+        context['board_name'] = self.kwargs.get('name', None)
+        context['body_id'] = 'body-stats'
+        return context
 
 
 def ajax_stats(request):
