@@ -38,7 +38,7 @@ $(document).ready(function(){
         var selector = $.attr(this, 'href');
 
         // Don't prevent the default beaviour on external links.
-        if (selector.match(/#post-[0-9]+/) !== null){
+        if (selector.match(/^#post-[0-9]+$/) !== null){
             highlightPost(selector);
             goToAnchor(selector);
             event.preventDefault();
@@ -82,7 +82,6 @@ $(document).ready(function(){
     // Additional event handling for the popup gallery link - it is necessary to close it before scrolling the page.
     $('body').on('click', '.gallery-post-link', function(event){
         $.magnificPopup.instance.close();
-        event.preventDefault();
     });
 
     // Popup image gallery.

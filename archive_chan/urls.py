@@ -16,6 +16,7 @@ urlpatterns = patterns('',
     url(r'^gallery/$', views.GalleryView.as_view(), name='gallery'),
 
     url(r'^ajax/stats/$', views.ajax_stats, name='ajax_stats'),
+    url(r'^ajax/gallery/$', views.ajax_gallery, name='ajax_gallery'),
 
     url(r'^ajax/thread/save/$', views.ajax_save_thread, name='ajax_save_thread'),
     url(r'^ajax/get_parent_thread/$', views.ajax_get_parent_thread, name='ajax_get_parent_thread'),
