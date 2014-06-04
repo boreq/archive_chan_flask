@@ -31,9 +31,10 @@ class ThreadInfo:
         else:
             last_reply_time = int(thread_json['time'])
 
-        self.last_reply_time = datetime.datetime.fromtimestamp(last_reply_time).replace(tzinfo=utc) # Note the time-zone-aware datetime.
+        # Note the timezone-aware datetime.
+        self.last_reply_time = datetime.datetime.fromtimestamp(last_reply_time).replace(tzinfo=utc)
 
-        # Get the number of the replies in the thread (first post doest not count - it is considered as a thread).
+        # Get the number of the replies in the thread (first post doest not count).
         self.replies = int(thread_json['replies'])
 
 
@@ -154,15 +155,17 @@ class Triggers:
         return actions
 
     def handle(self, post_data, thread):
-        
+        """Actual function called to execute triggers."""
         actions = set()
 
+        # Prepare a set of actions to execute.
         for trigger in self.triggers:
             new_actions = self.get_actions(trigger, thread, post_data)
 
             if not new_actions is None:
                 actions = actions | new_actions
 
+        # Execute actions.
         for action in actions:
             if action[0] == 'save' and not thread.saved:
                 thread.saved = True
@@ -171,7 +174,11 @@ class Triggers:
 
             if action[0] == 'add_tag':
                 if not TagToThread.objects.filter(thread=thread, tag=action[1]).exists():
-                    tag_to_thread = TagToThread(thread=thread, tag=action[1], automatically_added=True)
+                    tag_to_thread = TagToThread(
+                        thread=thread,
+                        tag=action[1],
+                        automatically_added=True
+                    )
                     tag_to_thread.save()
 
 
@@ -180,7 +187,7 @@ class Scraper:
 
     def __init__(self, board, **kwargs):
         """Board is a database object, not a board name.
-        Accepted kwargs: bool progress
+        Accepted kwargs: (bool) progress
         """
 
         self.board = board
@@ -255,7 +262,6 @@ class Scraper:
     def get_catalog_json(self):
         """Get the catalog data from an official API."""
         url = format("https://a.4cdn.org/%s/catalog.json" % (self.board.name))
-        print(url)
         self.api_wait()
         return self.get_url(url).json()
 
@@ -295,15 +301,15 @@ class Scraper:
 
         # Get the exisiting entry for this thread from the database or create a new record for it.
         try:
-            thread = Thread.objects.filter(board=self.board).get(number=thread_info.number)
+            thread = Thread.objects.get(board=self.board, number=thread_info.number)
 
-            # Should the thread be updated?
-            # Check only if there is any data about the thread
+            # Should the thread be updated? Check only if there is any data about the thread
             # (the download of the first post was successful).
             if not thread.last_reply_time() is None and thread.post_set.count() > 0:
                 # It has to have newer replies or different number of replies.
                 # Note: use count_replies because 4chan does not count the first post as a reply.
-                if thread_info.last_reply_time <= thread.last_reply_time() and thread_info.replies == thread.count_replies():
+                if (thread_info.last_reply_time <= thread.last_reply_time()
+                    and thread_info.replies == thread.count_replies()):
                     return
 
         except Thread.DoesNotExist:
@@ -328,7 +334,6 @@ class Scraper:
 
         # Create a list for downloaded post numbers.
         # We will later check if something from our database is missing in this list and remove it.
-        # The reason for that is very simple: Storing files which got removed from 4chan on private server is not recommended.
         post_numbers = []
 
         # Add posts.
@@ -354,7 +359,7 @@ class Scraper:
 
                     # Save post in the database.
                     with transaction.atomic():
-                        # Do not save earlier or you might end up with a thread without posts after an error.
+                        # Do not save earlier or you might end up with a thread without posts.
                         if not thread.pk:
                             thread.save()
 

@@ -1,10 +1,22 @@
 #!/usr/bin/env python
 import os, argparse, json, sys
 
+colors = {
+    'white': '\033[0m',
+    'red': '\033[31m',
+    'green': '\033[32m',
+    'orange': '\033[33m',
+    'blue': '\033[34m',
+    'violet': '\033[35m',
+}
+
+def color(color, text):
+    return format('%s%s%s' % (colors[color], text, colors['white']))
+
 # Parse the arguments.
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--makefile', help='Path to a makefile relative to the current working directory.', default='makefile.json')
-parser.add_argument('-d', '--dryrun', help='Don\'t execute any commands.', action='store_true')
+parser.add_argument('--dryrun', help='Don\'t execute any commands.', action='store_true')
 parser.add_argument('--verbose', help='Increase verbosity', action='store_true')
 args = parser.parse_args()
 
@@ -56,12 +68,17 @@ def get_conversion_chain(file_path):
     return chain
 
 def process_file(file_path):
-    print('\nPROCESS: %s' % file_path)
+    if args.verbose:
+        print('\nPROCESS: %s' % (file_path))
 
     conversion_chain = get_conversion_chain(file_path)
 
     for conversion in conversion_chain:
-        print('  CONVERT %s TO %s WITH %s' % conversion)
+        if args.verbose:
+            print('  CONVERT %s TO %s WITH %s' % conversion)
+        else:
+            print(color('green', '*'), end='', flush=True)
+
         command = format(conversion[2] % (get_full_path(conversion[0]), get_full_path(conversion[1])))
         if args.verbose:
             print(command)
@@ -87,7 +104,11 @@ def handle(task):
     final_files = [get_full_path(file_path) for file_path in final_files]
 
     # Concat final files.
-    print('\nCONCAT\n')
+    if args.verbose:
+        print('\nCONCAT\n')
+    else:
+        print(color('violet', ' > '), end='', flush=True)
+
     command = format("cat %s > %s" % (" ".join(final_files), get_full_path(task['output'])))
     if args.verbose:
         print(command)
@@ -98,7 +119,11 @@ def handle(task):
     # Remove intermediate files.
     for file_path in task['input']:
         for intermediate_file in get_intermediate_files(file_path):
-            print('REMOVE %s' % intermediate_file)
+            if args.verbose:
+                print('REMOVE: %s' % intermediate_file)
+            else:
+                print(color('red', '-'), end='', flush=True)
+
             remove_path = get_full_path(intermediate_file)
             if args.verbose:
                 print(remove_path)
@@ -110,3 +135,4 @@ def handle(task):
 
 for task in makefile_data['tasks']:
     handle(task)
+    print('')

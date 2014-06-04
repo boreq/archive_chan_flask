@@ -209,7 +209,7 @@ def ajax_gallery(request):
             post__thread__number=thread_number
         )
 
-    # If more images is requested we have to fetch the new ones, not those already present in the gallery.
+    # If this is not a first request we have to fetch those which are not present in the gallery.
     if last is not None:
         queryset = queryset.filter(
             id__lt=last
@@ -230,7 +230,10 @@ def ajax_gallery(request):
             'post': image.post.number,
             'video': image.is_webm(),
             'url': image.image.url,
-            'post_url': reverse('archive_chan:thread', args=(image.post.thread.board.name, image.post.thread.number)) + format('#post-%s' % image.post.number)
+            'post_url': reverse(
+                'archive_chan:thread',
+                args=(image.post.thread.board.name, image.post.thread.number)
+            ) + format('#post-%s' % image.post.number)
         })
 
     return HttpResponse(json.dumps(json_data), content_type='application/json')
@@ -277,7 +280,10 @@ def ajax_get_parent_thread(request):
         post_number = int(request.GET['post'])
         board_name = request.GET['board']
 
-        parent_thread_number = Post.objects.get(thread__board=board_name, number=post_number).thread.number
+        parent_thread_number = Post.objects.get(
+            thread__board=board_name,
+            number=post_number
+        ).thread.number
 
         response = {
             'parent_thread': parent_thread_number
