@@ -549,9 +549,13 @@ code{
     }
 }
 
-.gallery-end{
+.gallery-end, .gallery-throbber{
     color: #999;
     text-align: center;
+}
+
+.gallery-throbber{
+    font-size: 20px;
 }
 
 /*   Buttons.   */

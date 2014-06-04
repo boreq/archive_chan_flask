@@ -1,4 +1,5 @@
 var resizeTimeout;
+var container = '#gallery-images';
 
 $(function(){
     // Get first images.
@@ -6,7 +7,7 @@ $(function(){
 
     // Detect scrolling.
     $(window).scroll(function(){ 
-        checkRefresh();
+        updateIfNeeded();
     });
 
     // Reposiiton masonry on windows resize.
@@ -17,17 +18,17 @@ $(function(){
 });
 
 function repositionMasonry(){
-    if ("object" === typeof $('#gallery-images').data('masonry')){
-        $('#gallery-images').masonry();
+    if ("object" === typeof $(container).data('masonry')){
+        $(container).masonry();
     }
 }
 
 var lastImage = null, update = false, end = false;
 
 // Check if more content should be loaded and trigger the update function if necessary.
-function checkRefresh(){
+function updateIfNeeded(){
     var windowBottom = $(window).scrollTop() + $(window).height();
-    var listBottom = $("#gallery-images").offset().top + $("#gallery-images").outerHeight();
+    var listBottom = $(container).offset().top + $(container).outerHeight();
 
     // Fetch more images if user is getting close to the bottom of the list.
     if (windowBottom > listBottom - 500){
@@ -60,7 +61,8 @@ function getImages(){
         return;
     }
 
-    update = true;
+    updateStart();
+
 
     request_data = {}
 
@@ -81,23 +83,41 @@ function getImages(){
     }).done(function(response){
         if (response['error']){
             alert(response['error']);
-            update = false;
+            updateEnd();
         }else{
             addImages(response);
         }
     }).fail(function(){
-        update = false;
+        updateEnd();
     });
+}
+
+function updateStart(){
+    update = true;
+    $(container).after('<p class="gallery-throbber"><i class="fa fa-spinner fa-spin"></i></p>');
+}
+
+function updateEnd(){
+    update = false;
+    $('.gallery-throbber').remove();
+
+    if (end){
+        $(container).after('<p class="gallery-end"><i class="fa fa-circle-o"></i></p>')
+    }
 }
 
 // This functions appends new images to the list.
 function addImages(response){
     var arrayLength = response.images.length, images = '';
 
-    // Received an empty list, that means that there is nothing to download.
-    // Updates might be disabled now.
+    // List is not full, further updates might be disabled now.
+    if (arrayLength < 10){
+        end = true;
+    }
+
+    // Received an empty list, that means that there are no more images to download.
     if (arrayLength == 0){
-        $('#gallery-images').after('<p class="gallery-end">No more images to load.</p>')
+        updateEnd();
         end = true;
         return;
     }
@@ -117,25 +137,25 @@ function addImages(response){
 
     images = $(images)
 
-    if ("object" === typeof $('#gallery-images').data('masonry')){
+    if ("object" === typeof $(container).data('masonry')){
         // Update.
-        $('#gallery-images').append(images).imagesLoaded(function(){
-            $('#gallery-images').masonry('appended', images, true);
+        $(container).append(images).imagesLoaded(function(){
+            $(container).masonry('appended', images);
+            $(container + ' li').show();
             popup();
-            update = false;
-            checkRefresh();
+            updateEnd();
+            updateIfNeeded();
         });
     }else{
         // Initialize.
-        $('#gallery-images').append(images).imagesLoaded(function(){
-            var $container = $('#gallery-images');
-            $container.masonry({
-                itemSelector: 'li',
-                isAnimated: true
+        $(container).append(images).imagesLoaded(function(){
+            $(container).masonry({
+                itemSelector: 'li'
             });
+            $(container + ' li').show();
             popup();
-            update = false;
-            checkRefresh();
+            updateEnd();
+            updateIfNeeded();
         });
     }
 }
@@ -149,5 +169,5 @@ function createImage(image){
         imageHtml = '<a class="gallery-image" href="' + image.url + '"><img src="' + image.url + '"></a>';
     }
 
-    return '<li board="' + image.board + '" post="' + image.post  + '"><div>' + imageHtml + '<a class="post-link" href="' + image.post_url  + '">&gt;&gt;/' + image.board + '/' + image.post + '</a></div></li>';
+    return '<li style="display: none" board="' + image.board + '" post="' + image.post  + '"><div>' + imageHtml + '<a class="post-link" href="' + image.post_url  + '">&gt;&gt;/' + image.board + '/' + image.post + '</a></div></li>';
 }

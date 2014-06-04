@@ -215,7 +215,11 @@ def ajax_gallery(request):
             id__lt=last
         )
 
-    queryset = queryset.order_by('-post__time')[:10]
+    # Grab more images if this is the first request.
+    if last is not None:
+        queryset = queryset.order_by('-post__time')[:10]
+    else:
+        queryset = queryset.order_by('-post__time')[:20]
 
     # Prepare the data.
     json_data = {
