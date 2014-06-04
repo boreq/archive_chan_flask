@@ -10,6 +10,7 @@ urlpatterns = patterns('',
     url(r'^board/(?P<name>[a-z]+)/gallery/$', views.GalleryView.as_view(), name='board_gallery'),
 
     url(r'^board/(?P<name>[a-z]+)/thread/(?P<number>[0-9]+)/$', ensure_csrf_cookie(views.ThreadView.as_view()), name='thread'),
+    url(r'^board/(?P<name>[a-z]+)/thread/(?P<number>[0-9]+)/stats/$', views.StatsView.as_view(), name='thread_stats'),
     url(r'^board/(?P<name>[a-z]+)/thread/(?P<number>[0-9]+)/gallery/$', views.GalleryView.as_view(), name='thread_gallery'),
 
     url(r'^stats/$', views.StatsView.as_view(), name='stats'),

@@ -5,11 +5,11 @@
 {% block inner_head %}
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script>
-        {% if board_name %}
-            var dataUrl = "{% url 'archive_chan:ajax_stats' %}?board={{ board_name }}";
-        {% else %}
-            var dataUrl = "{% url 'archive_chan:ajax_stats' %}";
-        {% endif %}
+        var info_data = {
+            {% if board_name %}board: '{{ board_name }}',{% endif %}
+            {% if thread_number %}thread: '{{ thread_number }}',{% endif %}
+            ajax_url_stats: '{% url 'archive_chan:ajax_stats' %}'
+        };
     </script>
     <script src="{% static 'archive_chan/js/stats.js' %}"></script>
 {% endblock %}

@@ -13,6 +13,12 @@ $(document).ready(function(){
     $('.last-update-info').on('click', '#update-now', function(){
         update();
     });
+
+    // Hide obvious statistics.
+    if (info_data.thread){
+        $('#value-average-thread').closest('li').hide();
+        $('#value-total-threads').closest('li').hide();
+    }
 });
 
 // Main function updating the data.
@@ -22,8 +28,17 @@ function update(){
 
     $('#update-now i').addClass('fa-spin');
 
+    request_data = {}
+
+    if (info_data.thread)
+        request_data['thread'] = info_data.thread;
+
+    if (info_data.board)
+        request_data['board'] = info_data.board;
+
     var jsonData = $.ajax({
-        url: dataUrl,
+        url: info_data.ajax_url_stats,
+        data: request_data,
         dataType: 'json'
     }).done(function(data){
         statsData = data; // Data has to be stored because the chart is redrawn on resize event.
@@ -59,6 +74,7 @@ function drawStats(data) {
   }else{
       $('#value-percent-image').text('0%');
   }
+
 }
 
 // Function drawing the chart.

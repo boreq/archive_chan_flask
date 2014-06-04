@@ -170,20 +170,19 @@ class StatsView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(StatsView, self).get_context_data(**kwargs)
         context['board_name'] = self.kwargs.get('name', None)
+        context['thread_number'] = int(self.kwargs['number']) if 'number' in self.kwargs else None
         context['body_id'] = 'body-stats'
         return context
 
 
 def ajax_stats(request):
     """JSON data with statistics."""
-    from archive_chan.lib.stats import get_global_stats, get_board_stats
+    from archive_chan.lib.stats import get_stats
 
     board_name = request.GET.get('board', None)
+    thread_number = request.GET.get('thread', None)
 
-    if board_name is None:
-        context = get_global_stats()
-    else:
-        context = get_board_stats(board_name)
+    context = get_stats(board=board_name, thread=thread_number)
 
     return HttpResponse(json.dumps(context), content_type='application/json')
 
