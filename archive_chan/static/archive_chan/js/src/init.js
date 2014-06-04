@@ -41,6 +41,7 @@ $(document).ready(function(){
         if (selector.match(/^#post-[0-9]+$/) !== null){
             highlightPost(selector);
             goToAnchor(selector);
+            window.history.pushState(null, null, selector);
             event.preventDefault();
         }
     });

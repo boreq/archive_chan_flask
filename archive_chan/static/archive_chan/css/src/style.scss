@@ -1,6 +1,7 @@
 $primary-color: #65c6bb;
 $background-color: #eee;
 $border-color: #dadfe1;
+$text-color-dimmed: #999;
 
 /*   Main.   */
 html, body{
@@ -44,7 +45,7 @@ header{
 }
 
 footer{
-    color: #999;
+    color: $text-color-dimmed;
     margin-top: -3em;
     position: relative;
     text-align: right;
@@ -124,7 +125,7 @@ footer{
 
     .generated:hover{
         i{
-            color: #999;
+            color: $text-color-dimmed;
         }
 
         span{
@@ -242,7 +243,6 @@ div.content{
 }
 
 /*   Threads.   */
-
 .board-wrapper{
     display: flex;
     flex-flow: row nowrap;
@@ -550,7 +550,7 @@ code{
 }
 
 .gallery-end, .gallery-throbber{
-    color: #999;
+    color: $text-color-dimmed;
     text-align: center;
 }
 
@@ -631,10 +631,10 @@ code{
 .last-update-info{
     padding: 5px;
     text-align: right;
-    color: #999;
+    color: $text-color-dimmed;
 
     a{
-        color: #999;
+        color: $text-color-dimmed;
     }
 
     a:hover{
