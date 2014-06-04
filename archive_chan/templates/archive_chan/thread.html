@@ -37,7 +37,7 @@
                         <div class="post-image-container">
                             {% with post.image as image %}
                                 {% if image.thumbnail %}
-                                    <a href="{{ image.image.url }}" target="_blank" class="post-image"><img src="{{ image.thumbnail.url }}"></a>
+                                    <a href="{{ image.image.url }}" title="{{ image.original_name }}" target="_blank" class="post-image"><img src="{{ image.thumbnail.url }}"></a>
                                 {% endif %}
                             {% endwith %}
 
