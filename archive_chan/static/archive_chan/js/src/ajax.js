@@ -62,6 +62,7 @@ function ajax_add_tag(input){
         }else{
             if (response['added']){
                 $('.tags').append('<li><i class="fa fa-fw fa-tag" title="Tag added by the user"></i><a class="tag-link" href="' + info_data.board_url + '?tag=' + input.value + '">' + input.value + '</a><a class="remove-tag" title="Remove the tag"><i class="fa fa-times"></i></a></li>'); // :(
+                $('#add-tag-input').val('');
             }
         }
     });
