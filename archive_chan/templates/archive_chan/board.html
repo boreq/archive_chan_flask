@@ -2,12 +2,6 @@
 {% load i18n %}
 {% load archive_chan_filters %}
 
-{% block header_link %}<a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>{% endblock %}
-
-{% block nav_link %}
-    {% include 'archive_chan/nav_board.html' %}
-{% endblock %}
-
 {% block inner_head %}
     <script>
         var info_data = {
@@ -19,7 +13,6 @@
 {% block content %}
     <div class="content">
         <div class="wrapper board-wrapper">
-            
             <ul id="threads">
                 {% for thread in thread_list %}
                     {% if thread.saved %}
@@ -28,7 +21,6 @@
                         <li>
                     {% endif %}
                         <a href="{% url 'archive_chan:thread' board_name thread.number %}">
-
                             {% with thread.first_post as post %}
                                 <div class="img-container">
                                     {% with post.image as image %}
@@ -60,14 +52,13 @@
                                     <div class="thread-comment">{{post.comment}}</div>
                                 {% endif %}
                             {% endwith %}
-
                         </a>
                     </li>
                 {% endfor %}
             </ul>
 
             <div class="board-sidebar">
-                {% include "archive_chan/board_filters.html" %}
+                {% include "archive_chan/snippets/board_filters.html" %}
             </div>
         </div>
     </div>
@@ -91,11 +82,4 @@
             </div>
         </div>
     {% endif %}
-{% endblock %}
-
-
-{% block inner_footer %}
-    <ul class="additional-links">
-        <li><a href="{% url 'archive_chan:board_stats' board_name %}"><i class="fa fa-bar-chart-o fa-fw"></i> Board statistics</a></li>
-    </ul>
 {% endblock %}

@@ -1,0 +1,37 @@
+{% load archive_chan_filters %}
+
+<div class="thread-filters">
+    <div>
+        <h3>Order by</h3>
+        {% include "archive_chan/snippets/simple_sort.html" with available_parameters=available_parameters.sort parameter=parameters.sort sort_reverse=parameters.sort_reverse parameter_name="sort" %}
+    </div>
+
+    <div>
+        <h3>Saved</h3>
+        {% include "archive_chan/snippets/simple_filter.html" with available_parameters=available_parameters.saved parameter=parameters.saved parameter_name="saved" %}
+    </div>
+
+    <div>
+        <h3>Last reply</h3>
+        {% include "archive_chan/snippets/simple_filter.html" with available_parameters=available_parameters.last_reply parameter=parameters.last_reply parameter_name="last_reply" %}
+    </div>
+
+    <div>
+        <h3>Tagged</h3>
+        {% include "archive_chan/snippets/simple_filter.html" with available_parameters=available_parameters.tagged parameter=parameters.tagged parameter_name="tagged" %}
+    </div>
+
+    {% if parameters.tag %}
+        <div>
+            <h3>Tag</h3>
+            <ul class="tags">
+                {% for name in parameters.tag %}
+                    <li>
+                        <i class="fa fa-fw fa-tag"></i>
+                        <a class="tag-link" href="{% url 'archive_chan:board' board_name %}?tag={{ name }}">{{ name }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+</div>

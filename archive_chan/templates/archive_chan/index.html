@@ -1,5 +1,4 @@
 {% extends "archive_chan/base.html" %}
-{% load i18n %}
 
 {% block content %}
     <div class="content">
@@ -13,10 +12,4 @@
             </ul>
         </div>
     </div>
-{% endblock %}
-
-{% block inner_footer %}
-    <ul class="additional-links">
-        <li><a href="{% url 'archive_chan:stats' %}"><i class="fa fa-bar-chart-o fa-fw"></i> Global statistics</a></li>
-    </ul>
 {% endblock %}

@@ -20,31 +20,26 @@
         {% block inner_head %}{% endblock %}
     </head>
 
-    {# This is set just to highlight the current page in navigation menu. #}
-    {% if body_id|length > 0 %}
-        <body id="{{ body_id }}">
-    {% else %}
-        <body>
-    {% endif %}
-
+    <body id="{{ body_id }}">
         <div id="site">
           <header>
             <div class="wrapper">
                 <div class="logo">
                     <a href="{% url 'archive_chan:index' %}">ARCHIVE CHAN</a>
-                    {% block header_link %}{% endblock %}
+                    {% block header_link %}
+                        {% if board_name %}<a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>{% endif %}
+                        {% if thread_number %}<a href="{% url 'archive_chan:thread' board_name thread_number %}">#{{ thread_number }}</a>{% endif %}
+                    {% endblock %}
                     <ul class="nav">
-                        {% block nav_link %}
-                            {% include 'archive_chan/nav_base.html' %}
-                        {% endblock %}
+                        {% include 'archive_chan/snippets/nav.html' %}
                     </ul>
                 </div>
             </div>
           </header>
 
           {% block content %}{% endblock %}
-
         </div>
+
         <footer>
           <div class="wrapper">
             All content is generated automatically and originates from <a href="http://4chan.org">4chan</a>.

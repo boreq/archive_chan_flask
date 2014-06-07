@@ -1,0 +1,23 @@
+{% load archive_chan_filters %}
+
+<ul class="fa-ul">
+    {% for item in available_parameters %}
+        <li>
+            {% if item.0 == parameter %}
+                {% if sort_reverse %}  
+                    <i class="fa-li fa fa-sort-amount-desc"></i>
+                    <a href="{% url 'archive_chan:board' board_name %}{% board_url_query parameter_name item.0 %}" class="current-selection">{{ item.1.0 }}</a>
+                {% else %}
+                    <i class="fa-li fa fa-sort-amount-asc"></i>
+                    {% with value="-"|add:item.0 %}
+                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query parameter_name value %}" class="current-selection">{{ item.1.0 }}</a>
+                    {% endwith %}
+                {% endif %}
+            {% else %}
+                    {% with value="-"|add:item.0 %}
+                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query parameter_name value %}">{{ item.1.0 }}</a>
+                    {% endwith %}
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>
