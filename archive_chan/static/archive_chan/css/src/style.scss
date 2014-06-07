@@ -55,15 +55,13 @@ div#site>div:last-child{
     padding-bottom: 4em; /* 3em footer + 1em padding */
 }
 
-.logo{
+header .wrapper{
     font-family: 'Oswald', sans-serif;
     font-size: 20px;
     display: flex;
     align-items: flex-end;
 
     >a{
-        color: #fff;
-        text-decoration: none;
         display: block;
         margin: 0 0 0 .5em;
     }
@@ -71,6 +69,15 @@ div#site>div:last-child{
     >a:first-child{
         margin: 0;
         font-size: 28px;
+    }
+
+    a{
+        text-decoration: none;
+        color: #fff;
+    }
+
+    a:hover{
+        color: $primary-color;
     }
 }
 
@@ -88,25 +95,11 @@ body#body-gallery .nav-gallery{
     flex-grow: 1;
     justify-content: flex-end;
 
-    color: #fff;
-    font-family: 'Oswald', sans-serif;
     font-size: 14px;
-    text-transform: uppercase;
     margin: 0 0 7px;
 
-    li{
-        display: inline-block;
-    }
-
-    li a{
-        display: inline-block;
-        text-decoration: none;
+    a{
         padding: 0 1em;
-        color: #fff;
-    }
-
-    li a:hover{
-        color: $primary-color;
     }
 }
 
@@ -125,7 +118,7 @@ footer{
 
     .generated:hover{
         i{
-            color: $text-color-dimmed;
+            color: inherit;
         }
 
         span{
@@ -753,7 +746,7 @@ code{
 
 /*   Nav/header.   */
 @media screen and (max-width: 450px){
-    .logo{
+    header .wrapper{
         text-align: center;
         margin: 0 auto;
         flex-flow: column nowrap;

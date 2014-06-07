@@ -74,6 +74,12 @@ class Post(models.Model):
     class Meta:
         ordering = ['number']
 
+    def get_name(self):
+        if self.name:
+            return self.name
+        else:
+            return 'Anonymous'
+
     def __str__(self):
         return format("#%s" % (self.number))
 

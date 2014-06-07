@@ -60,6 +60,8 @@
                                         </li>
                                     {% endfor %}
                                 </ul>
+
+                                {# Show add tag input. #}
                                 {% if  user.is_authenticated %}
                                     <input id="add-tag-input" type="text" name="new-tag" placeholder="New tag">
                                 {% endif %}
@@ -68,24 +70,23 @@
 
                         <div class="post-content">
                             <ul class="post-header">
-
                                 {# Post subject. #}
                                 {% if post.subject %}
-                                    <li class="post-subject">{{ post.subject }}</li>
+                                    <li class="post-subject">
+                                        {{ post.subject }}
+                                    </li>
                                 {% endif %}
 
                                 {# Post author. #}
                                 <li class="post-author">
                                     <span class="post-author-name">
-                                        {% if post.name %}
-                                            {{ post.name }}
-                                        {% else %}
-                                            Anonymous
-                                        {% endif %}
+                                        {{ post.get_name }}
                                     </span>
 
                                     {% if post.trip %}
-                                        <span class="post-author-trip">{{ post.trip }}</span>
+                                        <span class="post-author-trip">
+                                            {{ post.trip }}
+                                        </span>
                                     {% endif %}
                                 </li>
 
@@ -96,14 +97,14 @@
 
                                 {# Post number. #}
                                 <li class="post-number">
-                                    <a href="{% url 'archive_chan:thread' board_name thread_number %}#post-{{ post.number }}">#{{ post.number }}</a>
+                                    <a href="{% url 'archive_chan:thread' board_name thread_number %}#post-{{ post.number }}">{{ post }}</a>
                                 </li>
                             </ul>
+
                             {% if post.comment %}
                                 <div class="post-comment">{{ post.comment|force_escape|formatpost|safe|linebreaksbr }}</div>
                             {% endif %}
                         </div>
-
                     </li>
                 {% endfor %}
             </ul>

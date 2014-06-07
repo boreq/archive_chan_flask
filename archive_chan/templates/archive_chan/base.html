@@ -22,29 +22,36 @@
 
     <body id="{{ body_id }}">
         <div id="site">
-          <header>
-            <div class="wrapper">
-                <div class="logo">
+            <header>
+                <div class="wrapper">
+                    {# Main nav. #}
                     <a href="{% url 'archive_chan:index' %}">ARCHIVE CHAN</a>
-                    {% block header_link %}
-                        {% if board_name %}<a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>{% endif %}
-                        {% if thread_number %}<a href="{% url 'archive_chan:thread' board_name thread_number %}">#{{ thread_number }}</a>{% endif %}
-                    {% endblock %}
+                    {% if board_name %}<a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>{% endif %}
+                    {% if thread_number %}<a href="{% url 'archive_chan:thread' board_name thread_number %}">#{{ thread_number }}</a>{% endif %}
+
+                    {# Context sensitive nav. #}
                     <ul class="nav">
-                        {% include 'archive_chan/snippets/nav.html' %}
+                        {% if thread_number %}
+                            {% include 'archive_chan/snippets/nav_thread.html' %}
+                        {% else %}
+                            {% if board_name %}
+                                {% include 'archive_chan/snippets/nav_board.html' %}
+                            {% else %}
+                                {% include 'archive_chan/snippets/nav_base.html' %}
+                            {% endif %}
+                        {% endif %}
                     </ul>
                 </div>
-            </div>
-          </header>
+            </header>
 
-          {% block content %}{% endblock %}
+            {% block content %}{% endblock %}
         </div>
 
         <footer>
-          <div class="wrapper">
-            All content is generated automatically and originates from <a href="http://4chan.org">4chan</a>.
-            <span class="generated"><i class="fa fa-linux"></i> <span>{% now "Y-m-d G:i:s e" %}</span></span>
-          </div>
+            <div class="wrapper">
+                All content is generated automatically and originates from <a href="http://4chan.org">4chan</a>.
+                <span class="generated"><i class="fa fa-linux"></i> <span>{% now "Y-m-d G:i:s e" %}</span></span>
+            </div>
         </footer>
     </body>
 </html>

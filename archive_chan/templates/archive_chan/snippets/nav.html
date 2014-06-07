@@ -1,9 +1,0 @@
-{% if thread_number %}
-    {% include 'archive_chan/snippets/nav_thread.html' %}
-{% else %}
-    {% if board_name %}
-        {% include 'archive_chan/snippets/nav_board.html' %}
-    {% else %}
-        {% include 'archive_chan/snippets/nav_base.html' %}
-    {% endif %}
-{% endif %}
