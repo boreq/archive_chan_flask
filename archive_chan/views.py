@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404, get_list_or_404
 from django.template import RequestContext
 from django.http import HttpResponse
 from django.utils.timezone import utc
-from django.db.models import Max, Min, Count, Q
+from django.db.models import Max, Min, Count, Q, F
 from django.views.generic import ListView, TemplateView
 from django.core.urlresolvers import reverse
 
@@ -139,13 +139,12 @@ class ThreadView(ListView):
         return get_list_or_404(Post.objects.filter(
             thread__number=number,
             thread__board=name
-        ).order_by('number').select_related('image'))
+        ).order_by('number').select_related('image', 'thread'))
 
     def get_context_data(self, **kwargs):
         context = super(ThreadView, self).get_context_data(**kwargs)
         context['board_name'] = self.kwargs['name']
         context['thread_number'] = int(self.kwargs['number'])
-        context['thread_saved'] = self.thread.saved
         context['thread_tags'] = self.thread.tagtothread_set.select_related('tag').all().order_by('tag__name')
         context['body_id'] = 'body-thread'
         return context
@@ -159,12 +158,16 @@ class SearchView(ListView):
     paginate_by = 20
 
     available_parameters = {
+        'type': (
+            ('all', ('All', None)),
+            ('op', ('Main post', {'number': F('thread__number')})),
+        ),
         'saved': (
             ('all', ('All', None)),
             ('yes', ('Yes', {'thread__saved': True})),
             ('no',  ('No', {'thread__saved': False})),
         ),
-        'age': (
+        'created': (
             ('always', ('Always', None)),
             ('quarter', ('15 minutes', {'time': 0.25})),
             ('hour', ('Hour', {'time': 1})),
@@ -185,40 +188,63 @@ class SearchView(ListView):
             self.request.GET.get('saved', None)
         )
 
-        self.modifiers['age'] = modifiers.TimeFilter(
-            self.available_parameters['age'],
-            self.request.GET.get('age', None)
+        self.modifiers['type'] = modifiers.SimpleFilter(
+            self.available_parameters['type'],
+            self.request.GET.get('type', None)
+        )
+
+        self.modifiers['created'] = modifiers.TimeFilter(
+            self.available_parameters['created'],
+            self.request.GET.get('created', None)
         )
 
         parameters['saved'] = self.modifiers['saved'].get()
-        parameters['age'] = self.modifiers['age'].get()
+        parameters['created'] = self.modifiers['created'].get()
+        parameters['type'] = self.modifiers['type'].get()
         parameters['search'] = self.request.GET.get('search', None)
 
         return parameters
 
     def get_queryset(self):
-        name = self.kwargs['name']
         self.parameters = self.get_parameters()
+        self.chart_data = None
 
-        if self.parameters['search'] is None:
+        if self.parameters['search'] is None or len(self.parameters['search']) == 0:
             return Post.objects.none()
 
-        queryset = Post.objects.select_related('thread').filter(thread__board=name).filter(
+        queryset = Post.objects
+
+        if 'name' in self.kwargs:
+            queryset = queryset.filter(thread__board=self.kwargs['name'])
+
+        if 'number' in self.kwargs:
+            queryset = queryset.filter(thread__number=self.kwargs['number'])
+        
+        queryset = queryset.filter(
             Q(subject__icontains=self.parameters['search']) |
             Q(comment__icontains=self.parameters['search'])
-        )
-
+        ).order_by('-time')
+        
         for key, modifier in self.modifiers.items():
             queryset = modifier.execute(queryset)
 
-        return queryset
+        self.chart_data = queryset.extra({
+            'date': 'date("time")',
+        }).values('date').order_by('date').annotate(amount=Count('id'))
+
+        return queryset.select_related('thread', 'image', 'thread__board')
 
     def get_context_data(self, **kwargs):
+        from archive_chan.lib.stats import get_posts_chart_data
+
         context = super(SearchView, self).get_context_data(**kwargs)
-        context['board_name'] = self.kwargs['name']
+        context['board_name'] = self.kwargs.get('name', None)
+        context['thread_number'] = int(self.kwargs['number']) if 'number' in self.kwargs else None
         context['parameters'] = self.parameters
         context['available_parameters'] = self.available_parameters
         context['body_id'] = 'body-search'
+        context['chart_data'] = get_posts_chart_data(self.chart_data)
+
         return context
 
 
@@ -456,7 +482,7 @@ def ajax_remove_tag(request):
             }
 
         except:
-            response = {
+           response = {
                 'error': 'Error.'
             }
     else:

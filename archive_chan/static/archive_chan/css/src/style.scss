@@ -2,6 +2,7 @@ $primary-color: #65c6bb;
 $background-color: #eee;
 $border-color: #dadfe1;
 $text-color-dimmed: #999;
+$highlight-color: #c8f7c5;
 
 /*   Main.   */
 html, body{
@@ -398,6 +399,10 @@ div.content{
         }
     }
 
+    .post-icon{
+        color: $text-color-dimmed;
+    }
+
     .post-subject{
         font-weight: bold;
     }
@@ -427,6 +432,7 @@ div.content{
 
     .post-comment{
         padding: 1em 0;
+        line-height: 1.2;
     }
 
     .post-link-dead{
@@ -435,7 +441,7 @@ div.content{
 }
 
 .post-highlight{
-    background-color: #c8f7c5 !important;
+    background-color: $highlight-color !important;
 }
 
 .post-comment .post-link, .gallery-post-link{
@@ -451,7 +457,7 @@ div.content{
 }
 
 .highlight{
-    background-color: #f1c40f;
+    background-color: $highlight-color;
 }
 
 pre{
@@ -645,29 +651,53 @@ code{
 
 /*   Search.   */
 .search-parameters{
-    margin: 0 auto;
-    max-width: 500px;
+    display: flex;
+    margin: 0 auto 10px;
+    width: 100%;
 
-    .search-form{
-        display: block;
+    .search-main{
+        display: flex;
+        flex-flow: column nowrap;
+        flex-grow: 1;
 
-        input{
-            padding: .5em;
-            font-size: 16px;
-            margin: 0 auto;
+        .search-chart{
+            background-color: #fff;
+            border: 1px solid $border-color;
+            flex-grow: 1;
+            padding: 1em;
+
+            #chart{
+                height: 200px;
+            }
+        }
+
+        .search-form{
+            display: block;
             width: 100%;
+            margin: 0 auto 10px;
+
+            input{
+                padding: .5em;
+                font-size: 16px;
+                width: 100%;
+            }
         }
     }
 
     .search-filters{
-        display: flex;
         justify-content: center;
-        padding: 1em 0;
+        padding-left: 1em;
 
         >div{
-            padding: 0 1em;
-            width: 150px;
-            max-width: 50%;
+            flex: 1;
+        }
+
+        div:first-child h3{
+            margin: 0 0 .5em; 
+        }
+
+        h3{
+            margin: .5em 0 .5em; 
         }
     }
 }
@@ -777,6 +807,22 @@ code{
     #gallery-images{
         li{
             width: 100%;
+        }
+    }
+}
+
+/*   Search.   */
+@media screen and (max-width: 500px){
+    .search-parameters{
+        flex-flow: column nowrap;
+
+        .search-filters{
+            display: flex;
+            margin: .5em 0;
+
+            h3{
+                margin: 0 0 .5em; 
+            }
         }
     }
 }

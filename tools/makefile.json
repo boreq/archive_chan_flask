@@ -26,6 +26,12 @@
         },
         {
             "input": [
+                "archive_chan/static/archive_chan/js/src/search.js"
+            ],
+            "output": "archive_chan/static/archive_chan/js/search.js"
+        },
+        {
+            "input": [
                 "archive_chan/static/archive_chan/js/lib/imagesloaded.min.js",
                 "archive_chan/static/archive_chan/js/lib/jquery.masonry.min.js",
                 "archive_chan/static/archive_chan/js/src/gallery.js"

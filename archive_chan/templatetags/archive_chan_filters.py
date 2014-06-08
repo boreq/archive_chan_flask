@@ -99,9 +99,10 @@ def search_url_query(context, *args, **kwargs):
     if len(args) == 2:
         parameters[args[0]] = args[1]
 
-    query =  format('?saved=%s&age=%s&search=%s' % (
+    query =  format('?type=%s&saved=%s&created=%s&search=%s' % (
+        parameters['type'],
         parameters['saved'],
-        parameters['age'],
+        parameters['created'],
         parameters['search'],
     ))
 

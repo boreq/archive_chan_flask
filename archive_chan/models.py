@@ -80,6 +80,9 @@ class Post(models.Model):
         else:
             return 'Anonymous'
 
+    def is_main(self):
+        return (self.number == self.thread.number)
+
     def __str__(self):
         return format("#%s" % (self.number))
 

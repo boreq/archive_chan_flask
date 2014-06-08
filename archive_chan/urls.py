@@ -13,9 +13,11 @@ urlpatterns = patterns('',
     url(r'^board/(?P<name>[a-z]+)/thread/(?P<number>[0-9]+)/$', ensure_csrf_cookie(views.ThreadView.as_view()), name='thread'),
     url(r'^board/(?P<name>[a-z]+)/thread/(?P<number>[0-9]+)/stats/$', views.StatsView.as_view(), name='thread_stats'),
     url(r'^board/(?P<name>[a-z]+)/thread/(?P<number>[0-9]+)/gallery/$', views.GalleryView.as_view(), name='thread_gallery'),
+    url(r'^board/(?P<name>[a-z]+)/thread/(?P<number>[0-9]+)/search/$', views.SearchView.as_view(), name='thread_search'),
 
     url(r'^stats/$', views.StatsView.as_view(), name='stats'),
     url(r'^gallery/$', views.GalleryView.as_view(), name='gallery'),
+    url(r'^search/$', views.SearchView.as_view(), name='search'),
 
     url(r'^ajax/stats/$', views.ajax_stats, name='ajax_stats'),
     url(r'^ajax/gallery/$', views.ajax_gallery, name='ajax_gallery'),

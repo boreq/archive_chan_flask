@@ -56,10 +56,13 @@ def get_posts_chart_data(queryset):
         'rows': []
     }
 
+    if queryset is None:
+        return chart_data
+
     for entry in queryset:
         entry_time = datetime.datetime.combine(
             entry['date'],
-            datetime.time(hour=int(entry['hour']))
+            datetime.time(hour=int(entry.get('hour', 0)))
         )
 
         value_string = format("Date(%s, %s, %s, %s, %s, %s)" % (

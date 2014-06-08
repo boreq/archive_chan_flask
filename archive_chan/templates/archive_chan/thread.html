@@ -32,16 +32,7 @@
                             {% endwith %}
 
                             {# If this is a top post. #}
-                            {% if post.number == thread_number %}
-                                {# If user is logged in show a save button. #}
-                                {% if  user.is_authenticated %}
-                                    {% if thread_saved %}
-                                        <div class="button button-red button-unsave">Unsave thread</div>
-                                    {% else %}
-                                        <div class="button button-green button-save">Save thread</div>
-                                    {% endif %}
-                                {% endif %}
-
+                            {% if post.is_main %}
                                 {# Show tags in the main post. #}
                                 <ul class="tags">
                                     {% for tagtothread in thread_tags %}
@@ -64,12 +55,24 @@
                                 {# Show add tag input. #}
                                 {% if  user.is_authenticated %}
                                     <input id="add-tag-input" type="text" name="new-tag" placeholder="New tag">
+
+                                    {% if post.thread.saved %}
+                                        <div class="button button-red button-unsave">Unsave thread</div>
+                                    {% else %}
+                                        <div class="button button-green button-save">Save thread</div>
+                                    {% endif %}
                                 {% endif %}
                             {% endif %}
                         </div>
 
                         <div class="post-content">
                             <ul class="post-header">
+                                {% if post.is_main %}
+                                    <li class="post-icon">
+                                       <i class="fa fa-level-down" title="OP"></i> 
+                                    </li>
+                                {% endif %}
+
                                 {# Post subject. #}
                                 {% if post.subject %}
                                     <li class="post-subject">
@@ -97,7 +100,7 @@
 
                                 {# Post number. #}
                                 <li class="post-number">
-                                    <a href="{% url 'archive_chan:thread' board_name thread_number %}#post-{{ post.number }}">{{ post }}</a>
+                                    <a href="{% url 'archive_chan:thread' board_name post.thread.number %}#post-{{ post.number }}">{{ post }}</a>
                                 </li>
                             </ul>
 

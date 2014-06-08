@@ -1,19 +1,51 @@
 {% extends "archive_chan/base.html" %},
-{% load i18n %}
 {% load archive_chan_filters %}
+{% load staticfiles %}
+
+{% if thread_number %}
+    {% url 'archive_chan:thread_search' board_name thread_number as url %}
+{% else %}
+    {% if board_name %}
+        {% url 'archive_chan:board_search' board_name as url %}
+    {% else %}
+        {% url 'archive_chan:search' as url %}
+    {% endif %}
+{% endif %}
+
+{% block inner_head %}
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script>
+        var chartData = {{ chart_data|safe }};
+    </script>
+    <script src="{% static 'archive_chan/js/search.js' %}"></script>
+{% endblock %}
 
 {% block content %}
     <div class="content">
         <div class="wrapper">
             <div class="search-parameters">
-                <form class="search-form" method="get" action="{% url "archive_chan:board_search" board_name %}">
-                    <input type="text" name="search" value="{{ parameters.search }}" placeholder="Search">
-                </form>
+                <div class="search-main">
+                    <form class="search-form" method="get" action="{{ url }}">
+                        <input type="text" name="search"{% if parameters.search %} value="{{ parameters.search }}"{% endif %} placeholder="Search">
+                    </form>
+
+                    {% if parameters.search %}
+                        <div class="search-chart">
+                            <div id="chart"></div>
+                            <p>Found {{ page_obj.paginator.count }} results.</p>
+                        </div>
+                    {% endif %}
+                </div>
 
                 <div class="search-filters">
                     <div>
-                        <h3>Age</h3>
-                        {% include "archive_chan/snippets/simple_filter_search.html" with available_parameters=available_parameters.age parameter=parameters.age parameter_name="age" %}
+                        <h3>Type</h3>
+                        {% include "archive_chan/snippets/simple_filter_search.html" with available_parameters=available_parameters.type parameter=parameters.type parameter_name="type" %}
+                    </div>
+
+                    <div>
+                        <h3>Created</h3>
+                        {% include "archive_chan/snippets/simple_filter_search.html" with available_parameters=available_parameters.created parameter=parameters.created parameter_name="created" %}
                     </div>
 
                     <div>
@@ -32,14 +64,16 @@
                                     <a href="{{ image.image.url }}" title="{{ image.original_name }}" target="_blank" class="post-image"><img src="{{ image.thumbnail.url }}"></a>
                                 {% endif %}
                             {% endwith %}
-
-                            {# If this is a top post. #}
-                            {% if post.number == thread_number %}
-                            {% endif %}
                         </div>
 
                         <div class="post-content">
                             <ul class="post-header">
+                                {% if post.is_main %}
+                                    <li class="post-icon">
+                                       <i class="fa fa-level-down" title="OP"></i> 
+                                    </li>
+                                {% endif %}
+
                                 {# Post subject. #}
                                 {% if post.subject %}
                                     <li class="post-subject">
@@ -67,7 +101,7 @@
 
                                 {# Post number. #}
                                 <li class="post-number">
-                                    <a href="{% url 'archive_chan:thread' board_name post.thread.number %}#post-{{ post.number }}">{{ post }}</a>
+                                    <a href="{% url 'archive_chan:thread' post.thread.board.name post.thread.number %}#post-{{ post.number }}">{{ post }}</a>
                                 </li>
                             </ul>
 
@@ -84,7 +118,6 @@
     {% if is_paginated %}
         <div class="content">
             <div class="wrapper">
-                {% url 'archive_chan:board_search' board_name as url %}
                 {% search_url_query_assign as url_query %}
                 {% include "archive_chan/snippets/pagination.html" %}
             </div>

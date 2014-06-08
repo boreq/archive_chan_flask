@@ -5,9 +5,9 @@
         <li>
             {% if item.0 == parameter %}
                 <i class="fa-li fa fa-check"></i>
-                <a href="{% url 'archive_chan:board_search' board_name %}{% search_url_query parameter_name item.0 %}" class="current-selection">{{ item.1.0 }}</a>
+                <a href="{{ url }}{% search_url_query parameter_name item.0 %}" class="current-selection">{{ item.1.0 }}</a>
             {% else %}
-                <a href="{% url 'archive_chan:board_search' board_name %}{% search_url_query parameter_name item.0 %}">{{ item.1.0 }}</a>
+                <a href="{{ url }}{% search_url_query parameter_name item.0 %}">{{ item.1.0 }}</a>
             {% endif %}
         </li>
     {% endfor %}
