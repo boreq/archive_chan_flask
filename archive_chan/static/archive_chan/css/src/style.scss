@@ -450,6 +450,10 @@ div.content{
     color: #4daf7c;
 }
 
+.highlight{
+    background-color: #f1c40f;
+}
+
 pre{
     margin: .5em 0;
 }
@@ -640,24 +644,31 @@ code{
 }
 
 /*   Search.   */
-.search-form{
-    display: block;
-    input{
-        padding: .5em;
-        font-size: 16px;
-        margin: 0 auto;
-        width: 100%;
-        max-width: 400px;
+.search-parameters{
+    margin: 0 auto;
+    max-width: 500px;
+
+    .search-form{
+        display: block;
+
+        input{
+            padding: .5em;
+            font-size: 16px;
+            margin: 0 auto;
+            width: 100%;
+        }
     }
-}
 
-.search-filters{
-    display: flex;
-    justify-content: center;
-    padding: 1em 0;
+    .search-filters{
+        display: flex;
+        justify-content: center;
+        padding: 1em 0;
 
-    >div{
-        padding: 0 1em;
+        >div{
+            padding: 0 1em;
+            width: 150px;
+            max-width: 50%;
+        }
     }
 }
 

@@ -34,6 +34,26 @@ def formatpost(text):
     return text
 
 
+@register.filter
+def highlight(text, phrase):
+    """This filter higlights the specified phrase in the text."""
+
+    # >>quote
+    text = re.sub(
+        r'(' + phrase + ')',
+        r'<span class="highlight">\1</span>',
+        text,
+        flags=re.IGNORECASE
+    )
+
+    return text
+
+
+@register.assignment_tag(takes_context=True)
+def board_url_query_assign(context, *args, **kwargs):
+    return board_url_query(context, *args, **kwargs)
+
+
 @register.simple_tag(takes_context=True)
 def board_url_query(context, *args, **kwargs):
     """This tag generates a query part of a board url.
@@ -59,6 +79,11 @@ def board_url_query(context, *args, **kwargs):
         query = format('%s&tag=%s' % (query, urllib.parse.quote('+'.join(parameters['tag']))))
 
     return query
+
+
+@register.assignment_tag(takes_context=True)
+def search_url_query_assign(context, *args, **kwargs):
+    return search_url_query(context, *args, **kwargs)
 
 
 @register.simple_tag(takes_context=True)

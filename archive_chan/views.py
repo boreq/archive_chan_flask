@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404, get_list_or_404
 from django.template import RequestContext
 from django.http import HttpResponse
 from django.utils.timezone import utc
-from django.db.models import Max, Min, Count
+from django.db.models import Max, Min, Count, Q
 from django.views.generic import ListView, TemplateView
 from django.core.urlresolvers import reverse
 
@@ -203,9 +203,9 @@ class SearchView(ListView):
         if self.parameters['search'] is None:
             return Post.objects.none()
 
-        queryset = Post.objects.select_related('thread').filter(
-            thread__board=name,
-            comment__icontains=self.parameters['search']
+        queryset = Post.objects.select_related('thread').filter(thread__board=name).filter(
+            Q(subject__icontains=self.parameters['search']) |
+            Q(comment__icontains=self.parameters['search'])
         )
 
         for key, modifier in self.modifiers.items():

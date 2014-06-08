@@ -66,19 +66,9 @@
     {% if is_paginated %}
         <div class="content">
             <div class="wrapper">
-                <div class="pagination">
-                    {% if page_obj.has_previous %}
-                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query  %}&page={{ page_obj.previous_page_number }}" class="page-prev" title="{% trans "Previous page" %}"><i class="fa fa-angle-left"></i></a>
-                    {% endif %}
-                    <div class="page-current">
-                        {% blocktrans with current_page=page_obj.number all_pages=page_obj.paginator.num_pages %}
-                            Page {{ current_page }} of {{ all_pages }}
-                        {% endblocktrans %}
-                    </div>
-                    {% if page_obj.has_next %}
-                        <a href="{% url 'archive_chan:board' board_name %}{% board_url_query  %}&page={{ page_obj.next_page_number }}" class="page-next" title="{% trans "Next page" %}"><i class="fa fa-angle-right"></i></a>
-                    {% endif %}
-                </div>
+                {% url 'archive_chan:board' board_name as url %}
+                {% board_url_query_assign as url_query %}
+                {% include "archive_chan/snippets/pagination.html" %}
             </div>
         </div>
     {% endif %}

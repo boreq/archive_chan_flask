@@ -4,23 +4,25 @@
 
 {% block content %}
     <div class="content">
-        <form class="search-form" method="get" action="{% url "archive_chan:board_search" board_name %}">
-            <input type="text" name="search" value="{{ parameters.search }}" placeholder="Search">
-        </form>
-
-        <div class="search-filters">
-            <div>
-                <h3>Age</h3>
-                {% include "archive_chan/snippets/simple_filter_search.html" with available_parameters=available_parameters.age parameter=parameters.age parameter_name="age" %}
-            </div>
-
-            <div>
-                <h3>Saved</h3>
-                {% include "archive_chan/snippets/simple_filter_search.html" with available_parameters=available_parameters.saved parameter=parameters.saved parameter_name="saved" %}
-            </div>
-        </div>
-
         <div class="wrapper">
+            <div class="search-parameters">
+                <form class="search-form" method="get" action="{% url "archive_chan:board_search" board_name %}">
+                    <input type="text" name="search" value="{{ parameters.search }}" placeholder="Search">
+                </form>
+
+                <div class="search-filters">
+                    <div>
+                        <h3>Age</h3>
+                        {% include "archive_chan/snippets/simple_filter_search.html" with available_parameters=available_parameters.age parameter=parameters.age parameter_name="age" %}
+                    </div>
+
+                    <div>
+                        <h3>Saved</h3>
+                        {% include "archive_chan/snippets/simple_filter_search.html" with available_parameters=available_parameters.saved parameter=parameters.saved parameter_name="saved" %}
+                    </div>
+                </div>
+            </div>
+
             <ul id="posts">
                 {% for post in post_list %}
                     <li class="post" id="post-{{ post.number }}">
@@ -41,7 +43,7 @@
                                 {# Post subject. #}
                                 {% if post.subject %}
                                     <li class="post-subject">
-                                        {{ post.subject }}
+                                        {{ post.subject|force_escape|highlight:parameters.search|safe }}
                                     </li>
                                 {% endif %}
 
@@ -70,7 +72,7 @@
                             </ul>
 
                             {% if post.comment %}
-                                <div class="post-comment">{{ post.comment|force_escape|formatpost|safe|linebreaksbr }}</div>
+                                <div class="post-comment">{{ post.comment|force_escape|highlight:parameters.search|formatpost|safe|linebreaksbr }}</div>
                             {% endif %}
                         </div>
                     </li>
@@ -78,4 +80,14 @@
             </ul>
         </div>
     </div>
+
+    {% if is_paginated %}
+        <div class="content">
+            <div class="wrapper">
+                {% url 'archive_chan:board_search' board_name as url %}
+                {% search_url_query_assign as url_query %}
+                {% include "archive_chan/snippets/pagination.html" %}
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}
