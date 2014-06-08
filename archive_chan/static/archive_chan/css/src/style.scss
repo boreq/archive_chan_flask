@@ -260,7 +260,7 @@ div.content{
     box-sizing: border-box;
 }
 
-.thread-filters{
+.board-filters{
     h3{
         margin: .5em 0 .5em; 
     }
@@ -642,14 +642,22 @@ code{
 /*   Search.   */
 .search-form{
     display: block;
-    padding: 1em;
-    
     input{
         padding: .5em;
         font-size: 16px;
         margin: 0 auto;
         width: 100%;
         max-width: 400px;
+    }
+}
+
+.search-filters{
+    display: flex;
+    justify-content: center;
+    padding: 1em 0;
+
+    >div{
+        padding: 0 1em;
     }
 }
 
@@ -704,7 +712,7 @@ code{
         width: 100%;
     }
 
-    .thread-filters{
+    .board-filters{
         display: flex;
         flex-flow: row wrap;
 
@@ -716,7 +724,7 @@ code{
 }
 
 @media screen and (max-width: 350px){
-    .thread-filters div{
+    .board-filters div{
         min-width: 100%;
     }
 

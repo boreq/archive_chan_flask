@@ -59,3 +59,25 @@ def board_url_query(context, *args, **kwargs):
         query = format('%s&tag=%s' % (query, urllib.parse.quote('+'.join(parameters['tag']))))
 
     return query
+
+
+@register.simple_tag(takes_context=True)
+def search_url_query(context, *args, **kwargs):
+    """This tag generates a query part of a board url.
+    args[0] - name of the variable to replace
+    args[1] - new value of the variable
+    """
+    # Create a shallow copy, otherwise this would overwrite the original values and break the following tags.
+    parameters = copy.copy(context['parameters'])
+
+    # This tag does not have to overwrite values. Check if this behaviour is expected.
+    if len(args) == 2:
+        parameters[args[0]] = args[1]
+
+    query =  format('?saved=%s&age=%s&search=%s' % (
+        parameters['saved'],
+        parameters['age'],
+        parameters['search'],
+    ))
+
+    return query

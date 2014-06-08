@@ -4,10 +4,23 @@
 
 {% block content %}
     <div class="content">
+        <form class="search-form" method="get" action="{% url "archive_chan:board_search" board_name %}">
+            <input type="text" name="search" value="{{ parameters.search }}" placeholder="Search">
+        </form>
+
+        <div class="search-filters">
+            <div>
+                <h3>Age</h3>
+                {% include "archive_chan/snippets/simple_filter_search.html" with available_parameters=available_parameters.age parameter=parameters.age parameter_name="age" %}
+            </div>
+
+            <div>
+                <h3>Saved</h3>
+                {% include "archive_chan/snippets/simple_filter_search.html" with available_parameters=available_parameters.saved parameter=parameters.saved parameter_name="saved" %}
+            </div>
+        </div>
+
         <div class="wrapper">
-            <form class="search-form" method="get" action="{% url "archive_chan:board_search" board_name %}">
-                <input type="text" name="search" value="{{ parameters.search }}" placeholder="Search">
-            </form>
             <ul id="posts">
                 {% for post in post_list %}
                     <li class="post" id="post-{{ post.number }}">
