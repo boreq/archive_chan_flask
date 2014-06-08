@@ -27,7 +27,8 @@ header div.wrapper, div.about div.wrapper, div#projects div.wrapper, footer div.
 #body-board,
 #body-thread,
 #body-stats,
-#body-gallery{
+#body-gallery,
+#body-search{
     background-color: $background-color;
 }
 
@@ -195,6 +196,18 @@ a:hover{
 
 i{
     font-style: italic;
+}
+
+input{
+    display: block;
+    padding: .2em;
+    border: 1px solid $border-color;
+    transition: border 1s;
+    box-sizing: border-box;
+}
+
+input:focus{
+    border: 1px solid $primary-color;
 }
 
 /*   Content.   */
@@ -487,17 +500,8 @@ code{
 }
 
 #add-tag-input{
-    display: block;
     width: 100%;
-    padding: .2em;
     margin: 1em 0;
-    border: 1px solid $border-color;
-    transition: border 1s;
-    box-sizing: border-box;
-}
-
-#add-tag-input:focus{
-    border: 1px solid $primary-color;
 }
 
 .autocomplete-suggestions{
@@ -632,6 +636,20 @@ code{
 
     a:hover{
         color: $primary-color;
+    }
+}
+
+/*   Search.   */
+.search-form{
+    display: block;
+    padding: 1em;
+    
+    input{
+        padding: .5em;
+        font-size: 16px;
+        margin: 0 auto;
+        width: 100%;
+        max-width: 400px;
     }
 }
 

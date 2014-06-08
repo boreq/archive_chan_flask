@@ -49,16 +49,15 @@ class SimpleFilter(Modifier):
 class TimeFilter(SimpleFilter):
     """Time based filter. It converts parameters to time before applying them in the filter function."""
     def execute(self, queryset):
-        time = dict(self.settings)[self.parameter][1]
+        time_dict = dict(self.settings)[self.parameter][1]
 
-        if time is None:
+        if time_dict is None:
             return queryset
 
-        time_threshold = datetime.datetime.now().replace(tzinfo=utc) - datetime.timedelta(
-            hours=time
-        )
+        time_dict = {key: datetime.datetime.now().replace(tzinfo=utc) - datetime.timedelta(hours=value) for (key, value) in time_dict.items()}
 
-        return queryset.filter(last_reply__gt=time_threshold)
+        return queryset.filter(**time_dict)
+
 
 class TagFilter(Modifier):
     """Special tag filter accepting multiple parameters. It is not really reusable."""

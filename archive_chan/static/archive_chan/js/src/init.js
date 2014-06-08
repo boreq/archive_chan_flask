@@ -13,9 +13,6 @@ $(document).ready(function(){
         wrap: 'letter'
     });
 
-    // Generate internal post links urls (>>1234).
-    createPostLinks();
-
     // Create relative dates.
     $('time.timeago').timeago();
 
@@ -23,7 +20,7 @@ $(document).ready(function(){
     $('pre code').each(function(i, e){hljs.highlightBlock(e)});
 
     // Create tooltips when hovering over post links in a thread,
-    $('#posts').on('mouseenter', '.post-link', function(event){
+    $('#body-thread #posts').on('mouseenter', '.post-link', function(event){
         // Do not create tooltip again.
         if ("object" === typeof $(event.target).data('qtip')){
             return;
@@ -54,6 +51,9 @@ $(document).ready(function(){
     }
 
     if ($("#body-thread").length){
+        // Generate internal post links urls (>>1234).
+        createPostLinks();
+
         // Save threads when the button is clicked.
         $('.post').on('click', '.button-save, .button-unsave', function(event){
             ajax_save(event.target);

@@ -47,11 +47,11 @@ class BoardView(ListView):
         ),
         'last_reply': (
             ('always', ('Always', None)),
-            ('quarter', ('15 minutes', 0.25)),
-            ('hour', ('Hour', 1)),
-            ('day', ('Day', 24)),
-            ('week', ('Week', 24 * 7)),
-            ('month', ('Month', 24 * 30)),
+            ('quarter', ('15 minutes', {'last_reply__gt': 0.25})),
+            ('hour', ('Hour', {'last_reply__gt': 1})),
+            ('day', ('Day', {'last_reply__gt': 24})),
+            ('week', ('Week', {'last_reply__gt': 24 * 7})),
+            ('month', ('Month', {'last_reply__gt': 24 * 30})),
         ),
         'tagged': (
             ('all', ('All', None)),
@@ -148,6 +148,77 @@ class ThreadView(ListView):
         context['thread_saved'] = self.thread.saved
         context['thread_tags'] = self.thread.tagtothread_set.select_related('tag').all().order_by('tag__name')
         context['body_id'] = 'body-thread'
+        return context
+
+
+class SearchView(ListView):
+    """View showing all threads in a specified board."""
+    model = Post
+    context_object_name = 'post_list'
+    template_name = 'archive_chan/search.html'
+    paginate_by = 20
+
+    available_parameters = {
+        'saved': (
+            ('all', ('All', None)),
+            ('yes', ('Yes', {'thread__saved': True})),
+            ('no',  ('No', {'thread__saved': False})),
+        ),
+        'age': (
+            ('always', ('Always', None)),
+            ('quarter', ('15 minutes', {'time': 0.25})),
+            ('hour', ('Hour', {'time': 1})),
+            ('day', ('Day', {'time': 24})),
+            ('week', ('Week', {'time': 24 * 7})),
+            ('month', ('Month', {'time': 24 * 30})),
+        )
+    }
+
+    def get_parameters(self):
+        """Extracts parameters related to filtering and sorting from a request object."""
+        parameters = {}
+
+        self.modifiers = {}
+
+        self.modifiers['saved'] = modifiers.SimpleFilter(
+            self.available_parameters['saved'],
+            self.request.GET.get('saved', None)
+        )
+
+        self.modifiers['age'] = modifiers.TimeFilter(
+            self.available_parameters['age'],
+            self.request.GET.get('age', None)
+        )
+
+        parameters['saved'] = self.modifiers['saved'].get()
+        parameters['age'] = self.modifiers['age'].get()
+        parameters['search'] = self.request.GET.get('search', None)
+
+        return parameters
+
+    def get_queryset(self):
+        name = self.kwargs['name']
+        self.parameters = self.get_parameters()
+
+        if self.parameters['search'] is None:
+            return Post.objects.none()
+
+        queryset = Post.objects.select_related('thread').filter(
+            thread__board=name,
+            comment__icontains=self.parameters['search']
+        )
+
+        for key, modifier in self.modifiers.items():
+            queryset = modifier.execute(queryset)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super(SearchView, self).get_context_data(**kwargs)
+        context['board_name'] = self.kwargs['name']
+        context['parameters'] = self.parameters
+        context['available_parameters'] = self.available_parameters
+        context['body_id'] = 'body-search'
         return context
 
 
