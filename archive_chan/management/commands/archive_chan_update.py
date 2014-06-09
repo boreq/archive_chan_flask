@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand, CommandError
 from tendo import singleton
 
 from archive_chan.models import Board
-from archive_chan.lib.scraper import Scraper
+from archive_chan.lib.scraper import BoardScraper
 from archive_chan.settings import AppSettings
 
 class Command(BaseCommand):
@@ -36,7 +36,7 @@ class Command(BaseCommand):
 
         # Get new data for each board.
         for board in boards:
-            scraper = Scraper(board, progress=progress)
+            scraper = BoardScraper(board, progress=progress)
 
             processing_start = datetime.datetime.now()
 
@@ -65,10 +65,10 @@ class Command(BaseCommand):
                 processing_time.seconds,
                 wait_percent,
                 downloading_percent,
-                scraper.processed_threads,
-                scraper.added_posts,
-                scraper.removed_posts,
-                scraper.downloaded_images,
-                scraper.downloaded_thumbnails,
-                scraper.downloaded_threads
+                scraper.stats.get('processed_threads'),
+                scraper.stats.get('added_posts'),
+                scraper.stats.get('removed_posts'),
+                scraper.stats.get('downloaded_images'),
+                scraper.stats.get('downloaded_thumbnails'),
+                scraper.stats.get('downloaded_threads')
             ))
