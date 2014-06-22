@@ -45,30 +45,13 @@ class Command(BaseCommand):
                 scraper.update()
 
             except Exception as e:
+                raise
                 sys.stderr.write('%s\n' % (e))
 
             # Everything below is just info.
             processing_time = datetime.datetime.now() - processing_start
 
-            try:
-                wait_percent = round(scraper.total_wait / processing_time.seconds * 100)
-                downloading_percent = round(scraper.total_download_time / processing_time.seconds * 100)
-
-            except:
-                # Division by zero. Set 0 for the statistics.
-                wait_percent = 0
-                downloading_percent = 0
-
-            print('%s Board: %s Time passed: %s seconds (%s%% waiting, %s%% downloading files) Processed threads: %s Added posts: %s Removed posts: %s Downloaded images: %s Downloaded thumbnails: %s Downloaded threads: %s' % (
-                datetime.datetime.now(),
-                scraper.board,
-                processing_time.seconds,
-                wait_percent,
-                downloading_percent,
-                scraper.stats.get('processed_threads'),
-                scraper.stats.get('added_posts'),
-                scraper.stats.get('removed_posts'),
-                scraper.stats.get('downloaded_images'),
-                scraper.stats.get('downloaded_thumbnails'),
-                scraper.stats.get('downloaded_threads')
+            print('\nBoard: %s %s' % (
+                board,
+                scraper.stats.get_text(processing_time),
             ))
