@@ -699,6 +699,14 @@ code{
         h3{
             margin: .5em 0 .5em; 
         }
+
+        a{
+            text-decoration: none; 
+        }
+
+        .current-selection{
+            text-decoration: underline; 
+        }
     }
 }
 
