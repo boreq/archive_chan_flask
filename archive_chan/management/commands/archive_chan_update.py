@@ -45,7 +45,6 @@ class Command(BaseCommand):
                 scraper.update()
 
             except Exception as e:
-                raise
                 sys.stderr.write('%s\n' % (e))
 
             # Everything below is just info.

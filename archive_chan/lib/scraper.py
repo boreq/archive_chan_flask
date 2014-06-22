@@ -192,6 +192,7 @@ class Queuer:
         self.last_file_request = None
 
         self.total_wait = 0
+        self.total_wait_time_with_lock = datetime.timedelta()
 
         self.file_wait_lock = threading.Lock()
         self.api_wait_lock = threading.Lock()
@@ -199,6 +200,10 @@ class Queuer:
     def get_total_wait_time(self):
         """Get the total time for which this class forced the threads to wait."""
         return datetime.timedelta(seconds=self.total_wait)
+
+    def get_total_wait_time_with_lock(self):
+        """Get the total time for which this class forced the threads to wait plus the time waiting for the lock."""
+        return self.total_wait_time_with_lock
 
     def wait(self, time_beetwen_requests, last_request):
         """Wait to make sure that at least time_beetwen_requests passed since last_request."""
@@ -218,15 +223,23 @@ class Queuer:
 
     def api_wait(self):
         """Wait in order to satisfy the API rules."""
+        wait_start = datetime.datetime.now()
+
         with self.api_wait_lock:
             self.wait(AppSettings.get('API_WAIT'), self.last_api_request)
             self.last_api_request = datetime.datetime.now()
 
+        self.total_wait_time_with_lock += datetime.datetime.now() - wait_start
+
     def file_wait(self):
         """Wait in order to satisfy the rules. Used before downloading images."""
+        wait_start = datetime.datetime.now()
+
         with self.file_wait_lock:
             self.wait(AppSettings.get('FILE_WAIT'), self.last_file_request)
             self.last_file_request = datetime.datetime.now()
+
+        self.total_wait_time_with_lock += datetime.datetime.now() - wait_start
 
 
 class Stats:
@@ -237,6 +250,7 @@ class Stats:
         self.parameters = {
             'total_download_time': datetime.timedelta(),
             'total_wait_time': datetime.timedelta(),
+            'total_wait_time_with_lock': datetime.timedelta(),
             'processed_threads':  0,
             'added_posts': 0,
             'removed_posts': 0,
@@ -260,8 +274,8 @@ class Stats:
     def get_text(self, total_time):
         """Get the text for printing. Total processing time must be provided externally."""
         try:
-            wait_percent = round(self.get('total_wait_time').total_seconds() / total_time.total_seconds() * 100)
-            downloading_percent = round(self.get('total_download_time').total_seconds() / total_time.total_seconds() * 100)
+            wait_percent = round(self.get('total_wait_time_with_lock').total_seconds() / total_time.total_seconds() * 100 / AppSettings.get('SCRAPER_THREADS_NUMBER'))
+            downloading_percent = round(self.get('total_download_time').total_seconds() / total_time.total_seconds() * 100 / AppSettings.get('SCRAPER_THREADS_NUMBER'))
 
         except:
             # Division by zero. Set 0 for the statistics.
@@ -277,7 +291,7 @@ class Stats:
             self.get('removed_posts'),
             self.get('downloaded_images'),
             self.get('downloaded_thumbnails'),
-            self.get('downloaded_threads')
+            self.get('downloaded_threads'),
         )
 
     def merge(self, stats):
@@ -378,8 +392,7 @@ class ThreadScraper(Scraper):
             thread_json = self.get_thread_json(self.thread_info.number)
 
         except:
-            raise
-#            raise ScrapError('Unable to download the thread data. It might not exist anymore.')
+            raise ScrapError('Unable to download the thread data. It might not exist anymore.')
 
         # Create a list for downloaded post numbers.
         # We will later check if something from our database is missing in this list and remove it.
@@ -404,8 +417,7 @@ class ThreadScraper(Scraper):
                             filename_thumbnail = format('%s%s' % (post_data.filename, '.jpg'))
 
                         except:
-                            raise
-#                            raise ScrapError('Unable to download an image. Stopping at this post.')
+                            raise ScrapError('Unable to download an image. Stopping at this post.')
 
                     # Save post in the database.
                     with transaction.atomic():
@@ -468,7 +480,12 @@ class ThreadScraperThread(ThreadScraper, threading.Thread):
         self.board_scraper = board_scraper
 
     def run(self):
-        super().handle_thread()
+        try:
+            super().handle_thread()
+
+        except Exception as e:
+            sys.stderr.write('%s\n' % (e))
+
         self.board_scraper.on_thread_scraper_done(self)
 
 
@@ -483,7 +500,7 @@ class BoardScraper(Scraper):
 
     def get_catalog_json(self):
         """Get the catalog data from the official API."""
-        url = format("https://a.4cdn.org/%s/catalog.json" % (self.board.name))
+        url = 'https://a.4cdn.org/%s/catalog.json' % (self.board.name)
         self.queuer.api_wait()
         return self.get_url(url).json()
 
@@ -496,11 +513,20 @@ class BoardScraper(Scraper):
             # Launch a new thread in place of the one that just finished.
             self.launch_thread()
 
+        finally:
             # Remove the thread from the list of running threads.
-            with self.running_threads_lock:
-                self.running_threads.remove(thread_scraper.get_thread_number())
-        except:
-            raise
+            self.remove_running(thread_scraper.get_thread_number())
+
+    def add_running(self, thread_number):
+        """Add a thread to the list of the running threads."""
+        with self.running_threads_lock:
+            self.running_threads.append(thread_number)
+
+    def remove_running(self, thread_number):
+        """Remove a thread from the list of running threads."""
+        with self.running_threads_lock:
+            if thread_number in self.running_threads:
+                self.running_threads.remove(thread_number)
 
     def launch_thread(self):
         """Launch a new ThreadScraperThread."""
@@ -516,12 +542,16 @@ class BoardScraper(Scraper):
         thread_info = ThreadInfo(thread_data)
 
         # Add a new thread to the list of all running threads.
-        with self.running_threads_lock:
-            self.running_threads.append(thread_info.number)
+        self.add_running(thread_info.number)
 
-        # Launch the thread.
-        thread_scraper = ThreadScraperThread(self.board, thread_info, self, queuer=self.queuer, progress=self.show_progress)
-        thread_scraper.start()
+        try:
+            # Launch the thread.
+            thread_scraper = ThreadScraperThread(self.board, thread_info, self, queuer=self.queuer, progress=self.show_progress)
+            thread_scraper.start()
+
+        except:
+            # Remove the thread from the list of all running threads.
+            self.remove_running(thread_scraper.get_thread_number())
 
     def get_thread(self):
         """Get the next thread JSON."""
@@ -565,3 +595,4 @@ class BoardScraper(Scraper):
             time.sleep(1)
 
         self.stats.add('total_wait_time', self.queuer.get_total_wait_time())
+        self.stats.add('total_wait_time_with_lock', self.queuer.get_total_wait_time_with_lock())
