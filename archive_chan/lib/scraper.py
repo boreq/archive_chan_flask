@@ -510,10 +510,10 @@ class BoardScraper(Scraper):
             # Merge the stats from the child thread.
             self.stats.merge(thread_scraper.stats)
 
+        finally:
             # Launch a new thread in place of the one that just finished.
             self.launch_thread()
 
-        finally:
             # Remove the thread from the list of running threads.
             self.remove_running(thread_scraper.get_thread_number())
 
