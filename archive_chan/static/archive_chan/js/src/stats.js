@@ -61,7 +61,7 @@ function drawStats(data) {
   $('#value-total-posts').text(data.total_posts);
   $('#value-total-text').text(data.total_posts - data.total_image_posts);
   $('#value-total-image').text(data.total_image_posts);
-  $('#value-average-hour').text(Math.round(data.recent_posts / data.recent_posts_timespan));
+  $('#value-average-hour').text(Math.round(data.recent_posts / data.recent_posts_timespan * 100) / 100);
 
   if (data.total_threads > 0){
       $('#value-average-thread').text(Math.round(data.total_posts / data.total_threads));

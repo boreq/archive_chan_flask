@@ -93,9 +93,9 @@ class Image(models.Model):
     image = models.FileField(upload_to = "post_images") # It is impossible to use ImageField to store webm.
     thumbnail = models.FileField(upload_to = "post_thumbnails")
 
-    def is_webm(self):
+    def get_extension(self):
         name, extension = os.path.splitext(self.image.name)
-        return (extension == '.webm')
+        return extension
 
 
 class Trigger(models.Model):

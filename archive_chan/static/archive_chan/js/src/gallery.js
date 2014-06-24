@@ -72,14 +72,18 @@ function getImages(){
     if (info_data.board)
         request_data['board'] = info_data.board;
 
-    if (lastImage)
+    if (lastImage){
         request_data['last'] = lastImage;
+        request_data['amount'] = 10;
+    }else{
+        request_data['amount'] = 20;
+    }
 
     $.ajax({
         url: info_data.ajax_url_gallery,
         data: request_data,
         type: 'GET',
-        cache: true
+        cache: false
     }).done(function(response){
         if (response['error']){
             alert(response['error']);
@@ -163,7 +167,7 @@ function addImages(response){
 // Helper function creating html.
 function createImage(image){
     var imageHtml;
-    if (image.video){
+    if (image.extension == '.webm'){
         imageHtml = '<video src="' + image.url + '" controls></video>';
     }else{
         imageHtml = '<a class="gallery-image" href="' + image.url + '"><img src="' + image.url + '"></a>';

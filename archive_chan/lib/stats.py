@@ -17,7 +17,6 @@ def get_stats(**kwargs):
     # It is supposed to prevent drawing to much data on the chart and ensures correct results when calculating posts per hour
     # (saved threads which do not get deleted would alter the results).
     timespan = AppSettings.get('RECENT_POSTS_AGE')
-    timespan_time = datetime.datetime.now().replace(tzinfo=utc) - datetime.timedelta(hours=timespan)
 
     queryset_posts = Post.objects
     queryset_threads = Thread.objects
@@ -29,6 +28,10 @@ def get_stats(**kwargs):
     if thread_number is not None:
         queryset_posts = queryset_posts.filter(thread__number=thread_number)
         queryset_threads = queryset_threads.filter(number=thread_number)
+
+    # Base this on the time of the last matched post. It is possible to get an empty chart
+    # in the older threads if this is based on the current time.
+    timespan_time = queryset_posts.last().time - datetime.timedelta(hours=timespan)
 
     # Prepare data for the chart. It is necessary to convert it to a format required by Google Charts.
     posts = queryset_posts.filter(time__gt=timespan_time).extra({

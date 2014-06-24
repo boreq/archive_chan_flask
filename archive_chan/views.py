@@ -288,6 +288,7 @@ def ajax_gallery(request):
     board_name = request.GET.get('board', None)
     thread_number = request.GET.get('thread', None)
     last = request.GET.get('last', None)
+    amount = int(request.GET.get('amount', 10))
 
     queryset = Image.objects.select_related('post', 'post__thread', 'post__thread__board')
     
@@ -310,10 +311,7 @@ def ajax_gallery(request):
         )
 
     # Grab more images if this is the first request.
-    if last is not None:
-        queryset = queryset.order_by('-post__time')[:10]
-    else:
-        queryset = queryset.order_by('-post__time')[:20]
+    queryset = queryset.order_by('-post__time')[:amount]
 
     # Prepare the data.
     json_data = {
@@ -326,7 +324,7 @@ def ajax_gallery(request):
             'board': image.post.thread.board.name,
             'thread': image.post.thread.number,
             'post': image.post.number,
-            'video': image.is_webm(),
+            'extension': image.get_extension(),
             'url': image.image.url,
             'post_url': reverse(
                 'archive_chan:thread',
