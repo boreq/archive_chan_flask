@@ -102,12 +102,12 @@ class BoardView(ListView):
         return parameters
 
     def get_queryset(self):
-        name = self.kwargs['name']
+        board_name = self.kwargs['board']
         self.parameters = self.get_parameters()
 
         # I don't know how to select all data I need without executing
         # TWO damn additional queries for each thread (first post + tags).
-        queryset = Thread.objects.filter(board=name).annotate(
+        queryset = Thread.objects.filter(board=board_name).annotate(
             replies_count=Count('post'),
             images_count=Count('post__image'),
             last_reply=Max('post__time'),
@@ -120,7 +120,7 @@ class BoardView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(BoardView, self).get_context_data(**kwargs)
-        context['board_name'] = self.kwargs['name']
+        context['board_name'] = self.kwargs['board']
         context['parameters'] = self.parameters
         context['available_parameters'] = self.available_parameters
         context['body_id'] = 'body-board'
@@ -133,18 +133,18 @@ class ThreadView(ListView):
     template_name = 'archive_chan/thread.html'
 
     def get_queryset(self):
-        name = self.kwargs['name']
-        number = self.kwargs['number']
-        self.thread = get_object_or_404(Thread, board=name, number=number)
+        board_name = self.kwargs['board']
+        thread_number = self.kwargs['thread']
+        self.thread = get_object_or_404(Thread, board=board_name, number=thread_number)
         return get_list_or_404(Post.objects.filter(
-            thread__number=number,
-            thread__board=name
+            thread__number=thread_number,
+            thread__board=board_name
         ).order_by('number').select_related('image', 'thread'))
 
     def get_context_data(self, **kwargs):
         context = super(ThreadView, self).get_context_data(**kwargs)
-        context['board_name'] = self.kwargs['name']
-        context['thread_number'] = int(self.kwargs['number'])
+        context['board_name'] = self.kwargs['board']
+        context['thread_number'] = int(self.kwargs['thread'])
         context['thread_tags'] = self.thread.tagtothread_set.select_related('tag').all().order_by('tag__name')
         context['body_id'] = 'body-thread'
         return context
@@ -214,11 +214,11 @@ class SearchView(ListView):
 
         queryset = Post.objects
 
-        if 'name' in self.kwargs:
-            queryset = queryset.filter(thread__board=self.kwargs['name'])
+        if 'board' in self.kwargs:
+            queryset = queryset.filter(thread__board=self.kwargs['board'])
 
-        if 'number' in self.kwargs:
-            queryset = queryset.filter(thread__number=self.kwargs['number'])
+        if 'thread' in self.kwargs:
+            queryset = queryset.filter(thread__number=self.kwargs['thread'])
         
         queryset = queryset.filter(
             Q(subject__icontains=self.parameters['search']) |
@@ -238,8 +238,8 @@ class SearchView(ListView):
         from archive_chan.lib.stats import get_posts_chart_data
 
         context = super(SearchView, self).get_context_data(**kwargs)
-        context['board_name'] = self.kwargs.get('name', None)
-        context['thread_number'] = int(self.kwargs['number']) if 'number' in self.kwargs else None
+        context['board_name'] = self.kwargs.get('board', None)
+        context['thread_number'] = int(self.kwargs['thread']) if 'thread' in self.kwargs else None
         context['parameters'] = self.parameters
         context['available_parameters'] = self.available_parameters
         context['body_id'] = 'body-search'
@@ -254,8 +254,8 @@ class GalleryView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(GalleryView, self).get_context_data(**kwargs)
-        context['board_name'] = self.kwargs.get('name', None)
-        context['thread_number'] = int(self.kwargs['number']) if 'number' in self.kwargs else None
+        context['board_name'] = self.kwargs.get('board', None)
+        context['thread_number'] = int(self.kwargs['thread']) if 'thread' in self.kwargs else None
         context['body_id'] = 'body-gallery'
         return context
 
@@ -266,8 +266,8 @@ class StatsView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(StatsView, self).get_context_data(**kwargs)
-        context['board_name'] = self.kwargs.get('name', None)
-        context['thread_number'] = int(self.kwargs['number']) if 'number' in self.kwargs else None
+        context['board_name'] = self.kwargs.get('board', None)
+        context['thread_number'] = int(self.kwargs['thread']) if 'thread' in self.kwargs else None
         context['body_id'] = 'body-stats'
         return context
 
