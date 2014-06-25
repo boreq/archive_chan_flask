@@ -50,6 +50,8 @@ class Command(BaseCommand):
             # Everything below is just info.
             processing_time = datetime.datetime.now() - processing_start
 
+            scraper.stats.save(board, processing_time)
+
             print('%s Board: %s %s' % (
                 datetime.datetime.now(),
                 board,
