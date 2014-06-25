@@ -80,7 +80,7 @@ function ajax_remove_tag(sender){
         data: {
             thread: info_data.thread_number, // Those are set in the template
             board: info_data.board_name,     // to make things easier.
-            tag: $(sender).closest('li').find('.tag-link').text()
+            tag: $(sender).closest('li').find('.tag-link').text().trim()
         },
         type: 'POST',
         cache: false
