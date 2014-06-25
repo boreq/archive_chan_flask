@@ -16,6 +16,8 @@ class AppSettings:
         'CONNECTION_TIMEOUT': 10, # [seconds] Code downloading the data will stop waiting for a response after that time.
         'RECENT_POSTS_AGE': 48, # [hours] Used for selecting statistics when the board stores posts forever without deleting them. Read more in views.ajax_board_stats
         'SCRAPER_THREADS_NUMBER': 4, # Number of additional program threads running at the same time. In other words that many 4chan threads will be updated at the same time.
+        'VIEW_CACHE_AGE': 60 * 5, # [seconds] max age of the dynamic pages eg. board
+        'VIEW_CACHE_AGE_STATIC': 60 * 60 * 24, # [seconds] max age of the static pages eg. stats
     }
 
     @classmethod

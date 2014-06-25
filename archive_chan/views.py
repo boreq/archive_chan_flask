@@ -131,19 +131,19 @@ class ThreadView(ListView):
     def get_queryset(self):
         board_name = self.kwargs['board']
         thread_number = self.kwargs['thread']
-        self.thread = get_object_or_404(Thread, board=board_name, number=thread_number)
-        return get_list_or_404(
-            Post.objects.filter(
+        return Post.objects.select_related('image', 'thread').filter(
                 thread__number=thread_number,
                 thread__board=board_name
-            ).select_related('image', 'thread')
-        )
+            )
 
     def get_context_data(self, **kwargs):
+        thread = get_object_or_404(Thread, board=self.kwargs['board'], number=self.kwargs['thread'])
+
         context = super(ThreadView, self).get_context_data(**kwargs)
         context['board_name'] = self.kwargs['board']
         context['thread_number'] = int(self.kwargs['thread'])
-        context['thread_tags'] = self.thread.tagtothread_set.select_related('tag').order_by('tag__name')
+        context['thread'] = thread 
+        context['tags'] = thread.tagtothread_set.select_related('tag').order_by('tag__name')
         context['body_id'] = 'body-thread'
         return context
 

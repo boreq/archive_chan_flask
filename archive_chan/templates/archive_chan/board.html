@@ -1,5 +1,6 @@
 {% extends "archive_chan/base.html" %}
 {% load i18n %}
+{% load cache %}
 {% load archive_chan_filters %}
 
 {% block inner_head %}
@@ -58,7 +59,9 @@
             </ul>
 
             <div class="board-sidebar">
-                {% include "archive_chan/snippets/board_filters.html" %}
+                {% cache 300 board_filters parameters %}
+                    {% include "archive_chan/snippets/board_filters.html" %}
+                {% endcache %}
             </div>
         </div>
     </div>
