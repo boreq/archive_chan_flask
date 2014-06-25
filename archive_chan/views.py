@@ -1,9 +1,7 @@
-import json, datetime, time
+import json
 
-from django.shortcuts import render, get_object_or_404, get_list_or_404
-from django.template import RequestContext
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
-from django.utils.timezone import utc
 from django.db.models import Max, Min, Count, Q, F
 from django.views.generic import ListView, TemplateView
 from django.core.urlresolvers import reverse
