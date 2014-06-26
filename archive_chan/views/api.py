@@ -1,6 +1,6 @@
 import json
 
-from django.db.models import Avg
+from django.db.models import Avg, F
 from django.http import HttpResponse
 from django.views.generic.base import View
 
@@ -46,6 +46,7 @@ class ApiView(View):
 
         # Handle other exceptions.
         except Exception as e:
+            raise
             response_data, status_code = self.handle_exception(ApiError())
 
         return HttpResponse(
@@ -70,15 +71,23 @@ class StatusView(ApiView):
                 entry['date'].year,
                 entry['date'].month - 1, # JavaScript months start at 0.
                 entry['date'].day,
-                entry['date'].hour,
-                entry['date'].minute,
-                entry['date'].second
+                0,
+                0,
+                0
             ))
 
             label_string = entry['date'].strftime('%Y-%m-%d')
 
+            if entry['average_posts'] != 0:
+                value = round(entry['average_time'] / entry['average_posts'], 2)
+            else:
+                value = 0
+
             chart_data['rows'].append({
-                'c': [{'v': value_string, 'f': label_string}, {'v': entry['average'] / entry['added_posts']}]
+                'c': [
+                    {'v': value_string, 'f': label_string},
+                    {'v': value},
+                ]
             })
 
         return chart_data
@@ -92,8 +101,11 @@ class StatusView(ApiView):
             'date': str(last_update.date.isoformat())
         }
 
-        updates = Update.objects.values('date', 'added_posts').order_by('date').annotate(
-            average=Avg('total_time')
+        updates = Update.objects.extra({
+            'date': 'date("date")'
+        }).values('date').order_by('date').annotate(
+            average_time=Avg('total_time'),
+            average_posts=Avg('added_posts')
         )
 
         response_data['chart_data'] = self.get_chart_data(updates)

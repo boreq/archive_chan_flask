@@ -75,7 +75,11 @@ function drawChart(data) {
     series: [{
         color: '#65c6bb'
     }],
-    curveType: 'function'
+    explorer: {
+        maxZoomOut: 2,
+        actions: ['dragToZoom', 'rightClickToReset'],
+        keepInBounds: true
+    }
   };
 
   var chartData = new google.visualization.DataTable(data);

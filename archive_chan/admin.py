@@ -46,7 +46,7 @@ class TriggerAdmin(admin.ModelAdmin):
 
 
 class UpdateAdmin(admin.ModelAdmin):
-    list_display = ['board', 'date', 'total_time']
+    list_display = ['board', 'date', 'total_time', 'added_posts']
 
 
 admin.site.register(Board, BoardAdmin)
