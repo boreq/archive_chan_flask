@@ -168,6 +168,8 @@ class Update(models.Model):
     downloaded_thumbnails = models.IntegerField()
     downloaded_threads = models.IntegerField()
 
+    class Meta:
+        ordering = ['date']
 
 from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver

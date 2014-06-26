@@ -52,7 +52,7 @@ function update(){
 
 // Function filling in the statistics.
 function drawData(data) {
-  $('#value-total-threads').text(data.total_threads);
+  $('#value-last-update').text(data.last_update.date);
 }
 
 // Function drawing the chart.
@@ -79,6 +79,6 @@ function drawChart(data) {
   };
 
   var chartData = new google.visualization.DataTable(data);
-  var chart = new google.visualization.LineChart(document.getElementById('chart'));
+  var chart = new google.visualization.ColumnChart(document.getElementById('chart'));
   chart.draw(chartData, options);
 }

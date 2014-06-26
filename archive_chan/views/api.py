@@ -1,7 +1,10 @@
 import json
 
-from django.views.generic.base import View
+from django.db.models import Avg
 from django.http import HttpResponse
+from django.views.generic.base import View
+
+from archive_chan.models import Update
 
 class ApiError(Exception):
     def __init__(self, status_code=500, error_code='unknown', message='Unknown server error.'):
@@ -52,5 +55,47 @@ class ApiView(View):
         )
 
 class StatusView(ApiView):
+    def get_chart_data(self, queryset):
+        """Creates data structured as required by Google Charts."""
+        chart_data = {
+            'cols': [{'label': 'Date', 'type': 'datetime'}, {'label': 'Time per post', 'type': 'number'}],
+            'rows': []
+        }
+
+        if queryset is None:
+            return chart_data
+
+        for entry in queryset:
+            value_string = format("Date(%s, %s, %s, %s, %s, %s)" % (
+                entry['date'].year,
+                entry['date'].month - 1, # JavaScript months start at 0.
+                entry['date'].day,
+                entry['date'].hour,
+                entry['date'].minute,
+                entry['date'].second
+            ))
+
+            label_string = entry['date'].strftime('%Y-%m-%d')
+
+            chart_data['rows'].append({
+                'c': [{'v': value_string, 'f': label_string}, {'v': entry['average'] / entry['added_posts']}]
+            })
+
+        return chart_data
+
     def get_api_response(self, request, *args, **kwargs):
-        raise NotImplementedApiError
+        response_data = {}
+
+        last_update = Update.objects.last()
+
+        response_data['last_update'] = {
+            'date': str(last_update.date.isoformat())
+        }
+
+        updates = Update.objects.values('date', 'added_posts').order_by('date').annotate(
+            average=Avg('total_time')
+        )
+
+        response_data['chart_data'] = self.get_chart_data(updates)
+
+        return response_data
