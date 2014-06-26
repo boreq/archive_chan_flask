@@ -268,6 +268,16 @@ class StatsView(TemplateView):
         return context
 
 
+class StatusView(TemplateView):
+    """View displaying archive status. Data is loaded via AJAX calls."""
+    template_name = 'archive_chan/status.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(StatusView, self).get_context_data(**kwargs)
+        context['body_id'] = 'body-status'
+        return context
+
+
 def ajax_stats(request):
     """JSON data with statistics."""
     from archive_chan.lib.stats import get_stats

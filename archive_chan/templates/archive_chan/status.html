@@ -1,0 +1,48 @@
+{% extends "archive_chan/base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block inner_head %}
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script>
+        var info_data = {
+            api_url: '{% url 'archive_chan:api_status' %}'
+        };
+    </script>
+    <script src="{% static 'archive_chan/js/status.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="content">
+        <div class="wrapper">
+            <noscript><p>This page is updated automatically and requires JavaScript.</p></noscript>
+            <ul class="stats">
+                <li>
+                    <div>
+                        <h3>Data 1</h3>
+                        <div class="value" id="value-data-one"></div>
+                    </div>
+                </li>
+                
+                <li>
+                    <div>
+                        <h3>Data 2</h3>
+                        <div class="value" id="value-data-two"></div>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="chart-container">
+                <div class="chart">
+                    <h3>Average update times</h3>
+                    <div id="chart"></div>
+                </div>
+            </div>
+
+            <div class="last-update-info">
+                Last page update: <time id="last-update">Never</time>
+                <a id="update-now"><i class="fa fa-refresh"></i></a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

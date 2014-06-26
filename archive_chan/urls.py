@@ -3,6 +3,8 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.cache import cache_page
 
 import archive_chan.views.core as core
+import archive_chan.views.api as api
+
 from archive_chan.settings import AppSettings
 
 cache = AppSettings.get('VIEW_CACHE_AGE')
@@ -27,7 +29,12 @@ urlpatterns = patterns('',
     url(r'^board/(?P<board>[a-z]+)/thread/(?P<thread>[0-9]+)/gallery/$', cache_page(cache_static)(core.GalleryView.as_view()), name='thread_gallery'),
     url(r'^board/(?P<board>[a-z]+)/thread/(?P<thread>[0-9]+)/search/$', core.SearchView.as_view(), name='thread_search'),
 
-    # AJAX.
+    # Misc.
+    url(r'^status/$', cache_page(cache_static)(core.StatusView.as_view()), name='status'),
+
+    # API.
+    url(r'^api/status/$', api.StatusView.as_view(), name='api_status'),
+
     url(r'^ajax/stats/$', core.ajax_stats, name='ajax_stats'),
     url(r'^ajax/gallery/$', core.ajax_gallery, name='ajax_gallery'),
 
