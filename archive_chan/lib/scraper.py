@@ -486,8 +486,8 @@ class ThreadScraperThread(ThreadScraper, threading.Thread):
         except Exception as e:
             sys.stderr.write('%s\n' % (e))
 
-        self.board_scraper.on_thread_scraper_done(self)
-
+        finally:
+            self.board_scraper.on_thread_scraper_done(self)
 
 class BoardScraper(Scraper):
     """Class which basically launches and coordinates ThreadScraperThread classes."""
@@ -509,6 +509,9 @@ class BoardScraper(Scraper):
         try:
             # Merge the stats from the child thread.
             self.stats.merge(thread_scraper.stats)
+        
+        except Exception as e:
+            sys.stderr.write('%s\n' % (e))
 
         finally:
             # Launch a new thread in place of the one that just finished.
@@ -551,7 +554,7 @@ class BoardScraper(Scraper):
 
         except:
             # Remove the thread from the list of all running threads.
-            self.remove_running(thread_scraper.get_thread_number())
+            self.remove_running(thread_info.number)
 
     def get_thread(self):
         """Get the next thread JSON."""
