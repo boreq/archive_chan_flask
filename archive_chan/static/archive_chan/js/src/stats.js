@@ -41,39 +41,52 @@ function update(){
         data: request_data,
         dataType: 'json'
     }).done(function(data){
-        statsData = data; // Data has to be stored because the chart is redrawn on resize event.
+        // Data has to be stored because the chart is redrawn on resize event.
+        statsData = data;
+
+        // Display the data.
         drawStats(data);
         drawChart(data);
-
-        // Schedule the next update.
-        timeout = setTimeout(update, 15 * 1000);
 
         // Set the text with the time of the last update.
         var date = new Date();
         $('#last-update').attr("datetime", date.toISOString()).attr("title", date).data("timeago", null).timeago();
+    }).always(function(){
+        // Schedule the next update.
+        timeout = setTimeout(update, 15 * 1000);
+
+        // Stop the icon rotation.
         $('#update-now i').removeClass('fa-spin');
     });
 }
 
 // Function filling in the statistics.
 function drawStats(data) {
-  $('#value-total-threads').text(data.total_threads);
-  $('#value-total-posts').text(data.total_posts);
-  $('#value-total-text').text(data.total_posts - data.total_image_posts);
-  $('#value-total-image').text(data.total_image_posts);
-  $('#value-average-hour').text(Math.round(data.recent_posts / data.recent_posts_timespan * 100) / 100);
+    $('#value-total-threads').text(data.total_threads);
+    $('#value-total-posts').text(data.total_posts);
+    $('#value-total-text').text(data.total_posts - data.total_image_posts);
+    $('#value-total-image').text(data.total_image_posts);
 
-  if (data.total_threads > 0){
-      $('#value-average-thread').text(Math.round(data.total_posts / data.total_threads));
-  }else{
-      $('#value-average-thread').text('0');
-  }
+    // Show more detailed value if it is small.
+    var averageHour = data.recent_posts / data.recent_posts_timespan;
+    if (averageHour > 10){
+        averageHour = Math.round(averageHour);
+    }else{
+        averageHour = Math.round(averageHour * 100) / 100;
+    }
+    $('#value-average-hour').text(averageHour);
 
-  if (data.total_posts > 0){
-      $('#value-percent-image').text(Math.round(data.total_image_posts / data.total_posts * 100) + '%');
-  }else{
-      $('#value-percent-image').text('0%');
-  }
+    if (data.total_threads > 0){
+        $('#value-average-thread').text(Math.round(data.total_posts / data.total_threads));
+    }else{
+        $('#value-average-thread').text('0');
+    }
+
+    if (data.total_posts > 0){
+        $('#value-percent-image').text(Math.round(data.total_image_posts / data.total_posts * 100) + '%');
+    }else{
+        $('#value-percent-image').text('0%');
+    }
 
 }
 
@@ -84,9 +97,8 @@ function drawChart(data) {
     chartArea: {
         left: 50,
         top: 10,
-        right: 100,
-        bottom: 0,
-        width: '100%'
+        width: '100%',
+        height:  '80%'
     },
     legend: {
         position: 'none'

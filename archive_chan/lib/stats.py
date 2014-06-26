@@ -1,7 +1,7 @@
 import datetime
 
 from django.utils.timezone import utc
-from django.db.models import Count
+from django.db.models import Count, Min, Max
 
 from archive_chan.models import Board, Thread, Post
 from archive_chan.settings import AppSettings
@@ -28,6 +28,15 @@ def get_stats(**kwargs):
     if thread_number is not None:
         queryset_posts = queryset_posts.filter(thread__number=thread_number)
         queryset_threads = queryset_threads.filter(number=thread_number)
+
+    # Increase accuracy in thread mode.
+    if board_name and thread_number:
+        times = queryset_threads.annotate(
+            first=Min('post__time'),
+            last=Max('post__time')
+        ).first()
+
+        timespan = (times.last - times.first).total_seconds() / 3600
 
     # Base this on the time of the last matched post. It is possible to get an empty chart
     # in the older threads if this is based on the current time.
