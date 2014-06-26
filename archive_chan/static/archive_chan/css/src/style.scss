@@ -109,6 +109,29 @@ body#body-gallery .nav-gallery{
 
 /*   Footer.   */
 footer{
+    .wrapper{
+        display: flex;
+    
+        .links{
+            flex-grow: 1;
+            text-align: left;
+    
+            li{
+                display: inline-block;
+                margin-right: 1em;
+            }
+    
+            a{
+                color: $text-color-dimmed;
+                text-decoration: none;
+            }
+    
+            a:hover{
+                color: $primary-color;
+            }
+        }
+    }
+
     .generated{
         i{
             color: #ddd;
