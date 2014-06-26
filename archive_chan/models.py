@@ -151,6 +151,26 @@ class Tag(models.Model):
         return self.name
 
 
+class Update(models.Model):
+    board = models.ForeignKey('Board')
+    date = models.DateTimeField()
+    used_threads = models.IntegerField()
+
+    total_time = models.FloatField()
+    wait_time = models.FloatField()
+    download_time = models.FloatField()
+
+    processed_threads = models.IntegerField()
+    added_posts = models.IntegerField()
+    removed_posts = models.IntegerField()
+
+    downloaded_images = models.IntegerField()
+    downloaded_thumbnails = models.IntegerField()
+    downloaded_threads = models.IntegerField()
+
+    class Meta:
+        ordering = ['date']
+
 from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
 

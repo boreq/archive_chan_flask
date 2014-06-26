@@ -26,6 +26,12 @@
         },
         {
             "input": [
+                "archive_chan/static/archive_chan/js/src/status.js"
+            ],
+            "output": "archive_chan/static/archive_chan/js/status.js"
+        },
+        {
+            "input": [
                 "archive_chan/static/archive_chan/js/src/search.js"
             ],
             "output": "archive_chan/static/archive_chan/js/search.js"

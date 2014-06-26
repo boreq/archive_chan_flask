@@ -4,7 +4,7 @@ from django.utils.timezone import utc
 from django.db import transaction
 from django.core.files.base import ContentFile
 
-from archive_chan.models import Thread, Post, Image, Trigger, TagToThread
+from archive_chan.models import Thread, Post, Image, Trigger, TagToThread, Update
 from archive_chan.settings import AppSettings
 
 class ScrapError(Exception):
@@ -270,6 +270,29 @@ class Stats:
         """Get a value of the specified statistic."""
         with self.lock:
             return self.parameters[name]
+
+    def save(self, board, total_time, **kwargs):
+        """Save the statistics in the database."""
+        date = kwargs.get('date', datetime.datetime.utcnow().replace(tzinfo=utc))
+        used_threads = kwargs.get('used_threads', AppSettings.get('SCRAPER_THREADS_NUMBER'))
+
+        wait_time = self.get('total_wait_time_with_lock').total_seconds() / used_threads
+        download_time = self.get('total_download_time').total_seconds() / used_threads
+
+        update = Update.objects.create(
+            board=board,
+            date=date,
+            used_threads=used_threads,
+            total_time=total_time.total_seconds(),
+            wait_time=wait_time,
+            download_time=download_time,
+            processed_threads=self.get('processed_threads'),
+            added_posts=self.get('added_posts'),
+            removed_posts=self.get('removed_posts'),
+            downloaded_images=self.get('downloaded_images'),
+            downloaded_thumbnails=self.get('downloaded_thumbnails'),
+            downloaded_threads=self.get('downloaded_threads')
+        )
 
     def get_text(self, total_time):
         """Get the text for printing. Total processing time must be provided externally."""
