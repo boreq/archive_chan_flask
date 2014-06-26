@@ -1,6 +1,6 @@
 import json
 
-from django.db.models import Avg, F
+from django.db.models import Avg
 from django.http import HttpResponse
 from django.views.generic.base import View
 
@@ -95,12 +95,12 @@ class StatusView(ApiView):
     def get_api_response(self, request, *args, **kwargs):
         response_data = {}
 
-        last_update = Update.objects.last()
+        # Last updates.
+        last_updates = Update.objects.order_by('board__name', '-date').distinct('board').select_related('board')
 
-        response_data['last_update'] = {
-            'date': str(last_update.date.isoformat())
-        }
+        response_data['last_updates'] = [{'board': str(update.board), 'date': update.date.isoformat()} for update in last_updates]
 
+        # Chart data.
         updates = Update.objects.extra({
             'date': 'date("date")'
         }).values('date').order_by('date').annotate(

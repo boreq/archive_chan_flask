@@ -52,7 +52,17 @@ function update(){
 
 // Function filling in the statistics.
 function drawData(data) {
-  $('#value-last-update').text(data.last_update.date);
+    $('#value-last-updates').empty();
+
+    var length = data.last_updates.length;
+
+    for (var i = 0; i < length; i++){
+        var entry = data.last_updates[i];
+
+        $('#value-last-updates').append('<li>' + entry.board + ' <time class="timeago" datetime="' + entry.date + '">' + entry.date + '</time></li>');
+    }
+
+    $('#value-last-updates li time').data("timeago", null).timeago();
 }
 
 // Function drawing the chart.
