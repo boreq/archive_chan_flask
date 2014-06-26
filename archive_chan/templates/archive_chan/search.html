@@ -101,7 +101,7 @@
 
                                 {# Post number. #}
                                 <li class="post-number">
-                                    <a href="{% url 'archive_chan:thread' post.thread.board.name post.thread.number %}#post-{{ post.number }}">{{ post }}</a>
+                                    <a href="{{ post.get_absolute_url }}">{{ post }}</a>
                                 </li>
                             </ul>
 

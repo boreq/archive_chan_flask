@@ -1,6 +1,8 @@
 import os
 
 from django.db import models
+from django.db.models import Max, Min, Count
+from django.core.urlresolvers import reverse
 
 
 class Board(models.Model):
@@ -24,6 +26,9 @@ class Board(models.Model):
     def __str__(self):
         return format("/%s/" % self.name)
 
+    def get_absolute_url(self):
+        return reverse('archive_chan:board', args=[self.name])
+
 
 class Thread(models.Model):
     board = models.ForeignKey('Board')
@@ -32,8 +37,10 @@ class Thread(models.Model):
     auto_saved = models.BooleanField(default=False) # Was this thread saved automatically by a trigger?
     tags = models.ManyToManyField('Tag', through='TagToThread')
 
-    class Meta:
-        unique_together = ('board', 'number')
+    replies = models.IntegerField(default=0)
+    images = models.IntegerField(default=0)
+    first_reply = models.DateTimeField(null=True, default=None)
+    last_reply = models.DateTimeField(null=True, default=None)
 
     # Used by scraper.
     def last_reply_time(self):
@@ -47,13 +54,18 @@ class Thread(models.Model):
     def count_replies(self):
         return self.post_set.count() - 1
 
-
     # Used by board template. Can't figure out a query which wouldd fetch everything in one go.
     def first_post(self):
         return self.post_set.select_related('image').first()
 
+    class Meta:
+        unique_together = ('board', 'number')
+
     def __str__(self):
         return format("#%s" % (self.number))
+
+    def get_absolute_url(self):
+        return reverse('archive_chan:thread', args=[self.board.name, self.number])
 
 
 class Post(models.Model):
@@ -71,9 +83,6 @@ class Post(models.Model):
 
     save_time = models.DateTimeField(auto_now_add = True)
 
-    class Meta:
-        ordering = ['number']
-
     def get_name(self):
         if self.name:
             return self.name
@@ -83,9 +92,14 @@ class Post(models.Model):
     def is_main(self):
         return (self.number == self.thread.number)
 
+    class Meta:
+        ordering = ['number']
+
     def __str__(self):
         return format("#%s" % (self.number))
 
+    def get_absolute_url(self):
+        return '%s#post-%s' % (self.thread.get_absolute_url(), self.number)
 
 class Image(models.Model):
     original_name = models.CharField(max_length=255)
@@ -171,11 +185,65 @@ class Update(models.Model):
     class Meta:
         ordering = ['date']
 
-from django.db.models.signals import pre_delete
+from django.db.models.signals import pre_delete, post_save, pre_delete
 from django.dispatch.dispatcher import receiver
 
-# Delete downloaded images from the HDD when deleting a record.
 @receiver(pre_delete, sender=Image)
-def image_delete(sender, instance, **kwargs):
+def pre_image_delete(sender, instance, **kwargs):
+    """Delete images from the HDD."""
     instance.image.delete(False)
     instance.thumbnail.delete(False)
+
+@receiver(post_save, sender=Image)
+def post_image_save(sender, instance, created, **kwargs):
+    """Update images."""
+    if created:
+        thread = instance.post.thread
+        thread.images += 1
+        thread.save()
+
+@receiver(post_save, sender=Post)
+def post_post_save(sender, instance, created, **kwargs):
+    """Update the replies, last_reply and first_reply."""
+    if created:
+        thread = instance.thread
+
+        # Replies.
+        thread.replies += 1
+
+        # Last reply.
+        if thread.last_reply is None or instance.time > thread.last_reply:
+            thread.last_reply = instance.time
+
+        # First reply.
+        if thread.first_reply is None or instance.time < thread.first_reply:
+            thread.first_reply = instance.time
+
+        thread.save()
+
+@receiver(pre_delete, sender=Post)
+def pre_post_delete(sender, instance, **kwargs):
+    """Update replies, images, last_reply, first_reply."""
+    thread = instance.thread
+
+    # Replies
+    thread.replies -= 1
+
+    # Images.
+    try:
+        if instance.image:
+            thread.images -= 1
+
+    except:
+        pass
+
+    # First and last reply.
+    thread_recount = Thread.objects.annotate(
+        min_post=Min('post__time'),
+        max_post=Max('post__time')
+    ).get(pk=thread.pk)
+    
+    thread.first_reply = thread_recount.min_post
+    thread.last_reply = thread_recount.max_post
+    
+    thread.save()

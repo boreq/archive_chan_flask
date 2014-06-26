@@ -2,6 +2,7 @@ import requests, datetime, re, time, html, sys, threading
 
 from django.utils.timezone import utc
 from django.db import transaction
+from django.db.models import Max, Min, Count
 from django.core.files.base import ContentFile
 
 from archive_chan.models import Thread, Post, Image, Trigger, TagToThread, Update
@@ -351,6 +352,7 @@ class ThreadScraper(Scraper):
         super().__init__(board, **kwargs)
         self.thread_info = thread_info
         self.triggers = Triggers()
+        self.modified = False
 
     def get_image(self, filename, extension):
         """Download an image."""
@@ -377,6 +379,86 @@ class ThreadScraper(Scraper):
         """Get the number of a thread scrapped by this instance."""
         return self.thread_info.number
 
+    def should_be_updated(self, thread):
+
+        # Should the thread be updated? Check only if there is any data about the thread
+        # (the download of the first post was successful).
+        if not thread.last_reply_time() is None and thread.post_set.count() > 0:
+            # It has to have newer replies or different number of replies.
+            # Note: use count_replies because 4chan does not count the first post as a reply.
+            if (self.thread_info.last_reply_time <= thread.last_reply_time()
+                and self.thread_info.replies == thread.count_replies()):
+                return False
+
+        return True
+
+    def get_last_post_number(self, thread):
+        # Get the last saved post in this thread.
+        last_post = thread.post_set.order_by('number').last()
+
+        # Determine the last post's number or pick an imaginary one.
+        # Only posts with a number above this one will be added to the database.
+        if last_post is None:
+            return -1;
+        else:
+            return last_post.number
+
+    def add_post(self, post_data, thread):
+        # Download images first, don't waste time when in transaction.
+        if not post_data.filename is None:
+            try:
+                image_tmp = ContentFile(self.get_image(post_data.filename, post_data.extension))
+                thumbnail_tmp = ContentFile(self.get_thumbnail(post_data.filename))
+
+                filename_image = format('%s%s' % (post_data.filename, post_data.extension))
+                filename_thumbnail = format('%s%s' % (post_data.filename, '.jpg'))
+
+            except:
+                raise ScrapError('Unable to download an image. Stopping at this post.')
+
+        # Save post in the database.
+        with transaction.atomic():
+            # Do not save earlier or you might end up with a thread without posts.
+            if not thread.pk:
+                thread.save()
+
+            # Save post.
+            post = Post(
+                thread=thread,
+                number=post_data.number,
+                time=post_data.time,
+                name=post_data.name,
+                trip=post_data.trip,
+                email=post_data.email,
+                subject=post_data.subject,
+                comment=post_data.comment
+            )
+            post.save()
+
+            # Save image.
+            if not post_data.filename is None:
+                image = Image(original_name=post_data.original_filename, post=post)
+
+                image.image.save(filename_image, image_tmp)
+                image.thumbnail.save(filename_thumbnail, thumbnail_tmp)
+
+                image.save()
+            else:
+                image = None
+
+            self.triggers.handle(post_data, thread)
+
+        self.stats.add('added_posts', 1)
+
+        # Just to give something to look at. 
+        # "_" is a post withour an image, "-" is a post with an image
+        if self.show_progress:
+            if post_data.filename is None:
+                character = '_'
+            else:
+                character = '-'
+            print(character, end="", flush=True)
+
     def handle_thread(self):
         """Download/update the thread if necessary."""
         # Download only above certain number of posts.
@@ -388,27 +470,14 @@ class ThreadScraper(Scraper):
         try:
             thread = Thread.objects.get(board=self.board, number=self.thread_info.number)
 
-            # Should the thread be updated? Check only if there is any data about the thread
-            # (the download of the first post was successful).
-            if not thread.last_reply_time() is None and thread.post_set.count() > 0:
-                # It has to have newer replies or different number of replies.
-                # Note: use count_replies because 4chan does not count the first post as a reply.
-                if (self.thread_info.last_reply_time <= thread.last_reply_time()
-                    and self.thread_info.replies == thread.count_replies()):
-                    return
+            if not self.should_be_updated(thread):
+                return
 
         except Thread.DoesNotExist:
             thread = Thread(board=self.board, number=self.thread_info.number)
 
-        # Get the last saved post in this thread.
-        last_post = thread.post_set.order_by('number').last()
-
-        # Determine the last post's number or pick an imaginary one.
-        # Only posts with a number above this one will be added to the database.
-        if last_post is None:
-            last_post_number = -1;
-        else:
-            last_post_number = last_post.number;
+        # Get last post number.
+        last_post_number = self.get_last_post_number(thread)
 
         # Download the thread data.
         try:
@@ -421,79 +490,31 @@ class ThreadScraper(Scraper):
         # We will later check if something from our database is missing in this list and remove it.
         post_numbers = []
 
-        # Add posts.
-        for post_json in thread_json['posts']:
-            # Create container class and parse info in the process.
-            post_data = PostData(post_json)
-            
-            post_numbers.append(post_data.number)
-            
-            if post_data.number > last_post_number:
-                try:
-                    # Download images first, don't waste time when in transaction.
-                    if not post_data.filename is None:
-                        try:
-                            image_tmp = ContentFile(self.get_image(post_data.filename, post_data.extension))
-                            thumbnail_tmp = ContentFile(self.get_thumbnail(post_data.filename))
+        try:
+            # Add posts.
+            for post_json in thread_json['posts']:
+                # Create container class and parse info in the process.
+                post_data = PostData(post_json)
+                
+                # Store post number.
+                post_numbers.append(post_data.number)
 
-                            filename_image = format('%s%s' % (post_data.filename, post_data.extension))
-                            filename_thumbnail = format('%s%s' % (post_data.filename, '.jpg'))
+                # Actual update.
+                if post_data.number > last_post_number:
+                    self.modified = True
+                    self.add_post(post_data, thread)
 
-                        except:
-                            raise ScrapError('Unable to download an image. Stopping at this post.')
+            # Remove posts which don't exist in the thead.
+            for post in thread.post_set.all():
+                if not post.number in post_numbers:
+                    self.stats.add('removed_posts', 1)
+                    self.modified = True
+                    post.delete()
 
-                    # Save post in the database.
-                    with transaction.atomic():
-                        # Do not save earlier or you might end up with a thread without posts.
-                        if not thread.pk:
-                            thread.save()
+        except Exception as e:
+            sys.stderr.write('%s\m' % (e))
+            self.modified = True
 
-                        # Save post.
-                        post = Post(
-                            thread=thread,
-                            number=post_data.number,
-                            time=post_data.time,
-                            name=post_data.name,
-                            trip=post_data.trip,
-                            email=post_data.email,
-                            subject=post_data.subject,
-                            comment=post_data.comment
-                        )
-                        post.save()
-
-                        # Save image.
-                        if not post_data.filename is None:
-                            image = Image(original_name=post_data.original_filename, post=post)
-
-                            image.image.save(filename_image, image_tmp)
-                            image.thumbnail.save(filename_thumbnail, thumbnail_tmp)
-
-                            image.save()
-                        else:
-                            image = None
-
-                        self.triggers.handle(post_data, thread)
-
-                    self.stats.add('added_posts', 1)
-  
-
-                except Exception as e:
-                    raise e
-
-                # Just to give something to look at. 
-                # "_" is a post withour an image, "-" is a post with an image
-                if self.show_progress:
-                    if post_data.filename is None:
-                        character = '_'
-                    else:
-                        character = '-'
-                    print(character, end="", flush=True)
-    
-        # Remove posts which does not exist in the thead.
-        for post in thread.post_set.all():
-            if not post.number in post_numbers:
-                post.delete()
-                self.stats.add('removed_posts', 1)
 
 class ThreadScraperThread(ThreadScraper, threading.Thread):
     """This is simply a ThreadScraper which is supposed to run as a thread."""

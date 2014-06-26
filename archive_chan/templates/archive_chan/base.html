@@ -26,8 +26,10 @@
                 <div class="wrapper">
                     {# Main nav. #}
                     <a href="{% url 'archive_chan:index' %}">ARCHIVE CHAN</a>
-                    {% if board_name %}<a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>{% endif %}
-                    {% if thread_number %}<a href="{% url 'archive_chan:thread' board_name thread_number %}">#{{ thread_number }}</a>{% endif %}
+                    {% block main_nav %}
+                        {% if board_name %}<a href="{% url 'archive_chan:board' board_name %}">/{{ board_name }}/</a>{% endif %}
+                        {% if thread_number %}<a href="{% url 'archive_chan:thread' board_name thread_number %}">#{{ thread_number }}</a>{% endif %}
+                    {% endblock %}
 
                     {# Context sensitive nav. #}
                     <ul class="nav">

@@ -12,6 +12,11 @@
     <script src="{% static 'archive_chan/js/status.js' %}"></script>
 {% endblock %}
 
+{% block main_nav %}
+    <a href="{% url 'archive_chan:status' %}">status</a>
+{% endblock %}
+
+
 {% block content %}
     <div class="content">
         <div class="wrapper">

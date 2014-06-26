@@ -9,17 +9,27 @@ from django.core.urlresolvers import reverse
 from archive_chan.models import Board, Thread, Post, Tag, TagToThread, Image
 import archive_chan.lib.modifiers as modifiers
 
+class BodyIdMixin(object):
+    def get_context_data(self, **kwargs):
+        context = super(BodyIdMixin, self).get_context_data(**kwargs)
+        context['body_id'] = getattr(self, 'body_id', None)
+        return context
 
-class IndexView(ListView):
+
+class UniversalViewMixin(BodyIdMixin):
+    def get_context_data(self, **kwargs):
+        context = super(UniversalViewMixin, self).get_context_data(**kwargs)
+        context['board_name'] = self.kwargs.get('board', None)
+        context['thread_number'] = int(self.kwargs['thread']) if 'thread' in self.kwargs else None
+        return context
+
+
+class IndexView(BodyIdMixin, ListView):
     """View showing all boards."""
     model = Board
     context_object_name = 'board_list'
     template_name = 'archive_chan/index.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(IndexView, self).get_context_data(**kwargs)
-        context['body_id'] = 'body-home'
-        return context
+    body_id = 'body-home'
 
 
 class BoardView(ListView):
@@ -32,8 +42,8 @@ class BoardView(ListView):
     available_parameters = {
         'sort': (
             ('last_reply', ('Last reply', 'last_reply', None)),
-            ('creation_date', ('Creation date', 'first_reply', {'first_reply': Min('post__time')})),
-            ('replies', ('Replies', 'replies', {'replies': Count('post')})),
+            ('creation_date', ('Creation date', 'first_reply', None)),
+            ('replies', ('Replies', 'replies', None)),
         ),
         'saved': (
             ('all', ('All', None)),
@@ -101,11 +111,7 @@ class BoardView(ListView):
 
         # I don't know how to select all data I need without executing
         # TWO damn additional queries for each thread (first post + tags).
-        queryset = Thread.objects.filter(board=self.kwargs['board']).annotate(
-            replies_count=Count('post'),
-            images_count=Count('post__image'),
-            last_reply=Max('post__time'),
-        ).filter(replies_count__gte=1)
+        queryset = Thread.objects.filter(board=self.kwargs['board'], replies__gte=1).select_related('board')
 
         for key, modifier in self.modifiers.items():
             queryset = modifier.execute(queryset)
@@ -122,14 +128,14 @@ class BoardView(ListView):
 
 class ThreadView(ListView):
     """View showing all posts in a specified thread."""
-    model = Thread
+    model = Post
     context_object_name = 'post_list'
     template_name = 'archive_chan/thread.html'
 
     def get_queryset(self):
         board_name = self.kwargs['board']
         thread_number = self.kwargs['thread']
-        return Post.objects.select_related('image', 'thread').filter(
+        return Post.objects.select_related('image', 'thread', 'thread__board').filter(
                 thread__number=thread_number,
                 thread__board=board_name
             )
@@ -244,38 +250,22 @@ class SearchView(ListView):
         return context
 
 
-class GalleryView(TemplateView):
+class GalleryView(UniversalViewMixin, TemplateView):
     """View displaying gallery template. Data is loaded via AJAX calls."""
     template_name = 'archive_chan/gallery.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(GalleryView, self).get_context_data(**kwargs)
-        context['board_name'] = self.kwargs.get('board', None)
-        context['thread_number'] = int(self.kwargs['thread']) if 'thread' in self.kwargs else None
-        context['body_id'] = 'body-gallery'
-        return context
+    body_id = 'body-gallery'
 
 
-class StatsView(TemplateView):
+class StatsView(UniversalViewMixin, TemplateView):
     """View displaying stats template. Data is loaded via AJAX calls."""
     template_name = 'archive_chan/stats.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(StatsView, self).get_context_data(**kwargs)
-        context['board_name'] = self.kwargs.get('board', None)
-        context['thread_number'] = int(self.kwargs['thread']) if 'thread' in self.kwargs else None
-        context['body_id'] = 'body-stats'
-        return context
+    body_id = 'body-stats'
 
 
-class StatusView(TemplateView):
+class StatusView(BodyIdMixin, TemplateView):
     """View displaying archive status. Data is loaded via AJAX calls."""
     template_name = 'archive_chan/status.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(StatusView, self).get_context_data(**kwargs)
-        context['body_id'] = 'body-status'
-        return context
+    body_id = 'body-status'
 
 
 def ajax_stats(request):

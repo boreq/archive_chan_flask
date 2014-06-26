@@ -21,7 +21,7 @@
                     {% else %}
                         <li>
                     {% endif %}
-                        <a href="{% url 'archive_chan:thread' board_name thread.number %}">
+                        <a href="{{ thread.get_absolute_url }}">
                             {% with thread.first_post as post %}
                                 <div class="img-container">
                                     {% with post.image as image %}
@@ -34,8 +34,8 @@
                                         last <time class="timeago" datetime="{{ thread.last_reply|date:"c" }}">{{ thread.last_reply }}</time>
                                     </div>
                                     <div class="thread-info-stats">
-                                        <i class="fa fa-comment-o"></i> {{ thread.replies_count|add:"-1" }}
-                                        <i class="fa fa-picture-o"></i> {{ thread.images_count|add:"-1" }}
+                                        <i class="fa fa-comment-o"></i> {{ thread.replies|add:"-1" }}
+                                        <i class="fa fa-picture-o"></i> {{ thread.images|add:"-1" }}
                                     </div>
                                 </div>
 
@@ -46,11 +46,11 @@
                                 </div>
 
                                 {% if post.subject %}
-                                    <div class="thread-subject">{{post.subject}}</div>
+                                    <div class="thread-subject">{{ post.subject }}</div>
                                 {% endif %}
 
                                 {% if post.comment %}
-                                    <div class="thread-comment">{{post.comment}}</div>
+                                    <div class="thread-comment">{{ post.comment }}</div>
                                 {% endif %}
                             {% endwith %}
                         </a>
