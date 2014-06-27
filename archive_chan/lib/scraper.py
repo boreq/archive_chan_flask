@@ -2,7 +2,6 @@ import requests, datetime, re, time, html, sys, threading
 
 from django.utils.timezone import utc
 from django.db import transaction
-from django.db.models import Max, Min, Count
 from django.core.files.base import ContentFile
 
 from archive_chan.models import Thread, Post, Image, Trigger, TagToThread, Update
