@@ -84,6 +84,9 @@ function drawChart(data) {
         maxZoomOut: 2,
         actions: ['dragToZoom', 'rightClickToReset'],
         keepInBounds: true
+    },
+    vAxis:{
+        minValue: 0
     }
   };
 
