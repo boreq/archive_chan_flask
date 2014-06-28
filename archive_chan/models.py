@@ -3,7 +3,12 @@ import os
 from django.db import models
 from django.db.models import Max, Min, Count
 from django.core.urlresolvers import reverse
+from django.core.files.storage import FileSystemStorage
 
+from archive_chan.settings import AppSettings
+
+# This overrides the global media url.
+fs = FileSystemStorage(base_url=AppSettings.get('MEDIA_URL'))
 
 class Board(models.Model):
     name = models.CharField(max_length=255, primary_key = True)
@@ -104,8 +109,8 @@ class Post(models.Model):
 class Image(models.Model):
     original_name = models.CharField(max_length=255)
     post = models.OneToOneField('Post')
-    image = models.FileField(upload_to = "post_images") # It is impossible to use ImageField to store webm.
-    thumbnail = models.FileField(upload_to = "post_thumbnails")
+    image = models.FileField(upload_to = "post_images", storage=fs) # It is impossible to use ImageField to store webm.
+    thumbnail = models.FileField(upload_to = "post_thumbnails", storage=fs)
 
     def get_extension(self):
         name, extension = os.path.splitext(self.image.name)

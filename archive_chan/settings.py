@@ -6,6 +6,10 @@
 # For example:
 #
 # ARCHIVE_CHAN_API_WAIT = 2
+#
+# Of course you can also modify those values directly in this file but by defining them in the global project settings.py
+# file you will not loose your changes during an update. You will also be able to return to the default values
+# simply by deleting the line in the global project settings.py file.
 
 from django.conf import settings
 
@@ -18,6 +22,7 @@ class AppSettings:
         'SCRAPER_THREADS_NUMBER': 4, # Number of additional program threads running at the same time. In other words that many 4chan threads will be updated at the same time.
         'VIEW_CACHE_AGE': 60 * 5, # [seconds] max age of the dynamic pages eg. board
         'VIEW_CACHE_AGE_STATIC': 60 * 60 * 24, # [seconds] max age of the static pages eg. stats
+        'MEDIA_URL': settings.MEDIA_URL, # You can override the URL from which the downloaded photos are served.
     }
 
     @classmethod
