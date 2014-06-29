@@ -1,8 +1,12 @@
+import datetime
+
 from django.core.management.base import BaseCommand
-from archive_chan.models import Board, Thread
 from django.db.models import Max
 from django.utils.timezone import utc
-import datetime
+from django.core.signals import Signal
+
+from archive_chan.models import Board, Thread, Post, post_post_delete
+from django.db.models.signals import post_delete
 
 class Command(BaseCommand):
     args = ''
@@ -16,11 +20,21 @@ class Command(BaseCommand):
 
             # Get the posts older than the amount specified in the board settings.
             time_threshold = datetime.datetime.now().replace(tzinfo=utc) - datetime.timedelta(hours=board.store_threads_for)
-            queryset = Thread.objects.filter(board=board).annotate(last_reply=Max('post__time')).filter(last_reply__lt=time_threshold, saved=False)
+            queryset = Thread.objects.filter(board=board, last_reply__lt=time_threshold, saved=False)
 
             # Count for stats and delete.
             amount = queryset.count()
-            queryset.delete()
+
+            post_delete.disconnect(receiver=post_post_delete, sender=Post)
+
+            try:
+                queryset.delete()
+
+            except:
+                pass
+
+            finally:
+                post_delete.connect(post_post_delete, sender=Post)
 
             processing_time = datetime.datetime.now() - processing_start
 

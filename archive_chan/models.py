@@ -1,7 +1,7 @@
-import os
+import os, time
 
 from django.db import models
-from django.db.models import Max, Min, Count
+from django.db.models import Max, Min, Count, F
 from django.core.urlresolvers import reverse
 from django.core.files.storage import FileSystemStorage
 
@@ -190,7 +190,7 @@ class Update(models.Model):
     class Meta:
         ordering = ['date']
 
-from django.db.models.signals import pre_delete, post_save, pre_delete
+from django.db.models.signals import pre_delete, post_save, pre_delete, post_delete
 from django.dispatch.dispatcher import receiver
 
 @receiver(pre_delete, sender=Image)
@@ -226,8 +226,8 @@ def post_post_save(sender, instance, created, **kwargs):
 
         thread.save()
 
-@receiver(pre_delete, sender=Post)
-def pre_post_delete(sender, instance, **kwargs):
+@receiver(post_delete, sender=Post)
+def post_post_delete(sender, instance, **kwargs):
     """Update replies, images, last_reply, first_reply."""
     thread = instance.thread
 
@@ -243,12 +243,13 @@ def pre_post_delete(sender, instance, **kwargs):
         pass
 
     # First and last reply.
-    thread_recount = Thread.objects.annotate(
-        min_post=Min('post__time'),
-        max_post=Max('post__time')
-    ).get(pk=thread.pk)
-    
-    thread.first_reply = thread_recount.min_post
-    thread.last_reply = thread_recount.max_post
-    
+    if thread.first_reply == instance.time or thread.last_reply == instance.time:
+        thread_recount = Thread.objects.annotate(
+            min_post=Min('post__time'),
+            max_post=Max('post__time')
+        ).get(pk=instance.thread.pk)
+        
+        thread.first_reply=thread_recount.min_post
+        thread.last_reply=thread_recount.max_post
+
     thread.save()
