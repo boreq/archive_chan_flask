@@ -12,7 +12,7 @@ class ThreadAdmin(admin.ModelAdmin):
     search_fields = ['number']
 
 class PostAdmin(admin.ModelAdmin):
-    list_display = ['number', 'subject', 'comment']
+    list_display = ['number', 'time', 'name', 'trip', 'email', 'subject', 'comment']
     search_fields = ['number']
 
 class TagAdmin(admin.ModelAdmin):
