@@ -96,13 +96,19 @@ class StatusView(ApiView):
         response_data = {}
 
         # Last updates.
-        last_updates = Update.objects.order_by('board__name', '-date').distinct('board').select_related('board')
+        last_updates = Update.objects.order_by('board__name', '-start').distinct('board').select_related('board')
 
-        response_data['last_updates'] = [{'board': str(update.board), 'date': update.date.isoformat()} for update in last_updates]
+        response_data['last_updates'] = [{
+            'board': str(update.board),
+            'start': update.start.isoformat(),
+            'end': update.end.isoformat() if update.end else None,
+            'status': update.status,
+            'status_verbose': update.get_status_display(),
+        } for update in last_updates]
 
         # Chart data.
-        updates = Update.objects.extra({
-            'date': 'date("date")'
+        updates = Update.objects.filter(status=Update.COMPLETED).extra({
+            'date': 'date("end")'
         }).values('date').order_by('date').annotate(
             average_time=Avg('total_time'),
             average_posts=Avg('added_posts')

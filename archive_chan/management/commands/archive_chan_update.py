@@ -2,10 +2,11 @@ import datetime, sys
 from optparse import make_option
 
 from django.core.management.base import BaseCommand, CommandError
+from django.utils.timezone import utc
 
 from tendo import singleton
 
-from archive_chan.models import Board
+from archive_chan.models import Board, Update
 from archive_chan.lib.scraper import BoardScraper
 from archive_chan.settings import AppSettings
 
@@ -36,24 +37,41 @@ class Command(BaseCommand):
 
         # Get new data for each board.
         for board in boards:
-            scraper = BoardScraper(board, progress=progress)
+            # Info.
+            processing_start = datetime.datetime.utcnow().replace(tzinfo=utc)
+            update = Update.objects.create(board=board, start=processing_start, used_threads = AppSettings.get('SCRAPER_THREADS_NUMBER'))
 
-            processing_start = datetime.datetime.now()
-
-            # Actual update.
             try:
+                # Actual update.
+                scraper = BoardScraper(board, progress=progress)
                 scraper.update()
+
+                # Info.
+                update.status = Update.COMPLETED
 
             except Exception as e:
                 sys.stderr.write('%s\n' % (e))
 
-            # Everything below is just info.
-            processing_time = datetime.datetime.now() - processing_start
+            finally:
+                # Info.
+                try:
+                    if update.status != Update.COMPLETED:
+                        update.status = Update.FAILED
 
-            scraper.stats.save(board, processing_time)
+                    processing_end = datetime.datetime.utcnow().replace(tzinfo=utc)
+                    processing_time =  processing_end - processing_start
+                    update.end = processing_end
+                    update = scraper.stats.add_to_record(update, processing_time)
 
-            print('%s Board: %s %s' % (
-                datetime.datetime.now(),
-                board,
-                scraper.stats.get_text(processing_time),
-            ))
+                except Exception as e:
+                    sys.stderr.write('%s\n' % (e))
+
+                finally:
+                    update.save()
+
+                # Everything below is just info.
+                print('%s Board: %s %s' % (
+                    datetime.datetime.now(),
+                    board,
+                    scraper.stats.get_text(processing_time),
+                ))

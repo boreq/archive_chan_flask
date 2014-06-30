@@ -673,6 +673,19 @@ code{
     }
 }
 
+/* Status. */
+.update.failed{
+    color: #c0392b;
+}
+
+.update.completed{
+    color: #16a085;
+}
+
+.update.started{
+    color: #8E44AD;
+}
+
 /*   Search.   */
 .search-parameters{
     display: flex;

@@ -171,24 +171,37 @@ class Tag(models.Model):
 
 
 class Update(models.Model):
+    CURRENT = 0
+    FAILED = 1
+    COMPLETED = 2
+
+    STATUS_CHOICES = (
+        (CURRENT, 'Started'),
+        (FAILED, 'Failed'),
+        (COMPLETED, 'Completed'),
+    )
+
     board = models.ForeignKey('Board')
-    date = models.DateTimeField()
+    status = models.SmallIntegerField(choices=STATUS_CHOICES, default=CURRENT)
+    start = models.DateTimeField()
+    end = models.DateTimeField(null=True)
+
     used_threads = models.IntegerField()
 
-    total_time = models.FloatField()
-    wait_time = models.FloatField()
-    download_time = models.FloatField()
+    total_time = models.FloatField(default=0)
+    wait_time = models.FloatField(default=0)
+    download_time = models.FloatField(default=0)
 
-    processed_threads = models.IntegerField()
-    added_posts = models.IntegerField()
-    removed_posts = models.IntegerField()
+    processed_threads = models.IntegerField(default=0)
+    added_posts = models.IntegerField(default=0)
+    removed_posts = models.IntegerField(default=0)
 
-    downloaded_images = models.IntegerField()
-    downloaded_thumbnails = models.IntegerField()
-    downloaded_threads = models.IntegerField()
+    downloaded_images = models.IntegerField(default=0)
+    downloaded_thumbnails = models.IntegerField(default=0)
+    downloaded_threads = models.IntegerField(default=0)
 
     class Meta:
-        ordering = ['date']
+        ordering = ['-start']
 
 from django.db.models.signals import pre_delete, post_save, pre_delete, post_delete
 from django.dispatch.dispatcher import receiver

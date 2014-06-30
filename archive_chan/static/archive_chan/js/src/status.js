@@ -55,7 +55,17 @@ function drawData(data) {
     for (var i = 0; i < length; i++){
         var entry = data.last_updates[i];
 
-        $('#value-last-updates').append('<li>' + entry.board + ' <time class="timeago" datetime="' + entry.date + '">' + entry.date + '</time></li>');
+        var date = null;
+
+        if (entry.status > 0){
+            date = entry.end;
+        }else{
+            date = entry.start;
+        }
+
+        var css_class = ['started', 'failed', 'completed'];
+
+        $('#value-last-updates').append('<li class="update ' + css_class[entry.status] + '">' + entry.board + ' ' + entry.status_verbose.toLowerCase() + ' <time class="timeago" datetime="' + date + '">' + date + '</time></li>');
     }
 
     $('#value-last-updates li time').data("timeago", null).timeago();

@@ -271,30 +271,26 @@ class Stats:
         with self.lock:
             return self.parameters[name]
 
-    def save(self, board, total_time, **kwargs):
+    def add_to_record(self, record, total_time, **kwargs):
         """Save the statistics in the database."""
-        date = kwargs.get('date', datetime.datetime.utcnow().replace(tzinfo=utc))
         used_threads = kwargs.get('used_threads', AppSettings.get('SCRAPER_THREADS_NUMBER'))
 
         wait_time = self.get('total_wait_time_with_lock').total_seconds() / used_threads
         download_time = self.get('total_download_time').total_seconds() / used_threads
 
-        update = Update.objects.create(
-            board=board,
-            date=date,
-            used_threads=used_threads,
-            total_time=total_time.total_seconds(),
-            wait_time=wait_time,
-            download_time=download_time,
-            processed_threads=self.get('processed_threads'),
-            added_posts=self.get('added_posts'),
-            removed_posts=self.get('removed_posts'),
-            downloaded_images=self.get('downloaded_images'),
-            downloaded_thumbnails=self.get('downloaded_thumbnails'),
-            downloaded_threads=self.get('downloaded_threads')
-        )
+        record.total_time = total_time.total_seconds()
+        record.wait_time = wait_time
+        record.download_time = download_time
+        record.processed_threads = self.get('processed_threads')
+        record.added_posts = self.get('added_posts')
+        record.removed_posts = self.get('removed_posts')
+        record.downloaded_images = self.get('downloaded_images')
+        record.downloaded_thumbnails = self.get('downloaded_thumbnails')
+        record.downloaded_threads = self.get('downloaded_threads')
 
-    def get_text(self, total_time):
+        return record
+
+    def get_text(self, total_time, **kwargs):
         """Get the text for printing. Total processing time must be provided externally."""
         try:
             wait_percent = round(self.get('total_wait_time_with_lock').total_seconds() / total_time.total_seconds() * 100 / AppSettings.get('SCRAPER_THREADS_NUMBER'))
@@ -593,11 +589,14 @@ class BoardScraper(Scraper):
         try:
             # Launch the thread.
             thread_scraper = ThreadScraperThread(self.board, thread_info, self, queuer=self.queuer, progress=self.show_progress)
+            thread_scraper.daemon = True
             thread_scraper.start()
 
-        except:
+        except Exception as e:
             # Remove the thread from the list of all running threads.
             self.remove_running(thread_info.number)
+
+            sys.stderr.write('%s\m' % (e))
 
     def get_thread(self):
         """Get the next thread JSON."""

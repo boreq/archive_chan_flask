@@ -25,7 +25,8 @@ class TriggerAdmin(admin.ModelAdmin):
     list_display = ['field', 'event', 'phrase', 'case_sensitive', 'post_type', 'save_thread', 'tag_thread']
 
 class UpdateAdmin(admin.ModelAdmin):
-    list_display = ['board', 'date', 'total_time', 'added_posts']
+    list_display = ['board', 'start', 'end', 'used_threads', 'total_time', 'wait_time', 'download_time', 'processed_threads', 'added_posts', 'removed_posts', 'downloaded_images', 'downloaded_thumbnails', 'downloaded_threads', 'status']
+    list_filter = ['status']
 
 
 admin.site.register(Board, BoardAdmin)
