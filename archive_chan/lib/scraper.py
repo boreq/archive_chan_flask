@@ -115,10 +115,10 @@ class Triggers:
             trigger_value = trigger_value.lower()
 
         # Check if the event occurs.
-            if trigger.event == 'isnot' or trigger.event == 'containsno':
-                return_value = False
-            else:
-                return_value = True
+        if trigger.event == 'isnot' or trigger.event == 'containsno':
+            return_value = False
+        else:
+            return_value = True
 
         if trigger.event == 'contains' or trigger.event == 'containsno':
             if field_value.find(trigger_value) >= 0:
