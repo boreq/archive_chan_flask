@@ -115,10 +115,10 @@ class Triggers:
             trigger_value = trigger_value.lower()
 
         # Check if the event occurs.
-            if trigger.event == 'isnot' or trigger.event == 'containsno':
-                return_value = False
-            else:
-                return_value = True
+        if trigger.event == 'isnot' or trigger.event == 'containsno':
+            return_value = False
+        else:
+            return_value = True
 
         if trigger.event == 'contains' or trigger.event == 'containsno':
             if field_value.find(trigger_value) >= 0:
@@ -136,13 +136,13 @@ class Triggers:
             return field_value.startswith(trigger_value)
 
         if trigger.event == 'ends':
-            return field_value.endsswith(trigger_value)
+            return field_value.endswith(trigger_value)
 
         return False
 
 
-    def get_actions(self, trigger, thread, post_data):
-        """Returns a set of actions to execute."""
+    def get_single_trigger_actions(self, trigger, thread, post_data):
+        """Returns a set of actions to execute absed on one trigger."""
         if not self.check_post_type(trigger, thread, post_data):
             return None
         
@@ -157,16 +157,22 @@ class Triggers:
 
         return actions
 
-    def handle(self, post_data, thread):
-        """Actual function called to execute triggers."""
+    def get_actions(self, thread, post_data):
+        """Returns a set of actions to execute."""
         actions = set()
 
         # Prepare a set of actions to execute.
         for trigger in self.triggers:
-            new_actions = self.get_actions(trigger, thread, post_data)
+            new_actions = self.get_single_trigger_actions(trigger, thread, post_data)
 
             if not new_actions is None:
                 actions = actions | new_actions
+
+        return actions
+
+    def handle(self, post_data, thread):
+        """Actual function called to execute triggers."""
+        actions = self.get_actions(thread, post_data)
 
         # Execute actions.
         for action in actions:

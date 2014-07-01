@@ -1,12 +1,14 @@
 import datetime, json
 
 from django.core.urlresolvers import reverse
+from django.db import connection
 from django.test import TestCase
 from django.test.client import Client
 from django.utils.timezone import utc
 
 import archive_chan.lib.modifiers as modifiers
 import archive_chan.models as models
+import archive_chan.lib.scraper as scraper
 
 now = datetime.datetime(2014, 4, 23, 15, 0, 0, 0, utc)
 
@@ -176,3 +178,103 @@ class ApiTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual('last_updates' in response_data and len(response_data['last_updates']) == 2, True)
         self.assertEqual('chart_data' in response_data and len(response_data['chart_data']['rows']) == 1, True)
+
+class TriggersTest(TestCase):
+    def setUp(self):
+        board = models.Board.objects.create(name='a')
+        self.thread = models.Thread.objects.create(
+            board=board,
+            number=1,
+            first_reply=now,
+            last_reply=now
+        )
+
+        self.post_json = {
+            'no': 1,
+            'time': 123,
+            'name': 'name',
+            'trip': 'trip',
+            'email': 'email',
+            'sub': 'sub',
+            'com': 'com',
+            'tim': 'tim',
+            'ext': 'ext',
+            'filename': 'filename',
+        }
+
+    def insert_triggers(self):
+        """Create all possible combinations of a trigger."""
+        self.phrases = []
+
+        for field_choice in dict(models.Trigger.FIELD_CHOICES).keys():
+            for event_choice in dict(models.Trigger.EVENT_CHOICES).keys():
+                for post_type_choice in dict(models.Trigger.POST_TYPE_CHOICES).keys():
+                    for case_sensitive in [True, False]:
+                        phrase = ('%s-%s-%s-%s' % (
+                                field_choice,
+                                event_choice,
+                                post_type_choice,
+                                str(case_sensitive),
+                            ))
+
+                        self.phrases.append(phrase)
+
+                        tag = models.Tag.objects.create(name=phrase)
+
+                        models.Trigger.objects.create(
+                            field=field_choice,
+                            event=event_choice,
+                            post_type=post_type_choice,
+                            case_sensitive=case_sensitive,
+                            phrase=phrase,
+                            tag_thread=tag
+                        )
+
+
+    def test_no_triggers(self):
+        triggers = scraper.Triggers()
+        post_data = scraper.PostData(self.post_json)
+
+        actions = triggers.get_actions(self.thread, post_data)
+        self.assertEqual(len(actions), 0)
+
+    def test_triggers(self):
+        """Just run all triggers on the default post to look for exceptions."""
+        self.insert_triggers()
+
+        triggers = scraper.Triggers()
+        post_data = scraper.PostData(self.post_json)
+        actions = triggers.get_actions(self.thread, post_data)
+
+        # 2(isnot/containsno) * 2(any/master) * 5(fields) * 2(casesensitivity)
+        # any/master included for 2 because each trigger has a separate tag
+        self.assertEqual(len(actions), 40)
+
+    def test_triggers_detailed(self):
+        # Change the fields to match triggers one by one and try to break something.
+        triggers = scraper.Triggers()
+
+        for field_choice in dict(models.Trigger.FIELD_CHOICES).keys():
+            for event_choice in dict(models.Trigger.EVENT_CHOICES).keys():
+                for post_type_choice in dict(models.Trigger.POST_TYPE_CHOICES).keys():
+                    for case_sensitive in [True, False]:
+                        phrase = ('%s-%s-%s-%s' % (
+                                field_choice,
+                                event_choice,
+                                post_type_choice,
+                                str(case_sensitive),
+                            ))
+
+                        fields = {
+                            'name': 'name',
+                            'trip': 'trip',
+                            'email': 'email',
+                            'subject': 'sub',
+                            'comment': 'com',
+                        }
+
+                        json_data = self.post_json.copy()
+                        json_data[fields[field_choice]] = phrase
+
+                        post_data = scraper.PostData(json_data)
+                        actions = triggers.get_actions(self.thread, post_data)
