@@ -79,7 +79,7 @@ class StatusView(ApiView):
             label_string = entry['date'].strftime('%Y-%m-%d')
 
             if entry['average_posts'] != 0:
-                value = round(entry['average_time'] / entry['average_posts'], 2)
+                value = round(entry['average_time'] / entry['average_posts'], 3)
             else:
                 value = 0
 
