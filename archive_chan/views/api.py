@@ -20,6 +20,7 @@ class NotImplementedApiError(ApiError):
         error_code = kwargs.get('error_code', 'not_implemented')
         message = kwargs.get('message', 'Not implemented.')
         super(NotImplementedApiError, self).__init__(status_code, error_code, message) 
+
 class ApiView(View):
     def handle_exception(self, exception):
         """Extract exception parameters."""
@@ -47,7 +48,6 @@ class ApiView(View):
 
         # Handle other exceptions.
         except Exception as e:
-            raise
             response_data, status_code = self.handle_exception(ApiError())
 
         return HttpResponse(
@@ -146,13 +146,12 @@ class GalleryView(ApiView):
                 post__thread__number=thread_number
             )
 
-        # If this is not a first request we have to fetch those which are not present in the gallery.
+        # If this is not a first request we have to fetch those images which are not present in the gallery.
         if last is not None:
             queryset = queryset.filter(
                 id__lt=last
             )
 
-        # Grab more images if this is the first request.
         queryset = queryset.order_by('-post__time')[:amount]
 
         # Prepare the data.
