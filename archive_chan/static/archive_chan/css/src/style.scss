@@ -19,7 +19,7 @@ div#site{
     min-height: 100%;
 }
 
-header div.wrapper, div.about div.wrapper, div#projects div.wrapper, footer div.wrapper, div.content div.wrapper{
+.wrapper{
     max-width: 1000px;
     margin: 0 auto;
 }
@@ -76,7 +76,6 @@ header .wrapper{
 
     a{
         text-decoration: none;
-        color: #fff;
     }
 
     a:hover{
@@ -122,12 +121,7 @@ footer{
             }
     
             a{
-                color: $text-color-dimmed;
                 text-decoration: none;
-            }
-    
-            a:hover{
-                color: $primary-color;
             }
         }
     }
@@ -211,7 +205,7 @@ p{
 
 a{
     text-decoration: underline;
-    color: #000;
+    color: inherit;
     cursor: pointer;
 }
 
@@ -432,9 +426,6 @@ div.content{
     }
 
     .post-author{
-    }
-
-    .post-author-name, .post-author-trip{
         color: #117743;
     }
 
