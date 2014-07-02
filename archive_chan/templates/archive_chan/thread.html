@@ -23,7 +23,7 @@
     <div class="content">
         <div class="wrapper">
             <ul id="posts">
-                {% cache 300 thread_posts board_name thread_number thread.saved tags user.is_authenticated %}
+                {% cache 300 thread_posts board_name thread_number thread.saved tags user.is_staff %}
                     {% for post in post_list %}
                         <li class="post" id="post-{{ post.number }}">
                             <div class="post-image-container">
@@ -51,7 +51,7 @@
                                                     {{ tagtothread.tag.name }}
                                                 </a>
 
-                                                {% if user.is_authenticated %}
+                                                {% if user.is_staff %}
                                                     <a class="remove-tag" title="Remove the tag"><i class="fa fa-times"></i></a>
                                                 {% endif %}
                                             </li>
@@ -59,7 +59,7 @@
                                     </ul>
 
                                     {# Show add tag input. #}
-                                    {% if  user.is_authenticated %}
+                                    {% if  user.is_staff %}
                                         <input id="add-tag-input" type="text" name="new-tag" placeholder="New tag">
 
                                         {% if thread.saved %}

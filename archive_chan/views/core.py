@@ -271,7 +271,7 @@ def ajax_save_thread(request):
     """View used for AJAX save thread calls."""
     response = {}
 
-    if request.user.is_authenticated():
+    if request.user.is_staff:
         try:
             thread_number = int(request.POST['thread'])
             board_name = request.POST['board']
@@ -294,7 +294,7 @@ def ajax_save_thread(request):
             }
     else:
         response = {
-            'error': 'Log in.'
+            'error': 'Not authorized.'
         }
 
     return HttpResponse(json.dumps(response), content_type='application/json')
@@ -351,7 +351,7 @@ def ajax_add_tag(request):
     """View used for adding a tag to a thread."""
     response = {}
 
-    if request.user.is_authenticated():
+    if request.user.is_staff:
         try:
             thread_number = int(request.POST['thread'])
             board_name = request.POST['board']
@@ -383,7 +383,7 @@ def ajax_add_tag(request):
             }
     else:
         response = {
-            'error': 'Log in.'
+            'error': 'Not authorized.'
         }
 
     return HttpResponse(json.dumps(response), content_type='application/json')
@@ -393,7 +393,7 @@ def ajax_remove_tag(request):
     """View used to remove a tag related to a thread."""
     response = {}
 
-    if request.user.is_authenticated():
+    if request.user.is_staff:
         try:
             thread_number = int(request.POST['thread'])
             board_name = request.POST['board']
@@ -415,7 +415,7 @@ def ajax_remove_tag(request):
             }
     else:
         response = {
-            'error': 'Log in.'
+            'error': 'Not authorized.'
         }
 
     return HttpResponse(json.dumps(response), content_type='application/json')
