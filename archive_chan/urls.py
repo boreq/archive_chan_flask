@@ -37,10 +37,10 @@ urlpatterns = patterns('',
     url(r'^api/stats/$', api.StatsView.as_view(), name='api_stats'),
     url(r'^api/gallery/$', api.GalleryView.as_view(), name='api_gallery'),
 
-    url(r'^ajax/thread/save/$', core.ajax_save_thread, name='ajax_save_thread'),
-    url(r'^ajax/get_parent_thread/$', core.ajax_get_parent_thread, name='ajax_get_parent_thread'),
+    url(r'^ajax/thread/save/$', api.ajax_save_thread, name='ajax_save_thread'),
+    url(r'^ajax/get_parent_thread/$', api.ajax_get_parent_thread, name='ajax_get_parent_thread'),
 
-    url(r'^ajax/tag/suggest/$', core.ajax_suggest_tag, name='ajax_suggest_tag'),
-    url(r'^ajax/tag/add/$', core.ajax_add_tag, name='ajax_add_tag'),
-    url(r'^ajax/tag/remove/$', core.ajax_remove_tag, name='ajax_remove_tag'),
+    url(r'^ajax/tag/suggest/$', api.ajax_suggest_tag, name='ajax_suggest_tag'),
+    url(r'^ajax/tag/add/$', api.ajax_add_tag, name='ajax_add_tag'),
+    url(r'^ajax/tag/remove/$', api.ajax_remove_tag, name='ajax_remove_tag'),
 )

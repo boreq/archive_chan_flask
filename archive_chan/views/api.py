@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.views.generic.base import View
 
-from archive_chan.models import Update, Image
+from archive_chan.models import Update, Image, Thread, Tag, TagToThread
 import archive_chan.lib.stats as stats
 
 class ApiError(Exception):
@@ -174,3 +174,152 @@ class GalleryView(ApiView):
             })
         
         return json_data
+
+def ajax_save_thread(request):
+    """View used for AJAX save thread calls."""
+    response = {}
+
+    if request.user.is_staff:
+        try:
+            thread_number = int(request.POST['thread'])
+            board_name = request.POST['board']
+            state = request.POST['state']
+
+            state = (state == 'true')
+
+            thread = Thread.objects.get(board=board_name, number=thread_number)
+            thread.saved = state
+            thread.save()
+
+            response = {
+                'state': thread.saved
+            }
+
+        except:
+            raise
+            response = {
+                'error': 'Error.'
+            }
+    else:
+        response = {
+            'error': 'Not authorized.'
+        }
+
+    return HttpResponse(json.dumps(response), content_type='application/json')
+
+def ajax_get_parent_thread(request):
+    """Returns a number of a thread the specified post belongs to."""
+    response = {}
+
+    try:
+        post_number = int(request.GET['post'])
+        board_name = request.GET['board']
+
+        parent_thread_number = Post.objects.get(
+            thread__board=board_name,
+            number=post_number
+        ).thread.number
+
+        response = {
+            'parent_thread': parent_thread_number
+        }
+
+    except:
+        response = {
+            'error': 'Error.'
+        }
+
+    return HttpResponse(json.dumps(response), content_type='application/json')
+
+def ajax_suggest_tag(request):
+    """View used for AJAX tag suggestions in the 'new tag' field in the thread view."""
+    response = {}
+
+    try:
+        query = request.GET['query']
+
+        tags = Tag.objects.filter(name__icontains=query)[:5]
+
+        response = {
+            'query': query, 
+            'suggestions': [tag.name for tag in tags]
+        }
+
+    except:
+        response = {
+            'error': 'Error.'
+        }
+
+    return HttpResponse(json.dumps(response), content_type='application/json')
+
+def ajax_add_tag(request):
+    """View used for adding a tag to a thread."""
+    response = {}
+
+    if request.user.is_staff:
+        try:
+            thread_number = int(request.POST['thread'])
+            board_name = request.POST['board']
+            tag = request.POST['tag']
+
+            exists = TagToThread.objects.filter(
+                thread__number=thread_number, 
+                thread__board__name=board_name,
+                tag__name=tag
+            ).exists()
+
+            if not exists:
+                thread = Thread.objects.get(number=thread_number, board__name=board_name)
+                tag, created_new_tag = Tag.objects.get_or_create(name=tag)
+                tag_to_thread = TagToThread(thread=thread, tag=tag)
+                tag_to_thread.save()
+
+                added = True
+            else:
+                added = False
+
+            response = {
+                'added': added
+            }
+
+        except:
+            response = {
+                'error': 'Error.'
+            }
+    else:
+        response = {
+            'error': 'Not authorized.'
+        }
+
+    return HttpResponse(json.dumps(response), content_type='application/json')
+
+def ajax_remove_tag(request):
+    """View used to remove a tag related to a thread."""
+    response = {}
+
+    if request.user.is_staff:
+        try:
+            thread_number = int(request.POST['thread'])
+            board_name = request.POST['board']
+            tag = request.POST['tag']
+
+            TagToThread.objects.get(
+                thread__number=thread_number, 
+                thread__board__name=board_name,
+                tag__name=tag
+            ).delete()
+
+            response = {
+                'removed': True
+            }
+
+        except:
+           response = {
+                'error': 'Error.'
+            }
+    else:
+        response = {
+            'error': 'Not authorized.'
+        }
+
+    return HttpResponse(json.dumps(response), content_type='application/json')
