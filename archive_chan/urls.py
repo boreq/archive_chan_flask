@@ -34,8 +34,7 @@ urlpatterns = patterns('',
 
     # API.
     url(r'^api/status/$', api.StatusView.as_view(), name='api_status'),
-
-    url(r'^ajax/stats/$', core.ajax_stats, name='ajax_stats'),
+    url(r'^api/stats/$', api.StatsView.as_view(), name='api_stats'),
     url(r'^ajax/gallery/$', core.ajax_gallery, name='ajax_gallery'),
 
     url(r'^ajax/thread/save/$', core.ajax_save_thread, name='ajax_save_thread'),

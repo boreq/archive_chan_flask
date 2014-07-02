@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from django.views.generic.base import View
 
 from archive_chan.models import Update
+import archive_chan.lib.stats as stats
 
 class ApiError(Exception):
     def __init__(self, status_code=500, error_code='unknown', message='Unknown server error.'):
@@ -117,3 +118,9 @@ class StatusView(ApiView):
         response_data['chart_data'] = self.get_chart_data(updates)
 
         return response_data
+
+class StatsView(ApiView):
+    def get_api_response(self, request, *args, **kwargs):
+        board_name = request.GET.get('board', None)
+        thread_number = request.GET.get('thread', None)
+        return stats.get_stats(board=board_name, thread=thread_number)

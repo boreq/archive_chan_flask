@@ -8,7 +8,7 @@
         var info_data = {
             {% if board_name %}board: '{{ board_name }}',{% endif %}
             {% if thread_number %}thread: '{{ thread_number }}',{% endif %}
-            ajax_url_stats: '{% url 'archive_chan:ajax_stats' %}'
+            api_url: '{% url 'archive_chan:api_stats' %}'
         };
     </script>
     <script src="{% static 'archive_chan/js/stats.js' %}"></script>

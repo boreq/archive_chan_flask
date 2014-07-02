@@ -268,18 +268,6 @@ class StatusView(BodyIdMixin, TemplateView):
     body_id = 'body-status'
 
 
-def ajax_stats(request):
-    """JSON data with statistics."""
-    from archive_chan.lib.stats import get_stats
-
-    board_name = request.GET.get('board', None)
-    thread_number = request.GET.get('thread', None)
-
-    context = get_stats(board=board_name, thread=thread_number)
-
-    return HttpResponse(json.dumps(context), content_type='application/json')
-
-
 def ajax_gallery(request):
     """JSON data with gallery images."""
 

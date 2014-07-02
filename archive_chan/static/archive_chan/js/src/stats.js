@@ -37,7 +37,7 @@ function update(){
         request_data['board'] = info_data.board;
 
     var jsonData = $.ajax({
-        url: info_data.ajax_url_stats,
+        url: info_data.api_url,
         data: request_data,
         dataType: 'json'
     }).done(function(data){
