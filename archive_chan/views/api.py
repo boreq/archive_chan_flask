@@ -1,10 +1,11 @@
 import json
 
 from django.db.models import Avg
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.views.generic.base import View
 
-from archive_chan.models import Update
+from archive_chan.models import Update, Image
 import archive_chan.lib.stats as stats
 
 class ApiError(Exception):
@@ -18,8 +19,7 @@ class NotImplementedApiError(ApiError):
         status_code = kwargs.get('status_code', 501)
         error_code = kwargs.get('error_code', 'not_implemented')
         message = kwargs.get('message', 'Not implemented.')
-        super(NotImplementedApiError, self).__init__(status_code, error_code, message)
-
+        super(NotImplementedApiError, self).__init__(status_code, error_code, message) 
 class ApiView(View):
     def handle_exception(self, exception):
         """Extract exception parameters."""
@@ -124,3 +124,54 @@ class StatsView(ApiView):
         board_name = request.GET.get('board', None)
         thread_number = request.GET.get('thread', None)
         return stats.get_stats(board=board_name, thread=thread_number)
+
+class GalleryView(ApiView):
+    def get_api_response(self, request, *args, **kwargs):
+        board_name = request.GET.get('board')
+        thread_number = request.GET.get('thread')
+        last = request.GET.get('last')
+        amount = int(request.GET.get('amount', 10))
+
+        queryset = Image.objects.select_related('post', 'post__thread', 'post__thread__board')
+        
+        # Board specific gallery?
+        if board_name is not None:
+            queryset = queryset.filter(
+                post__thread__board=board_name
+            )
+
+        # Thread specific gallery?
+        if thread_number is not None:
+            queryset = queryset.filter(
+                post__thread__number=thread_number
+            )
+
+        # If this is not a first request we have to fetch those which are not present in the gallery.
+        if last is not None:
+            queryset = queryset.filter(
+                id__lt=last
+            )
+
+        # Grab more images if this is the first request.
+        queryset = queryset.order_by('-post__time')[:amount]
+
+        # Prepare the data.
+        json_data = {
+            'images': []
+        }
+
+        for image in queryset:
+            json_data['images'].append({
+                'id': image.id,
+                'board': image.post.thread.board.name,
+                'thread': image.post.thread.number,
+                'post': image.post.number,
+                'extension': image.get_extension(),
+                'url': image.image.url,
+                'post_url': reverse(
+                    'archive_chan:thread',
+                    args=(image.post.thread.board.name, image.post.thread.number)
+                ) + format('#post-%s' % image.post.number)
+            })
+        
+        return json_data

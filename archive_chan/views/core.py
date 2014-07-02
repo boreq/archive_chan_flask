@@ -267,60 +267,6 @@ class StatusView(BodyIdMixin, TemplateView):
     template_name = 'archive_chan/status.html'
     body_id = 'body-status'
 
-
-def ajax_gallery(request):
-    """JSON data with gallery images."""
-
-    board_name = request.GET.get('board', None)
-    thread_number = request.GET.get('thread', None)
-    last = request.GET.get('last', None)
-    amount = int(request.GET.get('amount', 10))
-
-    queryset = Image.objects.select_related('post', 'post__thread', 'post__thread__board')
-    
-    # Board specific gallery?
-    if board_name is not None:
-        queryset = queryset.filter(
-            post__thread__board=board_name
-        )
-
-    # Thread specific gallery?
-    if thread_number is not None:
-        queryset = queryset.filter(
-            post__thread__number=thread_number
-        )
-
-    # If this is not a first request we have to fetch those which are not present in the gallery.
-    if last is not None:
-        queryset = queryset.filter(
-            id__lt=last
-        )
-
-    # Grab more images if this is the first request.
-    queryset = queryset.order_by('-post__time')[:amount]
-
-    # Prepare the data.
-    json_data = {
-        'images': []
-    }
-
-    for image in queryset:
-        json_data['images'].append({
-            'id': image.id,
-            'board': image.post.thread.board.name,
-            'thread': image.post.thread.number,
-            'post': image.post.number,
-            'extension': image.get_extension(),
-            'url': image.image.url,
-            'post_url': reverse(
-                'archive_chan:thread',
-                args=(image.post.thread.board.name, image.post.thread.number)
-            ) + format('#post-%s' % image.post.number)
-        })
-
-    return HttpResponse(json.dumps(json_data), content_type='application/json')
-
-
 def ajax_save_thread(request):
     """View used for AJAX save thread calls."""
     response = {}

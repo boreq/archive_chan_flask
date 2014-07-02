@@ -80,7 +80,7 @@ function getImages(){
     }
 
     $.ajax({
-        url: info_data.ajax_url_gallery,
+        url: info_data.api_url,
         data: request_data,
         type: 'GET',
         cache: false
