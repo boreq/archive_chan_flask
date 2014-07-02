@@ -8,13 +8,7 @@ from archive_chan.models import Thread, Post, Image, Trigger, TagToThread, Updat
 from archive_chan.settings import AppSettings
 
 class ScrapError(Exception):
-    """Error created only to allow passing a message."""
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return repr(self.message)
-
+    pass
 
 class ThreadInfo:
     """Class used for storing information about the thread."""
@@ -193,6 +187,7 @@ class Triggers:
 
 class Queuer:
     """Exposes the functions which allow the threads to synchronise their wait times."""
+
     def __init__(self):
         self.last_api_request = None
         self.last_file_request = None
@@ -326,6 +321,7 @@ class Stats:
 
 class Scraper:
     """Base class for the scrapers."""
+
     def __init__(self, board, **kwargs):
         """Board is a database object, not a board name.
         Accepted kwargs: (bool) progress, (Queuer) queuer
@@ -338,21 +334,18 @@ class Scraper:
         
     def get_url(self, url):
         """Download data from an url."""
-        # download_start and similar variables are used only for generating statistics.
         download_start = datetime.datetime.now()
-
         data = requests.get(url, timeout=AppSettings.get('CONNECTION_TIMEOUT'))
-
         self.stats.add('total_download_time', datetime.datetime.now() - download_start)
-
         return data
 
 class ThreadScraper(Scraper):
     """Scraper which scraps the data from a single thread."""
+
     def __init__(self, board, thread_info, **kwargs):
-        super().__init__(board, **kwargs)
+        super(ThreadScraper, self).__init__(board, **kwargs)
         self.thread_info = thread_info
-        self.triggers = Triggers()
+        self.triggers = kwargs.get('triggers', Triggers())
         self.modified = False
 
     def get_image(self, filename, extension):
@@ -381,7 +374,7 @@ class ThreadScraper(Scraper):
         return self.thread_info.number
 
     def should_be_updated(self, thread):
-
+        """Determine if the thread should be updated."""
         # Should the thread be updated? Check only if there is any data about the thread
         # (the download of the first post was successful).
         if not thread.last_reply_time() is None and thread.post_set.count() > 0:
@@ -394,17 +387,17 @@ class ThreadScraper(Scraper):
         return True
 
     def get_last_post_number(self, thread):
-        # Get the last saved post in this thread.
+        """Determine the last post's number or pick an imaginary one.
+        Only posts with a number above this one will be added to the database."""
         last_post = thread.post_set.order_by('number').last()
 
-        # Determine the last post's number or pick an imaginary one.
-        # Only posts with a number above this one will be added to the database.
         if last_post is None:
             return -1;
         else:
             return last_post.number
 
     def add_post(self, post_data, thread):
+        """Add the post."""
         # Download images first, don't waste time when in transaction.
         if not post_data.filename is None:
             try:
@@ -424,7 +417,7 @@ class ThreadScraper(Scraper):
                 thread.save()
 
             # Save post.
-            post = Post(
+            post = Post.objects.create(
                 thread=thread,
                 number=post_data.number,
                 time=post_data.time,
@@ -434,7 +427,6 @@ class ThreadScraper(Scraper):
                 subject=post_data.subject,
                 comment=post_data.comment
             )
-            post.save()
 
             # Save image.
             if not post_data.filename is None:
@@ -444,8 +436,6 @@ class ThreadScraper(Scraper):
                 image.thumbnail.save(filename_thumbnail, thumbnail_tmp)
 
                 image.save()
-            else:
-                image = None
 
             self.triggers.handle(post_data, thread)
 
@@ -454,11 +444,7 @@ class ThreadScraper(Scraper):
         # Just to give something to look at. 
         # "_" is a post withour an image, "-" is a post with an image
         if self.show_progress:
-            if post_data.filename is None:
-                character = '_'
-            else:
-                character = '-'
-            print(character, end="", flush=True)
+            print('-' if post_data.filename else '_', end="", flush=True)
 
     def handle_thread(self):
         """Download/update the thread if necessary."""
@@ -468,6 +454,8 @@ class ThreadScraper(Scraper):
             return
 
         # Get the exisiting entry for this thread from the database or create a new record for it.
+        # get_or_create is not used to avoid saving outside of the transaction - empty thread
+        # could be created in case of an error.
         try:
             thread = Thread.objects.get(board=self.board, number=self.thread_info.number)
 
@@ -505,7 +493,7 @@ class ThreadScraper(Scraper):
                     self.modified = True
                     self.add_post(post_data, thread)
 
-            # Remove posts which don't exist in the thead.
+            # Remove posts which don't exist in the thread.
             for post in thread.post_set.all():
                 if not post.number in post_numbers:
                     self.stats.add('removed_posts', 1)
@@ -519,6 +507,7 @@ class ThreadScraper(Scraper):
 
 class ThreadScraperThread(ThreadScraper, threading.Thread):
     """This is simply a ThreadScraper which is supposed to run as a thread."""
+
     def __init__(self, board, thread_info, board_scraper, **kwargs):
         super().__init__(board, thread_info, **kwargs)
         threading.Thread.__init__(self)
@@ -526,7 +515,7 @@ class ThreadScraperThread(ThreadScraper, threading.Thread):
 
     def run(self):
         try:
-            super().handle_thread()
+            self.handle_thread()
 
         except Exception as e:
             sys.stderr.write('%s\n' % (e))
@@ -536,8 +525,11 @@ class ThreadScraperThread(ThreadScraper, threading.Thread):
 
 class BoardScraper(Scraper):
     """Class which basically launches and coordinates ThreadScraperThread classes."""
+
     def __init__(self, board, **kwargs):
-        super().__init__(board, **kwargs)
+        super(BoardScraper, self).__init__(board, **kwargs)
+
+        self.triggers = Triggers()
 
         self.thread_gen = None
         self.running_threads = []
@@ -578,7 +570,6 @@ class BoardScraper(Scraper):
 
     def launch_thread(self):
         """Launch a new ThreadScraperThread."""
-        # Just info.
         self.stats.add('processed_threads', 1)
 
         # Get a new thread from the generator.
@@ -594,20 +585,24 @@ class BoardScraper(Scraper):
 
         try:
             # Launch the thread.
-            thread_scraper = ThreadScraperThread(self.board, thread_info, self, queuer=self.queuer, progress=self.show_progress)
+            thread_scraper = ThreadScraperThread(self.board, thread_info, self,
+                queuer=self.queuer,
+                triggers=self.triggers,
+                progress=self.show_progress
+            )
             thread_scraper.daemon = True
             thread_scraper.start()
 
         except Exception as e:
             # Remove the thread from the list of all running threads.
             self.remove_running(thread_info.number)
-
             sys.stderr.write('%s\m' % (e))
 
     def get_thread(self):
-        """Get the next thread JSON."""
+        """Get the next thread."""
         if self.thread_gen is None:
             self.thread_gen = self.thread_generator()
+
         try:
             return next(self.thread_gen)
 
@@ -622,10 +617,6 @@ class BoardScraper(Scraper):
 
     def update(self):
         """Call this to update the database."""
-
-        # Just info.
-        start_time = datetime.datetime.now()
-        
         # Get the catalog from the API.
         try:
             self.catalog = self.get_catalog_json()
@@ -639,11 +630,10 @@ class BoardScraper(Scraper):
 
         # Wait for all threads to finish.
         while True:
+            time.sleep(1)
             with self.running_threads_lock:
                 if not len(self.running_threads):
                     break
-
-            time.sleep(1)
 
         self.stats.add('total_wait_time', self.queuer.get_total_wait_time())
         self.stats.add('total_wait_time_with_lock', self.queuer.get_total_wait_time_with_lock())
