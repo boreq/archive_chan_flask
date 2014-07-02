@@ -88,6 +88,10 @@
 
                                     {# Post author. #}
                                     <li class="post-author">
+                                        {% if post.email %}
+                                            <a href="mailto:{{ post.email }}">
+                                        {% endif %}
+
                                         <span class="post-author-name">
                                             {{ post.get_name }}
                                         </span>
@@ -96,6 +100,10 @@
                                             <span class="post-author-trip">
                                                 {{ post.trip }}
                                             </span>
+                                        {% endif %}
+
+                                        {% if post.email %}
+                                            </a>
                                         {% endif %}
                                     </li>
 
