@@ -6,6 +6,7 @@ from archive_chan.models import Board, Thread, Post
 import archive_chan.lib.modifiers as modifiers
 
 class BodyIdMixin(object):
+    """This mixin adds an easy way to add body_id to the context."""
     def get_context_data(self, **kwargs):
         context = super(BodyIdMixin, self).get_context_data(**kwargs)
         context['body_id'] = getattr(self, 'body_id', None)
@@ -13,6 +14,7 @@ class BodyIdMixin(object):
 
 
 class UniversalViewMixin(BodyIdMixin):
+    """This mixin automatically adds board_name and thread_number to the context."""
     def get_context_data(self, **kwargs):
         context = super(UniversalViewMixin, self).get_context_data(**kwargs)
         context['board_name'] = self.kwargs.get('board', None)
@@ -28,12 +30,13 @@ class IndexView(BodyIdMixin, ListView):
     body_id = 'body-home'
 
 
-class BoardView(ListView):
+class BoardView(BodyIdMixin, ListView):
     """View showing all threads in a specified board."""
     model = Thread
     context_object_name = 'thread_list'
     template_name = 'archive_chan/board.html'
     paginate_by = 20
+    body_id = 'body-board'
 
     available_parameters = {
         'sort': (
@@ -105,7 +108,7 @@ class BoardView(ListView):
     def get_queryset(self):
         self.parameters = self.get_parameters()
 
-        # I don't know how to select all data I need without executing
+        # I don't know how to select all data I need using the ORM without executing
         # TWO damn additional queries for each thread (first post + tags).
         queryset = Thread.objects.filter(board=self.kwargs['board'], replies__gte=1).select_related('board')
 
@@ -119,14 +122,14 @@ class BoardView(ListView):
         context['board_name'] = self.kwargs['board']
         context['parameters'] = self.parameters
         context['available_parameters'] = self.available_parameters
-        context['body_id'] = 'body-board'
         return context
 
-class ThreadView(ListView):
+class ThreadView(BodyIdMixin, ListView):
     """View showing all posts in a specified thread."""
     model = Post
     context_object_name = 'post_list'
     template_name = 'archive_chan/thread.html'
+    body_id = 'body-thread'
 
     def get_queryset(self):
         board_name = self.kwargs['board']
@@ -144,16 +147,16 @@ class ThreadView(ListView):
         context['thread_number'] = int(self.kwargs['thread'])
         context['thread'] = thread 
         context['tags'] = thread.tagtothread_set.select_related('tag').order_by('tag__name')
-        context['body_id'] = 'body-thread'
         return context
 
 
-class SearchView(ListView):
+class SearchView(UniversalViewMixin, ListView):
     """View showing all threads in a specified board."""
     model = Post
     context_object_name = 'post_list'
     template_name = 'archive_chan/search.html'
     paginate_by = 20
+    body_id = 'body-search'
 
     available_parameters = {
         'type': (
@@ -236,13 +239,9 @@ class SearchView(ListView):
         from archive_chan.lib.stats import get_posts_chart_data
 
         context = super(SearchView, self).get_context_data(**kwargs)
-        context['board_name'] = self.kwargs.get('board', None)
-        context['thread_number'] = int(self.kwargs['thread']) if 'thread' in self.kwargs else None
         context['parameters'] = self.parameters
         context['available_parameters'] = self.available_parameters
-        context['body_id'] = 'body-search'
         context['chart_data'] = get_posts_chart_data(self.chart_data)
-
         return context
 
 
