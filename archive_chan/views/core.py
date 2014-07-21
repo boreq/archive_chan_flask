@@ -43,6 +43,7 @@ class BoardView(BodyIdMixin, ListView):
             ('last_reply', ('Last reply', 'last_reply', None)),
             ('creation_date', ('Creation date', 'first_reply', None)),
             ('replies', ('Replies', 'replies', None)),
+            ('images', ('Images', 'images', None)),
         ),
         'saved': (
             ('all', ('All', None)),
