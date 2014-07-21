@@ -3,6 +3,7 @@
     "tasks": [
         {
             "input": [
+                "archive_chan/static/archive_chan/js/lib/jquery.min.js",
                 "archive_chan/static/archive_chan/js/lib/jquery.timeago.js",
                 "archive_chan/static/archive_chan/js/lib/highlight.pack.js",
                 "archive_chan/static/archive_chan/js/lib/jquery.qtip.js",
