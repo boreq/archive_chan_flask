@@ -30,8 +30,8 @@ class Command(BaseCommand):
             try:
                 queryset.delete()
 
-            except:
-                pass
+            except Exception as e:
+                sys.stderr.write('%s\m' % (e))
 
             finally:
                 post_delete.connect(post_post_delete, sender=Post)
