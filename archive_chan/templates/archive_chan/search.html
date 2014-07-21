@@ -30,17 +30,17 @@
                 <div class="search-filters">
                     <div>
                         <h3>Type</h3>
-                        {% include "archive_chan/snippets/simple_filter_search.html" with available_parameters=available_parameters.type parameter=parameters.type parameter_name="type" %}
+                        {% simple_filter_search "type" %}
                     </div>
 
                     <div>
                         <h3>Created</h3>
-                        {% include "archive_chan/snippets/simple_filter_search.html" with available_parameters=available_parameters.created parameter=parameters.created parameter_name="created" %}
+                        {% simple_filter_search "created" %}
                     </div>
 
                     <div>
                         <h3>Saved</h3>
-                        {% include "archive_chan/snippets/simple_filter_search.html" with available_parameters=available_parameters.saved parameter=parameters.saved parameter_name="saved" %}
+                        {% simple_filter_search "saved" %}
                     </div>
                 </div>
             </div>

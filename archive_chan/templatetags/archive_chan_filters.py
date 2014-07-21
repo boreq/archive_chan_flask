@@ -1,8 +1,8 @@
-import re, cgi, copy, urllib
-
+import re, copy, urllib
 from django import template
 
 register = template.Library()
+
 
 @register.filter
 def formatpost(text):
@@ -38,7 +38,6 @@ def formatpost(text):
 def highlight(text, phrase):
     """This filter higlights the specified phrase in the text."""
 
-    # >>quote
     text = re.sub(
         r'(' + phrase + ')',
         r'<span class="highlight">\1</span>',
@@ -107,3 +106,27 @@ def search_url_query(context, *args, **kwargs):
     ))
 
     return query
+
+
+@register.inclusion_tag('archive_chan/snippets/simple_sort.html', takes_context=True)
+def simple_sort(context, parameter_name):
+    return {
+        'available_parameters': context['available_parameters'][parameter_name],
+        'parameters': context['parameters'],
+        'parameter': context['parameters'][parameter_name],
+        'sort_reverse': context['parameters']['sort_reverse'],
+        'parameter_name': parameter_name,
+    }
+
+
+def simple_filter(context, parameter_name):
+    return {
+        'available_parameters': context['available_parameters'][parameter_name],
+        'parameters': context['parameters'],
+        'parameter': context['parameters'][parameter_name],
+        'parameter_name': parameter_name,
+    }
+
+
+register.inclusion_tag('archive_chan/snippets/simple_filter.html', takes_context=True)(simple_filter)
+register.inclusion_tag('archive_chan/snippets/simple_filter_search.html', takes_context=True, name='simple_filter_search')(simple_filter)
