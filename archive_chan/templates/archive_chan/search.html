@@ -2,16 +2,6 @@
 {% load archive_chan_filters %}
 {% load staticfiles %}
 
-{% if thread_number %}
-    {% url 'archive_chan:thread_search' board_name thread_number as url %}
-{% else %}
-    {% if board_name %}
-        {% url 'archive_chan:board_search' board_name as url %}
-    {% else %}
-        {% url 'archive_chan:search' as url %}
-    {% endif %}
-{% endif %}
-
 {% block inner_head %}
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script>
@@ -25,7 +15,7 @@
         <div class="wrapper">
             <div class="search-parameters">
                 <div class="search-main">
-                    <form class="search-form" method="get" action="{{ url }}">
+                    <form class="search-form" method="get">
                         <input type="text" name="search"{% if parameters.search %} value="{{ parameters.search }}"{% endif %} placeholder="Search">
                     </form>
 

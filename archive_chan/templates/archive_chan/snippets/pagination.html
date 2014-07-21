@@ -2,7 +2,7 @@
 
 <div class="pagination">
     {% if page_obj.has_previous %}
-        <a href="{{ url }}{{ url_query }}&page={{ page_obj.previous_page_number }}" class="page-prev" title="{% trans "Previous page" %}"><i class="fa fa-angle-left"></i></a>
+        <a href="{{ url_query }}&page={{ page_obj.previous_page_number }}" class="page-prev" title="{% trans "Previous page" %}"><i class="fa fa-angle-left"></i></a>
     {% endif %}
     <div class="page-current">
         {% blocktrans with current_page=page_obj.number all_pages=page_obj.paginator.num_pages %}
@@ -10,6 +10,6 @@
         {% endblocktrans %}
     </div>
     {% if page_obj.has_next %}
-        <a href="{{ url }}{{ url_query  }}&page={{ page_obj.next_page_number }}" class="page-next" title="{% trans "Next page" %}"><i class="fa fa-angle-right"></i></a>
+        <a href="{{ url_query  }}&page={{ page_obj.next_page_number }}" class="page-next" title="{% trans "Next page" %}"><i class="fa fa-angle-right"></i></a>
     {% endif %}
 </div>

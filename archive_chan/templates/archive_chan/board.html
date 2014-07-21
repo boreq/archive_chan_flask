@@ -69,7 +69,6 @@
     {% if is_paginated %}
         <div class="content">
             <div class="wrapper">
-                {% url 'archive_chan:board' board_name as url %}
                 {% board_url_query_assign as url_query %}
                 {% include "archive_chan/snippets/pagination.html" %}
             </div>
