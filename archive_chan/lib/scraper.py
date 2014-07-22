@@ -33,7 +33,7 @@ class ThreadInfo:
 
 
 class PostData:
-    """Class used for storing data about the post before saving it to the databse."""
+    """Class used for storing data about the post before saving it to the database."""
 
     def replace_content(self, text):
         """Cleans the HTML from the post comment. Returns a string."""
@@ -136,7 +136,7 @@ class Triggers:
 
 
     def get_single_trigger_actions(self, trigger, thread, post_data):
-        """Returns a set of actions to execute absed on one trigger."""
+        """Returns a set of actions to execute based on one trigger."""
         if not self.check_post_type(trigger, thread, post_data):
             return None
         
@@ -211,11 +211,11 @@ class Queuer:
         # Convert seconds to microseconds.
         time_beetwen_requests *= 1000000
 
-        # Check when was the last request performed and wait if necessary.
+        # Check when the last request was performed and wait if necessary.
         if not last_request is None:
             time_passed = datetime.datetime.now() - last_request
 
-            # If not enough time passed since the last request wait for the remaining time.
+            # If not enough time passed since the last request, wait for the remaining time.
             if time_passed.microseconds < time_beetwen_requests:
                 # Calculate remaining time and convert microseconds to seconds.
                 wait_for_seconds = (time_beetwen_requests - time_passed.microseconds) / 1000000
@@ -298,7 +298,7 @@ class Stats:
             downloading_percent = round(self.get('total_download_time').total_seconds() / total_time.total_seconds() * 100 / AppSettings.get('SCRAPER_THREADS_NUMBER'))
 
         except:
-            # Division by zero. Set 0 for the statistics.
+            # Division by zero. Set to 0 for the statistics.
             wait_percent = 0
             downloading_percent = 0
 
@@ -442,7 +442,7 @@ class ThreadScraper(Scraper):
         self.stats.add('added_posts', 1)
 
         # Just to give something to look at. 
-        # "_" is a post withour an image, "-" is a post with an image
+        # "_" is a post without an image, "-" is a post with an image
         if self.show_progress:
             print('-' if post_data.filename else '_', end="", flush=True)
 
@@ -453,7 +453,7 @@ class ThreadScraper(Scraper):
         if self.thread_info.replies < self.board.replies_threshold:
             return
 
-        # Get the exisiting entry for this thread from the database or create a new record for it.
+        # Get the existing entry for this thread from the database or create a new record for it.
         # get_or_create is not used to avoid saving outside of the transaction - empty thread
         # could be created in case of an error.
         try:
