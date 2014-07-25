@@ -82,6 +82,7 @@ class Post(models.Model):
     name = models.CharField(max_length=255, blank=True)
     trip = models.CharField(max_length=255, blank=True)
     email = models.CharField(max_length=255, blank=True)
+    country = models.CharField(max_length=2, blank=True)
 
     subject = models.TextField(blank=True)
     comment = models.TextField(blank=True)

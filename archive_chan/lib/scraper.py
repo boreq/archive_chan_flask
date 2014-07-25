@@ -65,12 +65,13 @@ class PostData:
         self.number = int(post_json['no'])
         self.time = datetime.datetime.fromtimestamp(int(post_json['time'])).replace(tzinfo=utc)
 
-        self.name = post_json.get('name', "")
-        self.trip = post_json.get('trip', "")
-        self.email = post_json.get('email', "")
+        self.name = post_json.get('name', '')
+        self.trip = post_json.get('trip', '')
+        self.email = post_json.get('email', '')
+        self.country = post_json.get('country', '')
 
-        self.subject = self.replace_content(post_json.get('sub', ""))
-        self.comment = self.replace_content(post_json.get('com', ""))
+        self.subject = self.replace_content(post_json.get('sub', ''))
+        self.comment = self.replace_content(post_json.get('com', ''))
 
         self.filename = post_json.get('tim')
         self.extension = post_json.get('ext')
@@ -424,6 +425,7 @@ class ThreadScraper(Scraper):
                 name=post_data.name,
                 trip=post_data.trip,
                 email=post_data.email,
+                country=post_data.country,
                 subject=post_data.subject,
                 comment=post_data.comment
             )
