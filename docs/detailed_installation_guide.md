@@ -368,7 +368,7 @@ Run:
     $ source ../bin/activate
     (archive_chan_virtualenv) $ ./manage.py archive_chan_update --progress
 
-You can actually wait for it it finish. You should notice new threads appearing one by one on the website.
+You can actually wait for it to finish. You should notice new threads appearing one by one on the website.
 
 ### Set up cron
 We want the archive to automatically update periodically.

@@ -364,6 +364,10 @@ div.content{
         }
     }
 
+    .thread-subject, .thread-comment{
+        word-wrap: break-word;
+    }
+
     .thread-subject{
         font-weight: bold;
     }
