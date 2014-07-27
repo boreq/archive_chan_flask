@@ -1,5 +1,4 @@
 {% extends "archive_chan/base.html" %},
-{% load i18n %}
 {% load cache %}
 {% load archive_chan_filters %}
 
@@ -20,16 +19,16 @@
 {% endblock %}
 
 {% block content %}
-    <div class="content">
-        <div class="wrapper">
-            <ul id="posts">
-                {% cache 300 thread_posts board_name thread_number thread.saved tags user.is_staff %}
+    {% cache 300 thread_posts board_name thread_number thread.saved tags user.is_staff %}
+        <div class="content">
+            <div class="wrapper">
+                <ul id="posts">
                     {% for post in post_list %}
                         <li class="post" id="post-{{ post.number }}">
                             <div class="post-image-container">
                                 {% with post.image as image %}
                                     {% if image.thumbnail %}
-                                        <a href="{{ image.image.url }}" title="{{ image.original_name }}" target="_blank" class="post-image">
+                                        <a href="{{ image.image.url }}" title="{{ image.original_name }}" class="post-image">
                                             <img src="{{ image.thumbnail.url }}">
                                         </a>
                                     {% endif %}
@@ -93,7 +92,7 @@
                                         {% endif %}
 
                                         <span class="post-author-name">
-                                            {{ post.get_name }}
+                                            {{ post.name }}
                                         </span>
 
                                         {% if post.trip %}
@@ -106,6 +105,12 @@
                                             </a>
                                         {% endif %}
                                     </li>
+
+                                    {% if post.country %}
+                                        <li class="post-country">
+                                            {{ post.country }}
+                                        </li>
+                                    {% endif %}
 
                                     {# Post time. #}
                                     <li class="post-time">
@@ -124,8 +129,8 @@
                             </div>
                         </li>
                     {% endfor %}
-                {% endcache %}
-            </ul>
+                </ul>
+            </div>
         </div>
-    </div>
+    {% endcache %}
 {% endblock %}

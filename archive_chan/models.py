@@ -89,12 +89,6 @@ class Post(models.Model):
 
     save_time = models.DateTimeField(auto_now_add = True)
 
-    def get_name(self):
-        if self.name:
-            return self.name
-        else:
-            return 'Anonymous'
-
     def is_main(self):
         return (self.number == self.thread.number)
 
