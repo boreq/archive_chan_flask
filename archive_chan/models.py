@@ -82,17 +82,12 @@ class Post(models.Model):
     name = models.CharField(max_length=255, blank=True)
     trip = models.CharField(max_length=255, blank=True)
     email = models.CharField(max_length=255, blank=True)
+    country = models.CharField(max_length=2, blank=True)
 
     subject = models.TextField(blank=True)
     comment = models.TextField(blank=True)
 
     save_time = models.DateTimeField(auto_now_add = True)
-
-    def get_name(self):
-        if self.name:
-            return self.name
-        else:
-            return 'Anonymous'
 
     def is_main(self):
         return (self.number == self.thread.number)
