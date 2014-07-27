@@ -152,7 +152,7 @@ class GalleryView(ApiView):
                 id__lt=last
             )
 
-        queryset = queryset.order_by('-post__time')[:amount]
+        queryset = queryset.order_by('-id')[:amount]
 
         # Prepare the data.
         json_data = {
