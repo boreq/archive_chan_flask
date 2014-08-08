@@ -1,0 +1,73 @@
+{% extends "archive_chan/base.html" %}
+
+{% block inner_head %}
+    <script>
+        var info_data = {
+            board_name: '{{ board_name }}'
+        };
+    </script>
+{% endblock %}
+
+{% block content %}
+    <div class="content">
+        <div class="wrapper board-wrapper">
+            <ul id="threads">
+                {% for thread in thread_list %}
+                    {% if thread.saved %}
+                        <li class="thread-saved">
+                    {% else %}
+                        <li>
+                    {% endif %}
+                        <a href="{{ thread.get_absolute_url() }}">
+                            {% set post=thread.first_post() %}
+                            <div class="img-container">
+                                <img src="{{ url_for('.media', filename=post.image.image) }}">
+                            </div>
+
+                            <div class="thread-info">
+                                <div class="thread-info-time">
+                                    last 
+                                    <time class="timeago" datetime="{{ thread.last_reply }}">
+                                        {{ thread.last_reply }}
+                                    </time>
+                                </div>
+                                <div class="thread-info-stats">
+                                    <i class="fa fa-comment-o"></i> {{ thread.replies - 1 }}
+                                    <i class="fa fa-picture-o"></i> {{ thread.images - 1 }}
+                                </div>
+                            </div>
+
+                            <div class="thread-tags">
+                                {% for tag in thread.tags.all() %}
+                                    <div>{{ tag.name }}</div>
+                                {% endfor %}
+                            </div>
+
+                            {% if post.subject %}
+                                <div class="thread-subject">{{ post.subject }}</div>
+                            {% endif %}
+
+                            {% if post.comment %}
+                                <div class="thread-comment">{{ post.comment }}</div>
+                            {% endif %}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <div class="board-sidebar">
+                {% include "archive_chan/snippets/board_filters.html" %}
+            </div>
+        </div>
+    </div>
+
+    {% if is_paginated %}
+        <div class="content">
+            <div class="wrapper">
+                {#{% board_url_query_assign as url_query %}
+                {% include "archive_chan/snippets/pagination.html" %}
+                #}
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

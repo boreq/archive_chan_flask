@@ -1,15 +1,12 @@
 import json
-
-from django.db.models import Avg
-from django.core.urlresolvers import reverse
-from django.http import HttpResponse
-from django.views.generic.base import View
-
-from archive_chan.models import Update, Image, Thread, Tag, TagToThread
-import archive_chan.lib.stats as stats
+from flask import Response, request
+from flask.views import View
+from ..models import Board, Thread, Post, Image
+from ..lib import stats
 
 class ApiError(Exception):
-    def __init__(self, status_code=500, error_code='unknown', message='Unknown server error.'):
+    def __init__(self, status_code=500, error_code='unknown',
+                 message='Unknown server error.'):
         self.status_code = status_code
         self.error_code = error_code
         super(ApiError, self).__init__(message)
@@ -22,6 +19,8 @@ class NotImplementedApiError(ApiError):
         super(NotImplementedApiError, self).__init__(status_code, error_code, message) 
 
 class ApiView(View):
+    methods = ['GET']
+
     def handle_exception(self, exception):
         """Extract exception parameters."""
         response_data = {
@@ -30,14 +29,14 @@ class ApiView(View):
         }
         return (response_data, exception.status_code)
 
-    def dispatch(self, request, *args, **kwargs):
-        """Try to use the right method and handle the exceptions.
+    def dispatch_request(self, *args, **kwargs):
+        """Picks the right method and handles the exceptions.
         This view will try to get the data from <method_name>_api_response().
         """
         try:
             attr_name = request.method.lower() + '_api_response'
-            if request.method.lower() in self.http_method_names and hasattr(self, attr_name):
-                response_data = getattr(self, attr_name)(request, *args, **kwargs)
+            if request.method in self.methods and hasattr(self, attr_name):
+                response_data = getattr(self, attr_name)(*args, **kwargs)
                 status_code = 200
             else:
                 return self.http_method_not_allowed(request, *args, **kwargs)
@@ -48,14 +47,14 @@ class ApiView(View):
 
         # Handle other exceptions.
         except Exception as e:
+            raise
             response_data, status_code = self.handle_exception(ApiError())
 
-        return HttpResponse(
-            json.dumps(response_data, indent=4),
-            content_type='application/json',
+        return Response(json.dumps(response_data, indent=4),
+            mimetype='application/json',
             status=status_code
         )
-
+'''
 class StatusView(ApiView):
     def get_chart_data(self, queryset):
         """Creates data structured as required by Google Charts."""
@@ -93,7 +92,7 @@ class StatusView(ApiView):
 
         return chart_data
 
-    def get_api_response(self, request, *args, **kwargs):
+    def get_api_response(self,  *args, **kwargs):
         response_data = {}
 
         # Last updates.
@@ -118,63 +117,54 @@ class StatusView(ApiView):
         response_data['chart_data'] = self.get_chart_data(updates)
 
         return response_data
+'''
 
 class StatsView(ApiView):
-    def get_api_response(self, request, *args, **kwargs):
-        board_name = request.GET.get('board', None)
-        thread_number = request.GET.get('thread', None)
-        return stats.get_stats(board=board_name, thread=thread_number)
+    def get_api_response(self, *args, **kwargs):
+        return stats.get_stats(
+            board_name=request.args.get('board'),
+            thread_number=request.args.get('thread')
+        )
 
 class GalleryView(ApiView):
-    def get_api_response(self, request, *args, **kwargs):
-        board_name = request.GET.get('board')
-        thread_number = request.GET.get('thread')
-        last = request.GET.get('last')
-        amount = int(request.GET.get('amount', 10))
+    def get_api_response(self, *args, **kwargs):
+        board_name = request.args.get('board')
+        thread_number = request.args.get('thread')
+        last = request.args.get('last')
+        amount = int(request.args.get('amount', 10))
 
-        queryset = Image.objects.select_related('post', 'post__thread', 'post__thread__board')
+        queryset = Image.query.join(Post, Thread, Board)
         
-        # Board specific gallery?
-        if board_name is not None:
+        if board_name:
             queryset = queryset.filter(
-                post__thread__board=board_name
+                Board.name==board_name
             )
 
-        # Thread specific gallery?
-        if thread_number is not None:
+        if thread_number:
             queryset = queryset.filter(
-                post__thread__number=thread_number
+                Thread.number==thread_number
             )
 
-        # If this is not a first request we have to fetch those images which are not present in the gallery.
-        if last is not None:
+        if last:
             queryset = queryset.filter(
-                id__lt=last
+                Image.id<last
             )
 
-        queryset = queryset.order_by('-id')[:amount]
+        queryset = queryset.order_by(Image.id.desc()).limit(amount)
 
-        # Prepare the data.
-        json_data = {
-            'images': []
-        }
-
-        for image in queryset:
-            json_data['images'].append({
+        return {
+            'images': [{
                 'id': image.id,
                 'board': image.post.thread.board.name,
                 'thread': image.post.thread.number,
                 'post': image.post.number,
                 'extension': image.get_extension(),
-                'url': image.image.url,
-                'post_url': reverse(
-                    'archive_chan:thread',
-                    args=(image.post.thread.board.name, image.post.thread.number)
-                ) + format('#post-%s' % image.post.number)
-            })
-        
-        return json_data
+                'url': image.image_url,
+                'post_url': image.post.get_absolute_url()        
+            } for image in queryset]
+        }
 
+'''
 def ajax_save_thread(request):
     """View used for AJAX save thread calls."""
     response = {}
@@ -323,3 +313,4 @@ def ajax_remove_tag(request):
         }
 
     return HttpResponse(json.dumps(response), content_type='application/json')
+'''

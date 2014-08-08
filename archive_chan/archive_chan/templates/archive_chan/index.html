@@ -6,7 +6,7 @@
             <ul id="boards">
                 {% for board in board_list %}
                     <li>
-                        <a href="{{ board.get_absolute_url }}">{{ board }}</a>
+                        <a href="{{ board.get_absolute_url() }}">{{ board }}</a>
                     </li>
                 {% endfor %}
             </ul>

@@ -1,6 +1,5 @@
 import datetime
-
-from django.utils.timezone import utc
+import pytz
 
 class Modifier:
     """All sort/filter objects are based on this class.
@@ -8,27 +7,30 @@ class Modifier:
     Check in the views how to format settings for those objects.
     """
     def __init__(self, settings):
-        """Constructor is supposed to load settings and user defined parameters and perform sanity checks on them."""
+        """Constructor loads settings and user defined parameters and performs
+        sanity checks on them.
+        """
         self.settings = settings
 
     def load_default(self):
-        """This functions is supposed to load default parameters for this object."""
+        """Load default parameters for this object."""
         pass
 
     def execute(self, queryset):
-        """This function is supposed to modify the queryset."""
+        """Modify the queryset."""
         return queryset
 
     def get(self):
-        """This function is supposed to return the parameter that was chosen after sanity checks in the constructor."""
+        """Return the parameter that was chosen after sanity checks
+        in the constructor.
+        """
         pass
 
 class SimpleFilter(Modifier):
-    """Simple filter which can operate on single values (for example filter only saved objects)."""
+    """Simple filter which can operate on single values."""
     def __init__(self, settings, parameter):
         super(SimpleFilter, self).__init__(settings)
         self.parameter = parameter
-
         if not self.parameter in dict(self.settings):
             self.load_default()
 
@@ -36,12 +38,10 @@ class SimpleFilter(Modifier):
         self.parameter = self.settings[0][0]
 
     def execute(self, queryset):
-        filter_dict = dict(self.settings)[self.parameter][1]
-
-        if filter_dict is None:
+        filter_cond = dict(self.settings)[self.parameter][1]
+        if filter_cond is None:
             return queryset
-        
-        return queryset.filter(**filter_dict)
+        return queryset.filter(*filter_cond)
 
     def get(self):
         return self.parameter
@@ -49,15 +49,14 @@ class SimpleFilter(Modifier):
 class TimeFilter(SimpleFilter):
     """Time based filter. It converts parameters to time before applying them in the filter function."""
     def execute(self, queryset):
-        time_dict = dict(self.settings)[self.parameter][1]
-
-        if time_dict is None:
+        time_cond = dict(self.settings)[self.parameter][1]
+        if time_cond is None:
             return queryset
-
-        time_dict = {key: datetime.datetime.now().replace(tzinfo=utc) - datetime.timedelta(hours=value) for (key, value) in time_dict.items()}
-
-        return queryset.filter(**time_dict)
-
+        time_cond = time_cond[0](
+            time_cond[1],
+            pytz.utc.localize(datetime.datetime.utcnow()) - datetime.timedelta(hours=time_cond[2])
+        )
+        return queryset.filter(time_cond)
 
 class TagFilter(Modifier):
     """Special tag filter accepting multiple parameters. It is not really reusable."""
@@ -95,23 +94,11 @@ class SimpleSort(Modifier):
         else:
             self.load_default()
 
-    def annotate(self, queryset):
-        annotate_with = dict(self.settings)[self.parameter][2]
-
-        if annotate_with is None:
-            return queryset
-
-        return queryset.annotate(**annotate_with)
-
     def execute(self, queryset):
-        queryset = self.annotate(queryset)
-        
+        order = dict(self.settings)[self.parameter][1]
         if self.reverse:
-            prefix = '-'
-        else:
-            prefix = ''
-
-        return queryset.order_by(prefix + dict(self.settings)[self.parameter][1])
+            order = order.desc()
+        return queryset.order_by(order)
 
     def load_default(self):
         self.parameter = self.settings[0][0]
@@ -122,3 +109,23 @@ class SimpleSort(Modifier):
 
     def get_full(self):
         return '-' + self.parameter if self.reverse else self.parameter
+
+
+def Paginator(Modifier):
+    def __init__(self, pagination):
+        super(Paginator, self).__init__(None)
+        self.pagination = pagination
+
+    def load_default(self):
+        self.parameter = 1
+
+    def execute(self, queryset):
+        filter_dict = dict(self.settings)[self.parameter][1]
+
+        if filter_dict is None:
+            return queryset
+        
+        return queryset.filter(**filter_dict)
+
+    def get(self):
+        return self.parameter

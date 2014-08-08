@@ -1,24 +1,24 @@
-{% load archive_chan_filters %}
+{% import 'archive_chan/snippets/filters.html' as filters with context %}
 
 <div class="board-filters">
     <div>
         <h3>Order by</h3>
-        {% simple_sort "sort" %}
+        {{ filters.simple_sort("sort") }}
     </div>
 
     <div>
         <h3>Saved</h3>
-        {% simple_filter "saved" %}
+        {{ filters.simple_filter("saved") }}
     </div>
 
     <div>
         <h3>Last reply</h3>
-        {% simple_filter "last_reply" %}
+        {{ filters.simple_filter("last_reply") }}
     </div>
 
     <div>
         <h3>Tagged</h3>
-        {% simple_filter "tagged" %}
+        {{ filters.simple_filter("tagged") }}
     </div>
 
     {% if parameters.tag %}
