@@ -1,4 +1,6 @@
-{% extends "archive_chan/base.html" %},
+{% extends "archive_chan/base.html" %}
+{% from "archive_chan/snippets/post.html" import post_macro %}
+
 
 {% block inner_head %}
     <script>
@@ -12,7 +14,8 @@
             ajax_url_get_parent_thread: '{% url 'archive_chan:ajax_get_parent_thread' %}',
             ajax_url_suggest_tag: '{% url 'archive_chan:ajax_suggest_tag' %}',
             ajax_url_add_tag: '{% url 'archive_chan:ajax_add_tag' %}',
-            ajax_url_remove_tag: '{% url 'archive_chan:ajax_remove_tag' %}'#}
+            ajax_url_remove_tag: '{% url 'archive_chan:ajax_remove_tag' %}'
+            #}
         };
     </script>
 {% endblock %}
@@ -22,110 +25,7 @@
         <div class="wrapper">
             <ul id="posts">
                 {% for post in post_list %}
-                    <li class="post" id="post-{{ post.number }}">
-                        <div class="post-image-container">
-                            {% if post.image.thumbnail %}
-                                <a href="{{ post.image.image_url }}" title="{{ post.image.original_name }}" class="post-image">
-                                    <img src="{{ post.image.thumbnail_url }}">
-                                </a>
-                            {% endif %}
-
-                            {# If this is a top post. #}
-                            {% if post.is_main() %}
-                                {# Show tags in the main post. #}
-                                <ul class="tags">
-                                    {% for tagtothread in thread.tags %}
-                                        <li>
-                                            {% if tagtothread.automatically_added %}
-                                                <i class="fa fa-fw fa-tags" title="Tag added automatically"></i>
-                                            {% else %}
-                                                <i class="fa fa-fw fa-tag" title="Tag added by the user"></i>
-                                            {% endif %}
-
-                                            <a class="tag-link" href="{{ url_for('.board', name=board_name) }}?tag={{ tagtothread.tag.name }}">
-                                                {{ tagtothread.tag.name }}
-                                            </a>
-
-                                            {% if True %}
-                                                {#user.is_staff#}
-                                                <a class="remove-tag" title="Remove the tag"><i class="fa fa-times"></i></a>
-                                            {% endif %}
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-
-                                {# Show add tag input. #}
-                                {% if True %}
-                                    {#user.is_staff#}
-                                    <input id="add-tag-input" type="text" name="new-tag" placeholder="New tag">
-
-                                    {% if thread.saved %}
-                                        <div class="button button-red button-unsave">Unsave thread</div>
-                                    {% else %}
-                                        <div class="button button-green button-save">Save thread</div>
-                                    {% endif %}
-                                {% endif %}
-                            {% endif %}
-                        </div>
-
-                        <div class="post-content">
-                            <ul class="post-header">
-                                {% if post.is_main() %}
-                                    <li class="post-icon">
-                                       <i class="fa fa-level-down" title="OP"></i> 
-                                    </li>
-                                {% endif %}
-
-                                {# Post subject. #}
-                                {% if post.subject %}
-                                    <li class="post-subject">
-                                        {{ post.subject }}
-                                    </li>
-                                {% endif %}
-
-                                {# Post author. #}
-                                <li class="post-author">
-                                    {% if post.email %}
-                                        <a href="mailto:{{ post.email }}">
-                                    {% endif %}
-
-                                    <span class="post-author-name">
-                                        {{ post.name }}
-                                    </span>
-
-                                    {% if post.trip %}
-                                        <span class="post-author-trip">
-                                            {{ post.trip }}
-                                        </span>
-                                    {% endif %}
-
-                                    {% if post.email %}
-                                        </a>
-                                    {% endif %}
-                                </li>
-
-                                {% if post.country %}
-                                    <li class="post-country">
-                                        {{ post.country }}
-                                    </li>
-                                {% endif %}
-
-                                {# Post time. #}
-                                <li class="post-time">
-                                    <time class="timeago" datetime="{{ post.time }}">{{ post.time }}</time>
-                                </li>
-
-                                {# Post number. #}
-                                <li class="post-number">
-                                    <a href="{{ post.get_absolute_url }}">{{ post }}</a>
-                                </li>
-                            </ul>
-
-                            {% if post.comment %}
-                                <div class="post-comment">{{ post.comment|formatpost|nl2br }}</div>
-                            {% endif %}
-                        </div>
-                    </li>
+                    {{ post_macro(post, user) }}
                 {% endfor %}
             </ul>
         </div>

@@ -154,13 +154,7 @@ class ThreadView(UniversalViewMixin, TemplateView):
         ).order_by(Post.number)
 
     def get_context_data(self, **kwargs):
-        thread = get_object_or_404(
-            Thread,
-            Board.name==self.kwargs['board'],
-            Thread.number==self.kwargs['thread']
-        )
         context = super(ThreadView, self).get_context_data(**kwargs)
-        context['thread'] = thread 
         context['post_list'] = self.get_queryset()
         return context
 

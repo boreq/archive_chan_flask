@@ -1,0 +1,102 @@
+{% macro post_macro(post, user) -%}
+    <li class="post" id="post-{{ post.number }}">
+        <div class="post-image-container">
+            {% if post.image.thumbnail %}
+                <a href="{{ post.image.image_url }}" title="{{ post.image.original_name }}" class="post-image">
+                    <img src="{{ post.image.thumbnail_url }}">
+                </a>
+            {% endif %}
+
+            {% if post.is_main() %}
+                {{ main_post_macro(post, user) }}
+            {% endif %}
+        </div>
+
+        <div class="post-content">
+            <ul class="post-header">
+                {% if post.is_main() %}
+                    <li class="post-icon">
+                       <i class="fa fa-level-down" title="OP"></i> 
+                    </li>
+                {% endif %}
+
+                {% if post.subject %}
+                    <li class="post-subject">
+                        {{ post.subject }}
+                    </li>
+                {% endif %}
+
+                <li class="post-author">
+                    {% if post.email %}
+                        <a href="mailto:{{ post.email }}">
+                    {% endif %}
+
+                    <span class="post-author-name">
+                        {{ post.name }}
+                    </span>
+
+                    {% if post.trip %}
+                        <span class="post-author-trip">
+                            {{ post.trip }}
+                        </span>
+                    {% endif %}
+
+                    {% if post.email %}
+                        </a>
+                    {% endif %}
+                </li>
+
+                {% if post.country %}
+                    <li class="post-country">
+                        {{ post.country }}
+                    </li>
+                {% endif %}
+
+                <li class="post-time">
+                    <time class="timeago" datetime="{{ post.time }}">{{ post.time }}</time>
+                </li>
+
+                <li class="post-number">
+                    <a href="{{ post.get_absolute_url() }}">{{ post }}</a>
+                </li>
+            </ul>
+
+            {% if post.comment %}
+                <div class="post-comment">{{ post.comment|formatpost|nl2br }}</div>
+            {% endif %}
+        </div>
+    </li>
+{%- endmacro %}
+
+
+{% macro main_post_macro(post, user) -%}
+    <ul class="tags">
+        {% for tagtothread in post.thread.tags %}
+            <li>
+                {% if tagtothread.automatically_added %}
+                    <i class="fa fa-fw fa-tags" title="Tag added automatically"></i>
+                {% else %}
+                    <i class="fa fa-fw fa-tag" title="Tag added by the user"></i>
+                {% endif %}
+
+                <a class="tag-link" href="{{ url_for('.board', name=board_name) }}?tag={{ tagtothread.tag.name }}">
+                    {{ tagtothread.tag.name }}
+                </a>
+
+                {% if user.is_authenticated() %}
+                    <a class="remove-tag" title="Remove the tag"><i class="fa fa-times"></i></a>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+
+    {% if user.is_authenticated() %}
+        <input id="add-tag-input" type="text" name="new-tag" placeholder="New tag">
+
+        {% if post.thread.saved %}
+            <div class="button button-red button-unsave">Unsave thread</div>
+        {% else %}
+            <div class="button button-green button-save">Save thread</div>
+        {% endif %}
+    {% endif %}
+{%- endmacro %}
