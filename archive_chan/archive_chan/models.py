@@ -1,14 +1,18 @@
 import os
 from flask import url_for
+from flask.ext.login import UserMixin
 from .database import db
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = 'archive_chan_user'
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
+
+    def __str__(self):
+        return self.username
 
 
 class Board(db.Model):

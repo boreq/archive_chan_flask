@@ -1,6 +1,6 @@
 from flask import send_from_directory, current_app
 from . import bl
-from .views import core, api
+from .views import core, api, auth
 #import .views.api as api
 
 '''
@@ -54,6 +54,9 @@ bl.add_url_rule('/board/<board>/thread/<thread>/stats/', view_func=core.StatsVie
 
 bl.add_url_rule('/api/gallery/', view_func=api.GalleryView.as_view('api_gallery'))
 bl.add_url_rule('/api/stats/', view_func=api.StatsView.as_view('api_stats'))
+
+bl.add_url_rule('/login/', 'login', view_func=auth.login, methods=('GET', 'POST'))
+bl.add_url_rule('/logout/', 'logout', view_func=auth.logout)
 
 @bl.route('/media/<path:filename>')
 def media(filename):
