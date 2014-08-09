@@ -26,8 +26,6 @@ else:
         import sys
         sys.stderr.write('Flask Debug Toolbar was NOT loaded. Error: %s\n' % e)
 
-
-from .archive_chan.database import db
-db.init_app(app)
-from .archive_chan import bl
-app.register_blueprint(bl)
+from . import archive_chan
+archive_chan.init_app(app)
+app.register_blueprint(archive_chan.bl)

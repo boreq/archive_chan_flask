@@ -2,6 +2,15 @@ import os
 from flask import url_for
 from .database import db
 
+
+class User(db.Model):
+    __tablename__ = 'archive_chan_user'
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+
+
 class Board(db.Model):
     __tablename__ = 'archive_chan_board'
 

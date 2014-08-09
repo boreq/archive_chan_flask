@@ -1,40 +1,40 @@
-from django.contrib import admin
-from archive_chan.models import Board, Thread, Post, Image, Tag, Trigger, TagToThread, Update
-from django.conf import settings
+from flask.ext.admin import Admin
+from flask.ext.admin.contrib.sqla import ModelView
+from wtforms import PasswordField
+from . import models
+from .auth import bcrypt
+from .database import db
 
-class BoardAdmin(admin.ModelAdmin):
-    list_display = ['name', 'active']
-    list_filter = ['active']
-
-class ThreadAdmin(admin.ModelAdmin):
-    list_display = ['board', 'number', 'saved', 'auto_saved', 'replies', 'images', 'first_reply', 'last_reply']
-    list_filter = ['board']
-    search_fields = ['number']
-
-class PostAdmin(admin.ModelAdmin):
-    list_display = ['number', 'time', 'name', 'trip', 'email', 'country', 'subject', 'comment']
-    search_fields = ['number']
-
-class TagAdmin(admin.ModelAdmin):
-    pass
-
-class TagToThreadAdmin(admin.ModelAdmin):
-    pass
-
-class TriggerAdmin(admin.ModelAdmin):
-    list_display = ['field', 'event', 'phrase', 'case_sensitive', 'post_type', 'save_thread', 'tag_thread']
-
-class UpdateAdmin(admin.ModelAdmin):
-    list_display = ['board', 'start', 'end', 'used_threads', 'total_time', 'wait_time', 'download_time', 'processed_threads', 'added_posts', 'removed_posts', 'downloaded_images', 'downloaded_thumbnails', 'downloaded_threads', 'status']
-    list_filter = ['status']
+admin = Admin(name='Archive Chan')
 
 
-admin.site.register(Board, BoardAdmin)
-admin.site.register(Tag, TagAdmin)
-admin.site.register(Trigger, TriggerAdmin)
+class BoardView(ModelView):
+    form_create_rules = ('active', 'store_threads_for', 'replies_threshold')
+    column_list = ('name', 'active', 'store_threads_for', 'replies_threshold')
 
-if (settings.DEBUG):
-    admin.site.register(Thread, ThreadAdmin)
-    admin.site.register(Post, PostAdmin)
-    admin.site.register(TagToThread, TagToThreadAdmin)
-    admin.site.register(Update, UpdateAdmin)
+    def __init__(self, session, **kwargs):
+        super(BoardView, self).__init__(models.Board, session, **kwargs)
+
+
+class UserView(ModelView):
+    form_excluded_columns = ('password',)
+    column_list = ('username',)
+
+    def __init__(self, session, **kwargs):
+        super(UserView, self).__init__(models.User, session, **kwargs)
+
+    def scaffold_form(self):
+        form_class = super(UserView, self).scaffold_form()
+        form_class.new_password1 = PasswordField('New password')
+        form_class.new_password2 = PasswordField('Confirm password')
+        return form_class
+
+    def on_model_change(self, form, model):
+        if len(model.new_password1):
+            if model.new_password1 != model.new_password2:
+                raise ValueError('Passwords differ')
+            model.password = bcrypt.generate_password_hash(form.new_password1.data)
+
+
+admin.add_view(BoardView(db.session))
+admin.add_view(UserView(db.session))
