@@ -55,6 +55,11 @@ bl.add_url_rule('/board/<board>/thread/<thread>/stats/', view_func=core.StatsVie
 bl.add_url_rule('/api/gallery/', view_func=api.GalleryView.as_view('api_gallery'))
 bl.add_url_rule('/api/stats/', view_func=api.StatsView.as_view('api_stats'))
 
+bl.add_url_rule('/ajax/thread/save/', view_func=api.ajax_save_thread, methods=('POST',))
+bl.add_url_rule('/ajax/get_parent_thread/', view_func=api.ajax_get_parent_thread)
+
+bl.add_url_rule('/ajax/tag/suggest/', view_func=api.ajax_suggest_tag)
+
 bl.add_url_rule('/login/', 'login', view_func=auth.login, methods=('GET', 'POST'))
 bl.add_url_rule('/logout/', 'logout', view_func=auth.logout)
 

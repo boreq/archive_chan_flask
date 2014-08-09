@@ -1,8 +1,11 @@
 import json
 from flask import Response, request
 from flask.views import View
-from ..models import Board, Thread, Post, Image
+from flask.ext.login import current_user
+from ..database import db
+from ..models import Board, Thread, Post, Image, Tag
 from ..lib import stats
+
 
 class ApiError(Exception):
     def __init__(self, status_code=500, error_code='unknown',
@@ -11,12 +14,14 @@ class ApiError(Exception):
         self.error_code = error_code
         super(ApiError, self).__init__(message)
 
+
 class NotImplementedApiError(ApiError):
     def __init__(self, **kwargs):
         status_code = kwargs.get('status_code', 501)
         error_code = kwargs.get('error_code', 'not_implemented')
         message = kwargs.get('message', 'Not implemented.')
         super(NotImplementedApiError, self).__init__(status_code, error_code, message) 
+
 
 class ApiView(View):
     methods = ['GET']
@@ -164,22 +169,23 @@ class GalleryView(ApiView):
             } for image in queryset]
         }
 
-'''
-def ajax_save_thread(request):
+
+def ajax_save_thread():
     """View used for AJAX save thread calls."""
     response = {}
 
-    if request.user.is_staff:
+    if current_user.is_authenticated:
         try:
-            thread_number = int(request.POST['thread'])
-            board_name = request.POST['board']
-            state = request.POST['state']
+            thread_number = int(request.form['thread'])
+            board_name = request.form['board']
+            state = (request.form['state'] == 'true')
 
-            state = (state == 'true')
-
-            thread = Thread.objects.get(board=board_name, number=thread_number)
+            thread = Thread.query.join(Board).filter(
+                Board.name==board_name,
+                Thread.number==thread_number
+            ).one()
             thread.saved = state
-            thread.save()
+            db.session.commit()
 
             response = {
                 'state': thread.saved
@@ -195,20 +201,21 @@ def ajax_save_thread(request):
             'error': 'Not authorized.'
         }
 
-    return HttpResponse(json.dumps(response), content_type='application/json')
+    return Response(json.dumps(response), mimetype='application/json')
 
-def ajax_get_parent_thread(request):
+
+def ajax_get_parent_thread():
     """Returns a number of a thread the specified post belongs to."""
     response = {}
 
     try:
-        post_number = int(request.GET['post'])
-        board_name = request.GET['board']
+        post_number = int(request.form['post'])
+        board_name = request.form['board']
 
-        parent_thread_number = Post.objects.get(
-            thread__board=board_name,
-            number=post_number
-        ).thread.number
+        parent_thread_number = Post.objects.join(Thread, Board).filter(
+            Board.name==board_name,
+            Thread.number==post_number
+        ).one().thread.number
 
         response = {
             'parent_thread': parent_thread_number
@@ -219,16 +226,17 @@ def ajax_get_parent_thread(request):
             'error': 'Error.'
         }
 
-    return HttpResponse(json.dumps(response), content_type='application/json')
+    return Response(json.dumps(response), mimetype='application/json')
 
-def ajax_suggest_tag(request):
+
+def ajax_suggest_tag():
     """View used for AJAX tag suggestions in the 'new tag' field in the thread view."""
     response = {}
 
     try:
-        query = request.GET['query']
+        query = request.args['query']
 
-        tags = Tag.objects.filter(name__icontains=query)[:5]
+        tags = Tag.query.filter(Tag.name.like('%' + query + '%')).limit(5)
 
         response = {
             'query': query, 
@@ -236,11 +244,12 @@ def ajax_suggest_tag(request):
         }
 
     except:
+        raise
         response = {
             'error': 'Error.'
         }
 
-    return HttpResponse(json.dumps(response), content_type='application/json')
+    return Response(json.dumps(response), mimetype='application/json')
 
 def ajax_add_tag(request):
     """View used for adding a tag to a thread."""
@@ -313,4 +322,3 @@ def ajax_remove_tag(request):
         }
 
     return HttpResponse(json.dumps(response), content_type='application/json')
-'''
