@@ -1,29 +1,14 @@
-import copy
+"""
+    Template filters can be used to modify variables.
+"""
+
+
 import re
 from jinja2 import Markup, escape, evalcontextfilter
 from . import bl
 
-def board_url_query(parameters, name=None, value=None):
-    parameters = copy.copy(parameters)
-    parameters['sort'] = parameters['sort_with_operator']
 
-    if name:
-        parameters[name] = value
-
-    query =  '?sort=%s&saved=%s&last_reply=%s&tagged=%s' % (
-        parameters['sort'],
-        parameters['saved'],
-        parameters['last_reply'],
-        parameters['tagged'],
-    )
-
-    if parameters['tag'] is not None:
-        query = '%s&tag=%s' % (
-            query,
-            urllib.parse.quote('+'.join(parameters['tag']))
-        )
-
-    return query
+_paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
 
 
 @evalcontextfilter
@@ -59,8 +44,6 @@ def format_post(eval_ctx, text):
     return text
 
 
-_paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
-
 @evalcontextfilter
 def nl2br(eval_ctx, value):
     result = u'\n\n'.join(u'<p>%s</p>' % p.replace('\n', '<br>\n') \
@@ -70,6 +53,5 @@ def nl2br(eval_ctx, value):
     return result
 
 
-bl.add_app_template_filter(board_url_query, 'board_url_query')
 bl.add_app_template_filter(format_post, 'formatpost')
 bl.add_app_template_filter(nl2br, 'nl2br')

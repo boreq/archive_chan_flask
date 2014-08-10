@@ -1,5 +1,6 @@
 """
     Implementes methods related to user authentication.
+    flask-login extension provides basic functionality.
     Bcrypt is used instead of default Werkzeug hash implementation.
 """
 

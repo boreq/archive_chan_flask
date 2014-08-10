@@ -4,9 +4,9 @@
             <li>
                 {% if item[0] == parameters[name] %}
                     <i class="fa-li fa fa-check"></i>
-                    <a href="{{ parameters|board_url_query(name, item[0]) }}" class="current-selection">{{ item[1][0] }}</a>
+                    <a href="{{ board_url_query(parameters, name, item[0]) }}" class="current-selection">{{ item[1][0] }}</a>
                 {% else %}
-                    <a href="{{ parameters|board_url_query(name, item[0]) }}">{{ item[1][0] }}</a>
+                    <a href="{{ board_url_query(parameters, name, item[0]) }}">{{ item[1][0] }}</a>
                 {% endif %}
             </li>
         {% endfor %}
@@ -20,13 +20,13 @@
                 {% if item[0] == parameters[name] %}
                     {% if parameters['sort_reverse'] %}  
                         <i class="fa-li fa fa-sort-amount-desc"></i>
-                        <a href="{{ parameters|board_url_query(name, item[0]) }}" class="current-selection">{{ item[1][0] }}</a>
+                        <a href="{{ board_url_query(parameters, name, item[0]) }}" class="current-selection">{{ item[1][0] }}</a>
                     {% else %}
                         <i class="fa-li fa fa-sort-amount-asc"></i>
-                        <a href="{{ parameters|board_url_query(name, '-' + item[0]) }}" class="current-selection">{{ item[1][0] }}</a>
+                        <a href="{{ board_url_query(parameters, name, '-' + item[0]) }}" class="current-selection">{{ item[1][0] }}</a>
                     {% endif %}
                 {% else %}
-                        <a href="{{ parameters|board_url_query(name, '-' + item[0]) }}">{{ item[1][0] }}</a>
+                        <a href="{{ board_url_query(parameters, name, '-' + item[0]) }}">{{ item[1][0] }}</a>
                 {% endif %}
             </li>
         {% endfor %}
