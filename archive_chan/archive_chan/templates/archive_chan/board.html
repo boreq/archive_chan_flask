@@ -61,12 +61,11 @@
         </div>
     </div>
 
-    {% if is_paginated %}
+    {% if pagination.is_paginated %}
         <div class="content">
             <div class="wrapper">
-                {#{% board_url_query_assign as url_query %}
-                {% include "archive_chan/snippets/pagination.html" %}
-                #}
+                {% from "archive_chan/snippets/pagination.html" import pagination_macro %}
+                {{ pagination_macro(pagination, board_url_query(parameters)) }}
             </div>
         </div>
     {% endif %}

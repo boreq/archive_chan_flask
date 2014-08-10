@@ -3,14 +3,14 @@ from math import ceil
 
 class Pagination(object):
     def __init__(self, page, per_page, total_count):
-        try:
-            self.page = int(page)
-            if page > self.pages or page < 1:
-                raise ValueError
-        except:
-            page = 1
         self.per_page = per_page
         self.total_count = total_count
+        try:
+            self.page = int(page)
+            if not self.page in range(1, self.pages + 1):
+                raise ValueError
+        except:
+            self.page = 1
 
     @property
     def pages(self):
@@ -24,6 +24,20 @@ class Pagination(object):
     def has_next(self):
         return self.page < self.pages
 
-    def get_slice(self, page):
-        start = self.per_page * page
+    @property
+    def prev_page(self):
+        return self.page - 1
+
+    @property
+    def next_page(self):
+        return self.page + 1
+
+    @property
+    def is_paginated(self):
+        return (self.total_count > 1)
+
+    def get_slice(self, page=None):
+        if page is None:
+            page = self.page
+        start = self.per_page * (page - 1)
         return (start, start + self.per_page)

@@ -3,6 +3,7 @@ from flask import render_template, request
 from flask.views import View
 from ..models import Board, Thread, Post, Image, TagToThread
 from ..lib import modifiers, pagination
+from ..lib.pagination import Pagination
 from ..lib.helpers import get_object_or_404
 
 class TemplateView(View):
@@ -78,48 +79,37 @@ class BoardView(BodyIdMixin, TemplateView):
 
     def get_parameters(self):
         """Extracts parameters related to filtering and sorting from a request object."""
-        parameters = {}
-
         self.modifiers = {}
-
         self.modifiers['sort'] = modifiers.SimpleSort(
             self.available_parameters['sort'],
             request.args.get('sort', None)
         )
-
         self.modifiers['saved'] = modifiers.SimpleFilter(
             self.available_parameters['saved'],
             request.args.get('saved', None)
         )
-
         self.modifiers['tagged'] = modifiers.SimpleFilter(
             self.available_parameters['tagged'],
             request.args.get('tagged', None)
         )
-
         self.modifiers['last_reply'] = modifiers.TimeFilter(
             self.available_parameters['last_reply'],
             request.args.get('last_reply', None)
         )
-
         self.modifiers['tag'] = modifiers.TagFilter(
             request.args.get('tag', None)
         )
 
+        parameters = {}
         parameters['sort'], parameters['sort_reverse'] = self.modifiers['sort'].get()
         parameters['sort_with_operator'] = self.modifiers['sort'].get_full()
         parameters['saved'] = self.modifiers['saved'].get()
         parameters['tagged'] = self.modifiers['tagged'].get()
         parameters['last_reply'] = self.modifiers['last_reply'].get()
         parameters['tag'] = self.modifiers['tag'].get()
-
         return parameters
 
     def get_queryset(self):
-        # I don't know how to select all data I need using the ORM without executing
-        # TWO damn additional queries for each thread (first post + tags).
-        #queryset = Thread.objects.filter(board=self.kwargs['board'], replies__gte=1).select_related('board')
-
         queryset = Thread.query.join(Board).filter(
             Board.name==self.kwargs['board'],
             Thread.replies>1
@@ -127,16 +117,25 @@ class BoardView(BodyIdMixin, TemplateView):
 
         for key, modifier in self.modifiers.items():
             queryset = modifier.execute(queryset)
-        #queryset = self.modifiers['saved'].execute(queryset)
-        #queryset = queryset.filter(Thread.saved==True)
 
-        return queryset.limit(20)
+        total_count = queryset.count()
+
+        self.pagination = Pagination(
+            request.args.get('page'),
+            20,
+            total_count
+        )
+        self.parameters['page'] = self.pagination.page
+
+        return queryset.slice(*self.pagination.get_slice())
 
     def get_context_data(self, **kwargs):
-        context = super(BoardView, self).get_context_data(**kwargs)
         self.parameters = self.get_parameters()
+
+        context = super(BoardView, self).get_context_data(**kwargs)
         context['board_name'] = self.kwargs['board']
         context['thread_list'] = self.get_queryset()
+        context['pagination'] = self.pagination
         context['parameters'] = self.parameters
         context['available_parameters'] = self.available_parameters
         return context

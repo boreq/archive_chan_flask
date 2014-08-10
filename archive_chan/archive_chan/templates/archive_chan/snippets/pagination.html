@@ -1,11 +1,13 @@
-<div class="pagination">
-    {% if page_obj.has_previous %}
-        <a href="{{ url_query }}&page={{ page_obj.previous_page_number }}" class="page-prev" title="Previous page"><i class="fa fa-angle-left"></i></a>
-    {% endif %}
-    <div class="page-current">
-        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+{% macro pagination_macro(pagination, url_query) -%}
+    <div class="pagination">
+        {% if pagination.has_prev %}
+            <a href="{{ url_query }}&page={{ pagination.prev_page }}" class="page-prev" title="Previous page"><i class="fa fa-angle-left"></i></a>
+        {% endif %}
+        <div class="page-current">
+            Page {{ pagination.page }} of {{ pagination.pages }}
+        </div>
+        {% if pagination.has_next %}
+            <a href="{{ url_query  }}&page={{ pagination.next_page }}" class="page-next" title="Next page"><i class="fa fa-angle-right"></i></a>
+        {% endif %}
     </div>
-    {% if page_obj.has_next %}
-        <a href="{{ url_query  }}&page={{ page_obj.next_page_number }}" class="page-next" title="Next page"><i class="fa fa-angle-right"></i></a>
-    {% endif %}
-</div>
+{%- endmacro %}
