@@ -128,12 +128,14 @@ class StatusView(ApiView):
         return response_data
 '''
 
+
 class StatsView(ApiView):
     def get_api_response(self, *args, **kwargs):
         return stats.get_stats(
             board_name=request.args.get('board'),
             thread_number=request.args.get('thread')
         )
+
 
 class GalleryView(ApiView):
     def get_api_response(self, *args, **kwargs):
@@ -196,7 +198,6 @@ def ajax_save_thread():
             }
 
         except:
-            raise
             response = {
                 'error': 'Error.'
             }
@@ -248,12 +249,12 @@ def ajax_suggest_tag():
         }
 
     except:
-        raise
         response = {
             'error': 'Error.'
         }
 
     return Response(json.dumps(response), mimetype='application/json')
+
 
 def ajax_add_tag():
     """View used for adding a tag to a thread."""
@@ -291,7 +292,6 @@ def ajax_add_tag():
             }
 
         except:
-            raise
             response = {
                 'error': 'Error.'
             }
@@ -317,7 +317,6 @@ def ajax_remove_tag():
                 Board.name==board_name,
                 Tag.name==tag
             ).one()
-
             db.session.delete(tagtothread)
             db.session.commit()
 
