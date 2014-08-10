@@ -1,7 +1,7 @@
 import operator
 from flask import render_template, request
 from flask.views import View
-from ..models import Board, Thread, Post, Image
+from ..models import Board, Thread, Post, Image, TagToThread
 from ..lib import modifiers, pagination
 from ..lib.helpers import get_object_or_404
 
@@ -70,9 +70,9 @@ class BoardView(BodyIdMixin, TemplateView):
         'tagged': (
             ('all', ('All', None)),
             ('yes', ('Yes', (Thread.tags.any(),))),
-            ('auto', ('Automatically', (Thread==True,))),
-            ('user', ('Manually', {'tagtothread__automatically_added': False})),
-            ('no', ('No', {'tags__isnull': True})),
+            ('auto', ('Automatically', (Thread.tagtothreads.any(TagToThread.automatically_added==True),))),
+            ('user', ('Manually', (Thread.tagtothreads.any(TagToThread.automatically_added==False),))),
+            ('no', ('No', (~Thread.tags.any(),))),
         )
     }
 
