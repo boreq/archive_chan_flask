@@ -26,6 +26,7 @@ class Board(db.Model):
     replies_threshold = db.Column(db.Integer, default=20, nullable=False)
 
     threads = db.relationship('Thread', cascade='all,delete', backref='board', lazy='dynamic')
+    updates = db.relationship('Update', cascade='all,delete', backref='board', lazy='dynamic')
 
     def __str__(self):
         return '/%s/' % self.name
@@ -230,18 +231,10 @@ class Trigger(db.Model):
 
     active = db.Column(db.Boolean, nullable=False, default=True)
 
-'''
-class TagToThread(models.Model):
-    thread = models.ForeignKey('Thread')
-    tag = models.ForeignKey('Tag')
-    automatically_added = models.BooleanField(default=False, editable=False)
-    save_time = models.DateTimeField(auto_now_add = True)
 
-    def __str__(self):
-        return format('%s - %s' % (self.thread, self.tag))
+class Update(db.Model):
+    __tablename__ = 'archive_chan_update'
 
-
-class Update(models.Model):
     CURRENT = 0
     FAILED = 1
     COMPLETED = 2
@@ -252,28 +245,36 @@ class Update(models.Model):
         (COMPLETED, 'Completed'),
     )
 
-    board = models.ForeignKey('Board')
-    status = models.SmallIntegerField(choices=STATUS_CHOICES, default=CURRENT)
-    start = models.DateTimeField()
-    end = models.DateTimeField(null=True)
+    id = db.Column(db.Integer, primary_key=True)
+    board_id = db.Column(
+        db.String(255),
+        db.ForeignKey(Board.name, deferrable=True, initially='DEFERRED'),
+        nullable=False
+    )
 
-    used_threads = models.IntegerField()
+    status = db.Column(db.SmallInteger, nullable=False, default=CURRENT)
+    start = db.Column(db.DateTime(timezone=True), nullable=False)
+    end = db.Column(db.DateTime(timezone=True), nullable=True)
 
-    total_time = models.FloatField(default=0)
-    wait_time = models.FloatField(default=0)
-    download_time = models.FloatField(default=0)
+    used_threads = db.Column(db.Integer, nullable=False)
 
-    processed_threads = models.IntegerField(default=0)
-    added_posts = models.IntegerField(default=0)
-    removed_posts = models.IntegerField(default=0)
+    total_time = db.Column(db.Float, nullable=False, default=0)
+    wait_time = db.Column(db.Float, nullable=False, default=0)
+    download_time = db.Column(db.Float, nullable=False, default=0)
 
-    downloaded_images = models.IntegerField(default=0)
-    downloaded_thumbnails = models.IntegerField(default=0)
-    downloaded_threads = models.IntegerField(default=0)
+    processed_threads = db.Column(db.Integer, nullable=False, default=0)
+    added_posts = db.Column(db.Integer, nullable=False, default=0)
+    removed_posts = db.Column(db.Integer, nullable=False, default=0)
 
-    class Meta:
-        ordering = ['-start']
+    downloaded_images = db.Column(db.Integer, nullable=False, default=0)
+    downloaded_thumbnails = db.Column(db.Integer, nullable=False, default=0)
+    downloaded_images = db.Column(db.Integer, nullable=False, default=0)
+    
+    def get_status_display(self):
+        return dict(self.STATUS_CHOICES)[self.status]
 
+
+'''
 @receiver(pre_delete, sender=Image)
 def pre_image_delete(sender, instance, **kwargs):
     """Delete images from the HDD."""

@@ -43,6 +43,7 @@ urlpatterns = patterns('',
 bl.add_url_rule('/', view_func=core.IndexView.as_view('index'))
 bl.add_url_rule('/gallery/', view_func=core.GalleryView.as_view('gallery'))
 bl.add_url_rule('/stats/', view_func=core.StatsView.as_view('stats'))
+bl.add_url_rule('/status/', view_func=core.StatusView.as_view('status'))
 
 bl.add_url_rule('/board/<board>/', view_func=core.BoardView.as_view('board'))
 bl.add_url_rule('/board/<board>/gallery/', view_func=core.GalleryView.as_view('board_gallery'))
@@ -54,6 +55,7 @@ bl.add_url_rule('/board/<board>/thread/<thread>/stats/', view_func=core.StatsVie
 
 bl.add_url_rule('/api/gallery/', view_func=api.GalleryView.as_view('api_gallery'))
 bl.add_url_rule('/api/stats/', view_func=api.StatsView.as_view('api_stats'))
+bl.add_url_rule('/api/status/', view_func=api.StatusView.as_view('api_status'))
 
 bl.add_url_rule('/ajax/thread/save/', view_func=api.ajax_save_thread, methods=('POST',))
 bl.add_url_rule('/ajax/get_parent_thread/', view_func=api.ajax_get_parent_thread)

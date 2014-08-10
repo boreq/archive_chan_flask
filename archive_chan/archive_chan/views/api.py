@@ -3,7 +3,7 @@ from flask import Response, request
 from flask.views import View
 from flask.ext.login import current_user
 from ..database import db
-from ..models import Board, Thread, Post, Image, Tag, TagToThread
+from ..models import Board, Thread, Post, Image, Tag, TagToThread, Update
 from ..lib import stats, helpers
 
 
@@ -63,12 +63,16 @@ class ApiView(View):
             mimetype='application/json',
             status=status_code
         )
-'''
+
+
 class StatusView(ApiView):
     def get_chart_data(self, queryset):
         """Creates data structured as required by Google Charts."""
         chart_data = {
-            'cols': [{'label': 'Date', 'type': 'datetime'}, {'label': 'Time per post', 'type': 'number'}],
+            'cols': [
+                {'label': 'Date', 'type': 'datetime'},
+                {'label': 'Time per post', 'type': 'number'}
+            ],
             'rows': []
         }
 
@@ -77,18 +81,18 @@ class StatusView(ApiView):
 
         for entry in queryset:
             value_string = format("Date(%s, %s, %s, %s, %s, %s)" % (
-                entry['date'].year,
-                entry['date'].month - 1, # JavaScript months start at 0.
-                entry['date'].day,
+                entry.date.year,
+                entry.date.month - 1, # JavaScript months start at 0.
+                entry.date.day,
                 0,
                 0,
                 0
             ))
 
-            label_string = entry['date'].strftime('%Y-%m-%d')
+            label_string = entry.date.strftime('%Y-%m-%d')
 
-            if entry['average_posts'] != 0:
-                value = round(entry['average_time'] / entry['average_posts'], 3)
+            if entry.average_posts != 0:
+                value = round(entry.average_time / float(entry.average_posts), 3)
             else:
                 value = 0
 
@@ -105,7 +109,10 @@ class StatusView(ApiView):
         response_data = {}
 
         # Last updates.
-        last_updates = Update.objects.order_by('board__name', '-start').distinct('board').select_related('board')
+        last_updates = Update.query \
+                             .join(Board) \
+                             .order_by(Update.board_id, Update.start.desc()) \
+                             .distinct(Update.board_id)
 
         response_data['last_updates'] = [{
             'board': str(update.board),
@@ -116,17 +123,15 @@ class StatusView(ApiView):
         } for update in last_updates]
 
         # Chart data.
-        updates = Update.objects.filter(status=Update.COMPLETED).extra({
-            'date': 'date("end")'
-        }).values('date').order_by('date').annotate(
-            average_time=Avg('total_time'),
-            average_posts=Avg('added_posts')
-        )
+        updates = db.session.query(
+            db.func.avg(Update.total_time).label('average_time'),
+            db.func.avg(Update.added_posts).label('average_posts'),
+            db.func.date(Update.end).label('date')
+        ).group_by('date').order_by('date').all()
 
         response_data['chart_data'] = self.get_chart_data(updates)
 
         return response_data
-'''
 
 
 class StatsView(ApiView):

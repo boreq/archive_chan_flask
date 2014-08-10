@@ -1,20 +1,18 @@
 {% extends "archive_chan/base.html" %}
-{% load staticfiles %}
 
 {% block inner_head %}
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script>
         var info_data = {
-            api_url: '{% url 'archive_chan:api_status' %}'
+            api_url: '{{ url_for('.api_status') }}'
         };
     </script>
-    <script src="{% static 'archive_chan/js/status.js' %}"></script>
+    <script src="{{ url_for('.static', filename='js/status.js') }}"></script>
 {% endblock %}
 
 {% block main_nav %}
-    <a href="{% url 'archive_chan:status' %}">status</a>
+    <a href="{{ url_for('.status') }}">status</a>
 {% endblock %}
-
 
 {% block content %}
     <div class="content">
