@@ -3,8 +3,8 @@ from flask import Response, request
 from flask.views import View
 from flask.ext.login import current_user
 from ..database import db
-from ..models import Board, Thread, Post, Image, Tag
-from ..lib import stats
+from ..models import Board, Thread, Post, Image, Tag, TagToThread
+from ..lib import stats, helpers
 
 
 class ApiError(Exception):
@@ -20,7 +20,11 @@ class NotImplementedApiError(ApiError):
         status_code = kwargs.get('status_code', 501)
         error_code = kwargs.get('error_code', 'not_implemented')
         message = kwargs.get('message', 'Not implemented.')
-        super(NotImplementedApiError, self).__init__(status_code, error_code, message) 
+        super(NotImplementedApiError, self).__init__(
+            status_code,
+            error_code,
+            message
+        )
 
 
 class ApiView(View):
@@ -174,7 +178,7 @@ def ajax_save_thread():
     """View used for AJAX save thread calls."""
     response = {}
 
-    if current_user.is_authenticated:
+    if current_user.is_authenticated():
         try:
             thread_number = int(request.form['thread'])
             board_name = request.form['board']
@@ -251,28 +255,33 @@ def ajax_suggest_tag():
 
     return Response(json.dumps(response), mimetype='application/json')
 
-def ajax_add_tag(request):
+def ajax_add_tag():
     """View used for adding a tag to a thread."""
     response = {}
 
-    if request.user.is_staff:
+    if current_user.is_authenticated():
         try:
-            thread_number = int(request.POST['thread'])
-            board_name = request.POST['board']
-            tag = request.POST['tag']
+            thread_number = int(request.form['thread'])
+            board_name = request.form['board']
+            tag = request.form['tag']
 
-            exists = TagToThread.objects.filter(
-                thread__number=thread_number, 
-                thread__board__name=board_name,
-                tag__name=tag
-            ).exists()
+            thread = Thread.query.join(Board).filter(
+                Thread.number==thread_number, 
+                Board.name==board_name
+            ).one()
 
+            exists = TagToThread.query.join(Tag).filter(
+                TagToThread.thread==thread,
+                Tag.name==tag
+            ).first() is not None
+                
             if not exists:
-                thread = Thread.objects.get(number=thread_number, board__name=board_name)
-                tag, created_new_tag = Tag.objects.get_or_create(name=tag)
-                tag_to_thread = TagToThread(thread=thread, tag=tag)
-                tag_to_thread.save()
-
+                tag, created_new_tag = helpers.get_or_create(db.session, Tag,
+                    name=tag
+                )
+                db.session.commit()
+                thread.tags.append(tag)
+                db.session.commit()
                 added = True
             else:
                 added = False
@@ -282,6 +291,7 @@ def ajax_add_tag(request):
             }
 
         except:
+            raise
             response = {
                 'error': 'Error.'
             }
@@ -290,23 +300,26 @@ def ajax_add_tag(request):
             'error': 'Not authorized.'
         }
 
-    return HttpResponse(json.dumps(response), content_type='application/json')
+    return Response(json.dumps(response), mimetype='application/json')
 
-def ajax_remove_tag(request):
+def ajax_remove_tag():
     """View used to remove a tag related to a thread."""
     response = {}
 
-    if request.user.is_staff:
+    if current_user.is_authenticated():
         try:
-            thread_number = int(request.POST['thread'])
-            board_name = request.POST['board']
-            tag = request.POST['tag']
+            thread_number = int(request.form['thread'])
+            board_name = request.form['board']
+            tag = request.form['tag']
 
-            TagToThread.objects.get(
-                thread__number=thread_number, 
-                thread__board__name=board_name,
-                tag__name=tag
-            ).delete()
+            tagtothread = TagToThread.query.join(Thread, Board, Tag).filter(
+                Thread.number==thread_number, 
+                Board.name==board_name,
+                Tag.name==tag
+            ).one()
+
+            db.session.delete(tagtothread)
+            db.session.commit()
 
             response = {
                 'removed': True
@@ -321,4 +334,4 @@ def ajax_remove_tag(request):
             'error': 'Not authorized.'
         }
 
-    return HttpResponse(json.dumps(response), content_type='application/json')
+    return Response(json.dumps(response), mimetype='application/json')

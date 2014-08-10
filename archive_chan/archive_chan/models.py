@@ -1,7 +1,9 @@
 import os
 from flask import url_for
 from flask.ext.login import UserMixin
+from sqlalchemy.ext.associationproxy import association_proxy
 from .database import db
+from .lib.helpers import utc_now
 
 
 class User(UserMixin, db.Model):
@@ -32,27 +34,6 @@ class Board(db.Model):
         return url_for('.board', board=self.name)
 
 
-tag_to_thread = db.Table('archive_chan_tagtothread', 
-    db.Column('thread_id', db.Integer, db.ForeignKey('archive_chan_thread.id'), nullable=False),
-    db.Column('tag_id', db.Integer, db.ForeignKey('archive_chan_tag.id'), nullable=False),
-    db.Column('automatically_added', db.Boolean,default=False, nullable=False),
-    db.Column('save_time', db.DateTime(timezone=True), nullable=False)
-)
-
-
-class Tag(db.Model):
-    __tablename__ = 'archive_chan_tag'
-    __table_args__ = (
-        db.UniqueConstraint('name', name='_name_uc'),
-    )
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255))
-
-    def __str__(self):
-        return self.name
-
-
 class Thread(db.Model):
     __tablename__ = 'archive_chan_thread'
     __table_args__ = (
@@ -75,7 +56,8 @@ class Thread(db.Model):
     last_reply = db.Column(db.DateTime(timezone=True), nullable=True, default=None)
 
     posts = db.relationship('Post', cascade='all,delete', backref='thread', lazy='dynamic')
-    tags = db.relationship(Tag, secondary=tag_to_thread, cascade='all,delete', backref='thread', lazy='dynamic')
+    tags = association_proxy('tagtothread', 'tag')
+    tagtothreads = db.relationship('TagToThread', cascade='all,delete', lazy='dynamic')
 
     # Used by scraper.
     def last_reply_time(self):
@@ -134,6 +116,7 @@ class Post(db.Model):
     def get_absolute_url(self):
         return '%s#post-%s' % (self.thread.get_absolute_url(), self.number)
 
+
 class Image(db.Model):
     __tablename__ = 'archive_chan_image'
 
@@ -159,6 +142,51 @@ class Image(db.Model):
     def get_extension(self):
         name, extension = os.path.splitext(self.image)
         return extension
+
+
+class Tag(db.Model):
+    __tablename__ = 'archive_chan_tag'
+    __table_args__ = (
+        db.UniqueConstraint('name', name='_name_uc'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+
+    threads = association_proxy('tagtothread', 'thread')
+
+    def __str__(self):
+        return self.name
+
+
+class TagToThread(db.Model):
+    __tablename__ = 'archive_chan_tagtothread'
+
+    id = db.Column(db.Integer, primary_key=True)
+    thread_id = db.Column(
+        db.Integer,
+        db.ForeignKey(Thread.id, deferrable=True, initially='DEFERRED'),
+        nullable=False
+    )
+    tag_id = db.Column(
+        db.Integer,
+        db.ForeignKey(Tag.id, deferrable=True, initially='DEFERRED'),
+        nullable=False
+    )
+    automatically_added = db.Column(db.Boolean, nullable=False)
+    save_time = db.Column(db.DateTime(timezone=True), nullable=False)
+
+    tag = db.relationship(Tag, backref='tagtothread')
+    thread = db.relationship(Thread, backref='tagtothread')
+
+    def __init__(self, tag=None, thread=None, automatically_added=False):
+        self.tag_id = getattr(tag, 'id', None)
+        self.thread_id = getattr(thread, 'id', None)
+        self.automatically_added = automatically_added
+        self.save_time = utc_now()
+
+    def __str__(self):
+        return format('%s - %s' % (self.thread, self.tag))
 
 
 class Trigger(db.Model):

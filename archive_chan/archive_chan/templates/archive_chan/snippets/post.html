@@ -71,7 +71,7 @@
 
 {% macro main_post_macro(post, user) -%}
     <ul class="tags">
-        {% for tagtothread in post.thread.tags %}
+        {% for tagtothread in post.thread.tagtothreads %}
             <li>
                 {% if tagtothread.automatically_added %}
                     <i class="fa fa-fw fa-tags" title="Tag added automatically"></i>
@@ -79,7 +79,7 @@
                     <i class="fa fa-fw fa-tag" title="Tag added by the user"></i>
                 {% endif %}
 
-                <a class="tag-link" href="{{ url_for('.board', name=board_name) }}?tag={{ tagtothread.tag.name }}">
+                <a class="tag-link" href="{{ url_for('.board', board=post.thread.board.name) }}?tag={{ tagtothread.tag.name }}">
                     {{ tagtothread.tag.name }}
                 </a>
 

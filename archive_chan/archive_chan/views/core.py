@@ -69,7 +69,7 @@ class BoardView(BodyIdMixin, TemplateView):
         ),
         'tagged': (
             ('all', ('All', None)),
-            ('yes', ('Yes', (Thread.tags!=None,))),
+            ('yes', ('Yes', (Thread.tags.any(),))),
             ('auto', ('Automatically', (Thread==True,))),
             ('user', ('Manually', {'tagtothread__automatically_added': False})),
             ('no', ('No', {'tags__isnull': True})),

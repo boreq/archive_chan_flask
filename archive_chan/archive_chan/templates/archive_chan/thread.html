@@ -12,10 +12,8 @@
             ajax_url_save: '{{ url_for('.ajax_save_thread') }}',
             ajax_url_get_parent_thread: '{{ url_for('.ajax_get_parent_thread') }}',
             ajax_url_suggest_tag: '{{ url_for('.ajax_suggest_tag') }}',
-            {#
-            ajax_url_add_tag: '{% url 'archive_chan:ajax_add_tag' %}',
-            ajax_url_remove_tag: '{% url 'archive_chan:ajax_remove_tag' %}'
-            #}
+            ajax_url_add_tag: '{{ url_for('.ajax_add_tag') }}',
+            ajax_url_remove_tag: '{{ url_for('.ajax_remove_tag') }}'
         };
     </script>
 {% endblock %}
