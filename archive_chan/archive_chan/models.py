@@ -63,10 +63,9 @@ class Thread(db.Model):
     # Used by scraper.
     def last_reply_time(self):
         last = self.post_set.last()
-        if last is None:
-            return None
-        else:
+        if last is not None:
             return last.time
+        return None
 
     # Used by scraper.
     def count_replies(self):

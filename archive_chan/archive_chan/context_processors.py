@@ -5,6 +5,7 @@
 
 
 import copy
+import urllib
 from flask.ext.login import current_user
 from . import bl
 from .lib.helpers import utc_now
