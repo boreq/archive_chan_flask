@@ -163,6 +163,7 @@ class Tag(db.Model):
     name = db.Column(db.String(255))
 
     threads = association_proxy('tagtothread', 'thread')
+    triggers = db.relationship('Trigger', cascade='all,delete', backref='tag', lazy='dynamic')
 
     def __str__(self):
         return self.name
@@ -199,6 +200,8 @@ class TagToThread(db.Model):
 
 
 class Trigger(db.Model):
+    __tablename__ = 'archive_chan_trigger'
+
     FIELD_CHOICES = (
         ('name', 'Name'),
         ('trip', 'Trip'),
@@ -231,7 +234,9 @@ class Trigger(db.Model):
     post_type = db.Column(db.String(10), nullable=False)
 
     save_thread = db.Column(db.Boolean, nullable=False, default=False)
+    # [TODO] change legacy column name
     tag_id = db.Column(
+        'tag_thread_id',
         db.Integer,
         db.ForeignKey(Tag.id, deferrable=True, initially='DEFFERED'),
         nullable=True

@@ -35,7 +35,7 @@ def login(username, password, remember=False):
         return False
 
     # Check if the password is correct.
-    password_correct  = bcrypt.check_password_hash(user.password, password)
+    password_correct = check_password_hash(user.password, password)
     if not password_correct:
         return False
 
@@ -47,3 +47,13 @@ def logout():
     """Logs out the user. Will not fail if the user is not logged in."""
     logout_user()
     return True
+
+
+def generate_password_hash(password):
+    """Generates the password hash."""
+    return bcrypt.generate_password_hash(password)
+
+
+def check_password_hash(password_hash, password):
+    """Checks if the password hash matches the password."""
+    return bcrypt.check_password_hash(password_hash, password)

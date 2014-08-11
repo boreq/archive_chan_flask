@@ -1,9 +1,10 @@
 from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
-from wtforms import PasswordField
+from wtforms import PasswordField, SelectField
 from . import models
-from .auth import bcrypt
+from .auth import generate_password_hash
 from .database import db
+
 
 admin = Admin(name='Archive Chan')
 
@@ -33,8 +34,40 @@ class UserView(ModelView):
         if len(model.new_password1):
             if model.new_password1 != model.new_password2:
                 raise ValueError('Passwords differ')
-            model.password = bcrypt.generate_password_hash(form.new_password1.data)
+            model.password = generate_password_hash(form.new_password1.data)
+
+
+class TagView(ModelView):
+    form_excluded_columns = ('tagtothread',)
+
+    def __init__(self, session, **kwargs):
+        super(TagView, self).__init__(models.Tag, session, **kwargs)
+
+
+class TriggerView(ModelView):
+    form_excluded_columns = ('tagtothread',)
+    form_overrides = {
+        'field': SelectField,
+        'event': SelectField,
+        'post_type': SelectField,
+    }
+    form_args = dict(
+        field=dict(
+            choices=models.Trigger.FIELD_CHOICES
+        ),
+        event=dict(
+            choices=models.Trigger.EVENT_CHOICES
+        ),
+        post_type=dict(
+            choices=models.Trigger.POST_TYPE_CHOICES
+        )
+    )
+
+    def __init__(self, session, **kwargs):
+        super(TriggerView, self).__init__(models.Trigger, session, **kwargs)
 
 
 admin.add_view(BoardView(db.session))
 admin.add_view(UserView(db.session))
+admin.add_view(TagView(db.session))
+admin.add_view(TriggerView(db.session))
