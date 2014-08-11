@@ -4,7 +4,6 @@
 """
 
 
-from flask import current_app
 from flask.ext.sqlalchemy import SQLAlchemy
 
 

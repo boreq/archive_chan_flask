@@ -1,15 +1,11 @@
-# App level default settings.
-# To override those in the main project settings file use
-#
-# ARCHIVE_CHAN_<name from the list 'app_settings' below>
-#
-# For example:
-#
-# ARCHIVE_CHAN_API_WAIT = 2
-#
-# Of course you can also modify those values directly in this file but by defining them in the global project settings.py
-# file you will not loose your changes during an update. You will also be able to return to the default values
-# simply by deleting the line in the global project settings.py file.
+"""
+    Default settings for the application.
+
+    Of course you can modify those values directly in this file but that might
+    cause problems while updating the repository. You will also be unable to
+    return to the default values simply by deleting the line in the custom file.
+"""
+
 API_WAIT = 1 # [seconds] Delay between two API calls (catalog/list of posts). This should follow the API rules.
 FILE_WAIT = 0 # [seconds] Delay between two file downloads (images/thumbnails). This should follow the API rules (no limit at this point).
 CONNECTION_TIMEOUT = 10 # [seconds] Code downloading the data will stop waiting for a response after that time.

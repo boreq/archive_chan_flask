@@ -1,5 +1,5 @@
 """
-    Template filters can be used to modify variables.
+    Template filters can be used to modify variables in the template.
 """
 
 

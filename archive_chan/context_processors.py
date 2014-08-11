@@ -19,15 +19,15 @@ def now():
 
 @app.context_processor
 def user():
-    """Injects object used to represent current user by flask-login
-    extension.
+    """Injects the object used by flask-login extension to represent
+    the current user.
     """
     return dict(user=current_user)
 
 
 @app.context_processor
 def board_url_query():
-    """Injects method used to Build the query part of the board url."""
+    """Injects method used to build the query part of the board url."""
     def url_query(parameters, name=None, value=None):
         parameters = copy.copy(parameters)
         if name:

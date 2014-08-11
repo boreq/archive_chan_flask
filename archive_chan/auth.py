@@ -1,7 +1,9 @@
 """
     Implementes methods related to user authentication.
-    flask-login extension provides basic functionality.
-    Bcrypt is used instead of default Werkzeug hash implementation.
+
+    Basic functionality is provided by flask-login extension.
+    Bcrypt provided by flask-bcrypt extension is used instead of default
+    Werkzeug hash implementation.
 """
 
 
@@ -23,7 +25,7 @@ def load_user(user_id):
 
 
 def login(username, password, remember=False):
-    """Logs in the user. Returns True on sucess and False on failure
+    """Logs in the user. Returns True on success and False on failure
     (invalid username/password).
     """
     if not username or not password:
