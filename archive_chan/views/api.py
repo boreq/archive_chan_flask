@@ -1,10 +1,13 @@
 import json
-from flask import Response, request
+from flask import Blueprint, Response, request
 from flask.views import View
 from flask.ext.login import current_user
 from ..database import db
 from ..models import Board, Thread, Post, Image, Tag, TagToThread, Update
 from ..lib import stats, helpers
+
+
+bl = Blueprint('api', __name__)
 
 
 class ApiError(Exception):
@@ -339,3 +342,16 @@ def ajax_remove_tag():
         }
 
     return Response(json.dumps(response), mimetype='application/json')
+
+
+bl.add_url_rule('/gallery/', view_func=GalleryView.as_view('api_gallery'))
+bl.add_url_rule('/stats/', view_func=StatsView.as_view('api_stats'))
+bl.add_url_rule('/status/', view_func=StatusView.as_view('api_status'))
+
+bl.add_url_rule('/thread/save/', view_func=ajax_save_thread, methods=('POST',))
+bl.add_url_rule('/get_parent_thread/', view_func=ajax_get_parent_thread)
+
+bl.add_url_rule('/tag/suggest/', view_func=ajax_suggest_tag)
+bl.add_url_rule('/tag/add/', view_func=ajax_add_tag, methods=('POST',))
+bl.add_url_rule('/tag/remove/', view_func=ajax_remove_tag, methods=('POST',))
+

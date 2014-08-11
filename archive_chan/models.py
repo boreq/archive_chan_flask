@@ -2,6 +2,7 @@ import os
 from flask import url_for
 from flask.ext.login import UserMixin
 from sqlalchemy.ext.associationproxy import association_proxy
+from . import app
 from .database import db
 from .lib.helpers import utc_now
 
@@ -32,7 +33,7 @@ class Board(db.Model):
         return '/%s/' % self.name
 
     def get_absolute_url(self):
-        return url_for('.board', board=self.name)
+        return url_for('core.board', board=self.name)
 
 
 class Thread(db.Model):
@@ -79,7 +80,7 @@ class Thread(db.Model):
         return '#%s' % (self.number)
 
     def get_absolute_url(self):
-        return url_for('.thread', board=self.board.name, thread=self.number)
+        return url_for('core.thread', board=self.board.name, thread=self.number)
 
 
 class Post(db.Model):
@@ -133,11 +134,19 @@ class Image(db.Model):
 
     @property
     def image_url(self):
-        return url_for('.media', filename=self.image)
+        return url_for('media', filename=self.image)
 
     @property
     def thumbnail_url(self):
-        return url_for('.media', filename=self.thumbnail)
+        return url_for('media', filename=self.thumbnail)
+
+    def delete_files(self):
+        for filename in [self.image, self.thumbnail]:
+            path = os.path.join(app.config['MEDIA_ROOT'], filename)
+            try:
+                os.remove(path)
+            except FileNotFoundError:
+                pass
 
     def get_extension(self):
         name, extension = os.path.splitext(self.image)
@@ -275,10 +284,12 @@ class Update(db.Model):
 
 '''
 @receiver(pre_delete, sender=Image)
-def pre_image_delete(sender, instance, **kwargs):
+def pre_image_delete(mapper, connection, target):
     """Delete images from the HDD."""
     instance.image.delete(False)
     instance.thumbnail.delete(False)
+
+db.event.listen(Image, 'before_delete', pre_image_delete)
 
 @receiver(post_save, sender=Image)
 def post_image_save(sender, instance, created, **kwargs):

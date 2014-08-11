@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <a href="{{ url_for('core.index') }}"><img class="error-image" src="{{ url_for('static', filename='img/500.jpg') }}"></a>
+{% endblock %}

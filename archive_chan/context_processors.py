@@ -7,25 +7,27 @@
 import copy
 import urllib
 from flask.ext.login import current_user
-from . import bl
+from . import app
 from .lib.helpers import utc_now
 
 
-@bl.app_context_processor
+@app.context_processor
 def now():
-    """Current time."""
+    """Injects current time."""
     return dict(now=utc_now())
 
 
-@bl.app_context_processor
+@app.context_processor
 def user():
-    """Class used to represent current user by flask-login extension ."""
+    """Injects object used to represent current user by flask-login
+    extension.
+    """
     return dict(user=current_user)
 
 
-@bl.app_context_processor
+@app.context_processor
 def board_url_query():
-    """Builds the query part of the board url."""
+    """Injects method used to Build the query part of the board url."""
     def url_query(parameters, name=None, value=None):
         parameters = copy.copy(parameters)
         if name:

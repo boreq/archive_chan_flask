@@ -1,5 +1,8 @@
-from flask import request, render_template, flash, redirect, url_for
-from .. import auth
+from flask import Blueprint, request, render_template, flash, redirect, url_for
+from .. import app, auth
+
+
+bl = Blueprint('auth', __name__)
 
 
 def login():
@@ -11,10 +14,14 @@ def login():
             return redirect(url_for('.index'))
         else:
             flash('Invalid username or password')
-    return render_template('archive_chan/auth_login.html')
+    return render_template('auth/login.html')
 
 
 def logout():
     auth.logout_user()
     flash('Logged out')
     return redirect(url_for('.index'))
+
+
+bl.add_url_rule('/login/', 'login', view_func=login, methods=('GET', 'POST'))
+bl.add_url_rule('/logout/', 'logout', view_func=logout)

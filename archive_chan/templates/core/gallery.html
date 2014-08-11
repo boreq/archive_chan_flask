@@ -1,12 +1,12 @@
-{% extends "archive_chan/base.html" %}
+{% extends "base.html" %}
 
 {% block inner_head %}
-    <script src="{{ url_for('.static', filename='js/gallery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/gallery.js') }}"></script>
     <script>
         var info_data = {
             {% if board_name %}board: '{{ board_name }}',{% endif %}
             {% if thread_number %}thread: '{{ thread_number }}',{% endif %}
-            api_url: '{{ url_for('.api_gallery') }}'
+            api_url: '{{ url_for('api.api_gallery') }}'
         };
     </script>
 {% endblock %}

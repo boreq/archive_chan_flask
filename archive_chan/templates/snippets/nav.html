@@ -1,0 +1,17 @@
+{% macro nav(board_name, thread_number) -%}
+    {% if thread_number %}
+        <li><a class="nav-home" href="{{ url_for('core.thread', board=board_name, thread=thread_number) }}" title="Thread view"><i class="fa fa-bars"></i></a></li>
+        <li><a class="nav-gallery" href="{{ url_for('core.thread_gallery', board=board_name, thread=thread_number) }}" title="Thread gallery"><i class="fa fa-picture-o"></i></a></li>
+        <li><a class="nav-stats" href="{{ url_for('core.thread_stats', board=board_name, thread=thread_number) }}" title="Thread statistics"><i class="fa fa-bar-chart-o"></i></a></li>
+    {% else %}
+        {% if board_name %}
+            <li><a class="nav-home" href="{{ url_for('core.board', board=board_name) }}" title="Board view"><i class="fa fa-bars"></i></a></li>
+            <li><a class="nav-gallery" href="{{ url_for('core.board_gallery', board=board_name) }}" title="Board gallery"><i class="fa fa-picture-o"></i></a></li>
+            <li><a class="nav-stats" href="{{ url_for('core.board_stats', board=board_name) }}" title="Board statistics"><i class="fa fa-bar-chart-o"></i></a></li>
+        {% else %}
+            <li><a class="nav-home" href="{{ url_for('core.index') }}" title="Home"><i class="fa fa-bars"></i></a></li>
+            <li><a class="nav-gallery" href="{{ url_for('core.gallery') }}" title="Global gallery"><i class="fa fa-picture-o"></i></a></li>
+            <li><a class="nav-stats" href="{{ url_for('core.stats') }}" title="Global statistics"><i class="fa fa-bar-chart-o"></i></a></li>
+        {% endif %}
+    {% endif %}
+{%- endmacro %}

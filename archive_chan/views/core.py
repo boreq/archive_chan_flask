@@ -1,10 +1,14 @@
 import operator
-from flask import render_template, request
+from flask import Blueprint, render_template, request
 from flask.views import View
 from ..models import Board, Thread, Post, Image, TagToThread
-from ..lib import modifiers, pagination
+from ..lib import modifiers
 from ..lib.pagination import Pagination
 from ..lib.helpers import get_object_or_404
+
+
+bl = Blueprint('core', __name__)
+
 
 class TemplateView(View):
     def get_context_data(self, **kwargs):
@@ -35,7 +39,7 @@ class UniversalViewMixin(BodyIdMixin):
 
 class IndexView(BodyIdMixin, TemplateView):
     """View showing all boards."""
-    template_name = 'archive_chan/index.html'
+    template_name = 'core/index.html'
     body_id = 'body-home'
 
     def get_context_data(self, **kwargs):
@@ -46,7 +50,7 @@ class IndexView(BodyIdMixin, TemplateView):
 
 class BoardView(BodyIdMixin, TemplateView):
     """View showing all threads in a specified board."""
-    template_name = 'archive_chan/board.html'
+    template_name = 'core/board.html'
     body_id = 'body-board'
     available_parameters = {
         'sort': (
@@ -78,7 +82,9 @@ class BoardView(BodyIdMixin, TemplateView):
     }
 
     def get_parameters(self):
-        """Extracts parameters related to filtering and sorting from a request object."""
+        """Extracts parameters related to filtering and sorting from
+        the request object.
+        """
         self.modifiers = {}
         self.modifiers['sort'] = modifiers.SimpleSort(
             self.available_parameters['sort'],
@@ -143,7 +149,7 @@ class BoardView(BodyIdMixin, TemplateView):
 
 class ThreadView(UniversalViewMixin, TemplateView):
     """View showing all posts in a specified thread."""
-    template_name = 'archive_chan/thread.html'
+    template_name = 'core/thread.html'
     body_id = 'body-thread'
 
     def get_queryset(self):
@@ -160,17 +166,31 @@ class ThreadView(UniversalViewMixin, TemplateView):
 
 class GalleryView(UniversalViewMixin, TemplateView):
     """View displaying gallery template. Data is loaded via AJAX calls."""
-    template_name = 'archive_chan/gallery.html'
+    template_name = 'core/gallery.html'
     body_id = 'body-gallery'
 
 
 class StatsView(UniversalViewMixin, TemplateView):
     """View displaying stats template. Data is loaded via AJAX calls."""
-    template_name = 'archive_chan/stats.html'
+    template_name = 'core/stats.html'
     body_id = 'body-stats'
 
 
 class StatusView(BodyIdMixin, TemplateView):
     """View displaying archive status. Data is loaded via AJAX calls."""
-    template_name = 'archive_chan/status.html'
+    template_name = 'core/status.html'
     body_id = 'body-status'
+
+
+bl.add_url_rule('/', view_func=IndexView.as_view('index'))
+bl.add_url_rule('/gallery/', view_func=GalleryView.as_view('gallery'))
+bl.add_url_rule('/stats/', view_func=StatsView.as_view('stats'))
+bl.add_url_rule('/status/', view_func=StatusView.as_view('status'))
+
+bl.add_url_rule('/board/<board>/', view_func=BoardView.as_view('board'))
+bl.add_url_rule('/board/<board>/gallery/', view_func=GalleryView.as_view('board_gallery'))
+bl.add_url_rule('/board/<board>/stats/', view_func=StatsView.as_view('board_stats'))
+
+bl.add_url_rule('/board/<board>/thread/<thread>/', view_func=ThreadView.as_view('thread'))
+bl.add_url_rule('/board/<board>/thread/<thread>/gallery/', view_func=GalleryView.as_view('thread_gallery'))
+bl.add_url_rule('/board/<board>/thread/<thread>/stats/', view_func=StatsView.as_view('thread_stats'))

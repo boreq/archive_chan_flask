@@ -4,12 +4,9 @@
         <meta name="viewport" content="width=device-width,initial-scale=1.0">
         <meta charset="utf-8">
         <meta name="Robots" content="INDEX,FOLLOW">
-
-        <link rel="stylesheet" href="{{ url_for('.static', filename='css/main.css') }}">
-        <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
-
-        <script src="{{ url_for('.static', filename='js/main.js') }}"></script>
-
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css">
+        <script src="{{ url_for('static', filename='js/main.js') }}"></script>
         <title>{% block title %}Archive Chan{% endblock %}</title>
         {% block inner_head %}{% endblock %}
     </head>
@@ -19,14 +16,14 @@
             <header>
                 <div class="wrapper">
                     {# Main nav. #}
-                    <a href="{{ url_for('.index') }}">ARCHIVE CHAN</a>
+                    <a href="{{ url_for('core.index') }}">ARCHIVE CHAN</a>
                     {% block main_nav %}
-                        {% if board_name %}<a href="{{ url_for('.board', board=board_name) }}">/{{ board_name }}/</a>{% endif %}
-                        {% if thread_number %}<a href="{{ url_for('.thread', board=board_name, thread=thread_number) }}">#{{ thread_number }}</a>{% endif %}
+                        {% if board_name %}<a href="{{ url_for('core.board', board=board_name) }}">/{{ board_name }}/</a>{% endif %}
+                        {% if thread_number %}<a href="{{ url_for('core.thread', board=board_name, thread=thread_number) }}">#{{ thread_number }}</a>{% endif %}
                     {% endblock %}
 
                     {# Context sensitive nav. #}
-                    {% from 'archive_chan/snippets/nav.html' import nav %}
+                    {% from 'snippets/nav.html' import nav %}
                     <ul class="nav">
                         {{ nav(board_name, thread_number) }}
                     </ul>
@@ -49,7 +46,7 @@
         <footer>
             <div class="wrapper">
                 <ul class="links">
-                    <li><a href="{{ url_for('.status') }}">status</a></li>
+                    <li><a href="{{ url_for('core.status') }}">status</a></li>
                 </ul>
                 <div>
                     All content is generated automatically and originates from <a href="http://4chan.org">4chan</a>.

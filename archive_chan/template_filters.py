@@ -5,12 +5,13 @@
 
 import re
 from jinja2 import Markup, escape, evalcontextfilter
-from . import bl
+from . import app
 
 
 _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
 
 
+@app.template_filter('formatpost')
 @evalcontextfilter
 def format_post(eval_ctx, text):
     """This filter formats a post comment before displaying it in the template."""
@@ -44,6 +45,7 @@ def format_post(eval_ctx, text):
     return text
 
 
+@app.template_filter('nl2br')
 @evalcontextfilter
 def nl2br(eval_ctx, value):
     result = u'\n\n'.join(u'<p>%s</p>' % p.replace('\n', '<br>\n') \
@@ -51,7 +53,3 @@ def nl2br(eval_ctx, value):
     if eval_ctx.autoescape:
         result = Markup(result)
     return result
-
-
-bl.add_app_template_filter(format_post, 'formatpost')
-bl.add_app_template_filter(nl2br, 'nl2br')

@@ -16,6 +16,9 @@ if not app.config['DEBUG']:
     cache = MemcachedCache(app.config['MEMCACHED_URL']) # Actual memcached.
 else:
     cache = BaseCache() # Base cache class which does literally nothing.
+
+# Init debug toolbar.
+if app.config['DEBUG']:
     try:
         from flask_debugtoolbar import DebugToolbarExtension
         if not app.config.get('SECRET_KEY'):
@@ -26,6 +29,18 @@ else:
         import sys
         sys.stderr.write('Flask Debug Toolbar was NOT loaded. Error: %s\n' % e)
 
-from . import archive_chan
-archive_chan.init_app(app)
-app.register_blueprint(archive_chan.bl)
+from .database import db
+from .admin import admin
+from .auth import login_manager, bcrypt
+db.init_app(app)
+admin.init_app(app)
+login_manager.init_app(app)
+bcrypt.init_app(app)
+
+from .views import core, api, auth
+app.register_blueprint(core.bl)
+app.register_blueprint(api.bl, url_prefix='/api')
+app.register_blueprint(auth.bl)
+
+from . import template_filters
+from . import context_processors

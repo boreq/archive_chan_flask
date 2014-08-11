@@ -1,4 +1,4 @@
-{% extends "archive_chan/base.html" %}
+{% extends "base.html" %}
 
 {% block inner_head %}
     <script>
@@ -21,7 +21,7 @@
                         <a href="{{ thread.get_absolute_url() }}">
                             {% set post=thread.first_post() %}
                             <div class="img-container">
-                                <img src="{{ url_for('.media', filename=post.image.image) }}">
+                                <img src="{{ post.image.image_url }}">
                             </div>
 
                             <div class="thread-info">
@@ -56,7 +56,7 @@
             </ul>
 
             <div class="board-sidebar">
-                {% include "archive_chan/snippets/board_filters.html" %}
+                {% include "core/snippets/board_filters.html" %}
             </div>
         </div>
     </div>
@@ -64,7 +64,7 @@
     {% if pagination.is_paginated %}
         <div class="content">
             <div class="wrapper">
-                {% from "archive_chan/snippets/pagination.html" import pagination_macro %}
+                {% from "core/snippets/pagination.html" import pagination_macro %}
                 {{ pagination_macro(pagination, board_url_query(parameters)) }}
             </div>
         </div>

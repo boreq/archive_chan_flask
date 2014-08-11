@@ -1,4 +1,4 @@
-{% extends "archive_chan/base.html" %}
+{% extends "base.html" %}
 
 {% block inner_head %}
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
@@ -6,10 +6,10 @@
         var info_data = {
             {% if board_name %}board: '{{ board_name }}',{% endif %}
             {% if thread_number %}thread: '{{ thread_number }}',{% endif %}
-            api_url: '{{ url_for('.api_stats') }}'
+            api_url: '{{ url_for('api.api_stats') }}'
         };
     </script>
-    <script src="{{ url_for('.static', filename='js/stats.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/stats.js') }}"></script>
 {% endblock %}
 
 {% block content %}
