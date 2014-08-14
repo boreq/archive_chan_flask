@@ -5,9 +5,10 @@
 
 
 from flask.ext.sqlalchemy import SQLAlchemy
+from . import app
 
 
-db = SQLAlchemy()
+db = SQLAlchemy(app)
 
 
 def init_db():

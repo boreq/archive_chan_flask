@@ -1,6 +1,7 @@
 import os
 from flask import url_for
 from flask.ext.login import UserMixin
+from werkzeug.utils import secure_filename
 from sqlalchemy.ext.associationproxy import association_proxy
 from . import app
 from .database import db
@@ -26,8 +27,20 @@ class Board(db.Model):
     store_threads_for = db.Column(db.Integer, default=48, nullable=False)
     replies_threshold = db.Column(db.Integer, default=20, nullable=False)
 
-    threads = db.relationship('Thread', cascade='all,delete', backref='board', lazy='dynamic')
-    updates = db.relationship('Update', cascade='all,delete', backref='board', lazy='dynamic')
+    threads = db.relationship('Thread',
+        cascade='all,delete',
+        backref='board',
+        lazy='dynamic'
+    )
+    updates = db.relationship('Update',
+        cascade='all,delete',
+        backref='board',
+        lazy='dynamic'
+    )
+
+    @property
+    def id(self):
+        return self.name
 
     def __str__(self):
         return '/%s/' % self.name
@@ -52,25 +65,37 @@ class Thread(db.Model):
     saved = db.Column(db.Boolean, nullable=False, default=False)
     auto_saved = db.Column(db.Boolean, nullable=False, default=False)
 
-    replies = db.Column(db.Integer, nullable=False, default=0)
-    images = db.Column(db.Integer, nullable=False, default=0)
+    replies = db.Column(db.Integer, nullable=False)
+    images = db.Column(db.Integer, nullable=False)
     first_reply = db.Column(db.DateTime(timezone=True), nullable=True, default=None)
     last_reply = db.Column(db.DateTime(timezone=True), nullable=True, default=None)
 
-    posts = db.relationship('Post', cascade='all,delete', backref='thread', lazy='dynamic')
     tags = association_proxy('tagtothread', 'tag')
-    tagtothreads = db.relationship('TagToThread', cascade='all,delete', lazy='dynamic')
+    posts = db.relationship('Post',
+        cascade='all,delete',
+        backref='thread',
+        lazy='dynamic'
+    )
+    tagtothreads = db.relationship('TagToThread',
+        cascade='all,delete',
+        lazy='dynamic'
+    )
+
+    def __init__(self, **kwargs):
+        self.replies = kwargs.get('replies', 0)
+        self.images = kwargs.get('images', 0)
+        db.Model.__init__(self, **kwargs)
 
     # Used by scraper.
     def last_reply_time(self):
-        last = self.post_set.last()
+        last = self.posts.order_by(Post.time.desc()).first()
         if last is not None:
             return last.time
         return None
 
     # Used by scraper.
     def count_replies(self):
-        return self.post_set.count() - 1
+        return self.posts.count() - 1
 
     # Used by board template.
     def first_post(self):
@@ -104,9 +129,26 @@ class Post(db.Model):
     subject = db.Column(db.Text, nullable=False)
     comment = db.Column(db.Text, nullable=False)
 
-    save_time = db.Column(db.DateTime(timezone=True), nullable=False)
+    save_time = db.Column(db.DateTime(timezone=True), nullable=False, default=utc_now())
 
-    image = db.relationship('Image', cascade='all,delete', uselist=False, backref='post', lazy='joined')
+    image = db.relationship('Image',
+        cascade='all,delete',
+        uselist=False,
+        backref='post',
+        lazy='joined'
+    )
+
+    def __init__(self, **kwargs):
+        thread = kwargs['thread']
+        thread.replies += 1
+
+        if thread.last_reply is None or kwargs['time'] > thread.last_reply:
+            thread.last_reply = kwargs['time']
+
+        if thread.first_reply is None or kwargs['time'] < thread.first_reply:
+            thread.first_reply = kwargs['time']
+
+        db.Model.__init__(self, **kwargs)
 
     def is_main(self):
         return (self.number == self.thread.number)
@@ -128,9 +170,12 @@ class Image(db.Model):
         db.ForeignKey(Post.id, deferrable=True, initially='DEFERRED'),
         nullable=False
     )
-
     image = db.Column(db.String(255), nullable=False)
     thumbnail = db.Column(db.String(255), nullable=False)
+
+    def __init__(self, **kwargs):
+        kwargs['post'].thread.images += 1
+        db.Model.__init__(self, **kwargs)
 
     @property
     def image_url(self):
@@ -139,6 +184,20 @@ class Image(db.Model):
     @property
     def thumbnail_url(self):
         return url_for('media', filename=self.thumbnail)
+
+    def save_image(self, file_storage, filename):
+        filename = secure_filename(filename)
+        path = os.path.join('post_images', filename)
+        self.image = path
+        path = os.path.join(app.config['MEDIA_ROOT'], path)
+        file_storage.save(path)
+
+    def save_thumbnail(self, file_storage, filename):
+        filename = secure_filename(filename)
+        path = os.path.join('post_thumbnails', filename)
+        self.thumbnail = path
+        path = os.path.join(app.config['MEDIA_ROOT'], path)
+        file_storage.save(path)
 
     def delete_files(self):
         for filename in [self.image, self.thumbnail]:
@@ -163,7 +222,11 @@ class Tag(db.Model):
     name = db.Column(db.String(255))
 
     threads = association_proxy('tagtothread', 'thread')
-    triggers = db.relationship('Trigger', cascade='all,delete', backref='tag', lazy='dynamic')
+    triggers = db.relationship('Trigger',
+        cascade='all,delete',
+        backref='tag',
+        lazy='dynamic'
+    )
 
     def __str__(self):
         return self.name
@@ -186,8 +249,12 @@ class TagToThread(db.Model):
     automatically_added = db.Column(db.Boolean, nullable=False)
     save_time = db.Column(db.DateTime(timezone=True), nullable=False)
 
-    tag = db.relationship(Tag, backref='tagtothread')
-    thread = db.relationship(Thread, backref='tagtothread')
+    tag = db.relationship(Tag,
+        backref='tagtothread'
+    )
+    thread = db.relationship(Thread,
+        backref='tagtothread'
+    )
 
     def __init__(self, tag=None, thread=None, automatically_added=False):
         self.tag_id = getattr(tag, 'id', None)
@@ -281,21 +348,24 @@ class Update(db.Model):
 
     downloaded_images = db.Column(db.Integer, nullable=False, default=0)
     downloaded_thumbnails = db.Column(db.Integer, nullable=False, default=0)
-    downloaded_images = db.Column(db.Integer, nullable=False, default=0)
+    downloaded_threads = db.Column(db.Integer, nullable=False, default=0)
     
+    def __init__(self, board=None, start=None, used_threads=None):
+        self.board_id = board.id
+        self.start = start
+        self.used_threads = used_threads
+        
     def get_status_display(self):
         return dict(self.STATUS_CHOICES)[self.status]
 
 
-'''
-@receiver(pre_delete, sender=Image)
 def pre_image_delete(mapper, connection, target):
-    """Delete images from the HDD."""
-    instance.image.delete(False)
-    instance.thumbnail.delete(False)
-
+    """Delete the files from the HDD while deleting the database record."""
+    target.delete_files()
 db.event.listen(Image, 'before_delete', pre_image_delete)
 
+
+'''
 @receiver(post_save, sender=Image)
 def post_image_save(sender, instance, created, **kwargs):
     """Update images."""
@@ -305,6 +375,7 @@ def post_image_save(sender, instance, created, **kwargs):
         thread.save()
 
 @receiver(post_save, sender=Post)
+done
 def post_post_save(sender, instance, created, **kwargs):
     """Update the replies, last_reply and first_reply."""
     if created:

@@ -1,7 +1,7 @@
 from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
 from wtforms import PasswordField, SelectField
-from . import models
+from . import models, app
 from .auth import generate_password_hash
 from .database import db
 
@@ -67,7 +67,14 @@ class TriggerView(ModelView):
         super(TriggerView, self).__init__(models.Trigger, session, **kwargs)
 
 
+class ThreadView(ModelView):
+    def __init__(self, session, **kwargs):
+        super(ThreadView, self).__init__(models.Thread, session, **kwargs)
+
 admin.add_view(BoardView(db.session))
 admin.add_view(UserView(db.session))
 admin.add_view(TagView(db.session))
 admin.add_view(TriggerView(db.session))
+
+if app.config['DEBUG']:
+    admin.add_view(ThreadView(db.session))

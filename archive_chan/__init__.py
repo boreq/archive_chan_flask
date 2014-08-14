@@ -32,7 +32,6 @@ if app.config['DEBUG']:
 from .database import db
 from .admin import admin
 from .auth import login_manager, bcrypt
-db.init_app(app)
 admin.init_app(app)
 login_manager.init_app(app)
 bcrypt.init_app(app)
