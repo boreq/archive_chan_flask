@@ -12,7 +12,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import FileStorage
 from .. import app
 from ..database import db
-from ..models import Board, Thread, Post, Image, Trigger, TagToThread, Update
+from ..models import Board, Thread, Post, Image, Trigger, TagToThread, Update, Tag
 
 
 class ScrapError(Exception):
@@ -23,10 +23,6 @@ class ThreadInfo:
     """Class used for storing information about the thread."""
 
     def __init__(self, thread_json): 
-        """This constructor loads the data from a part of the JSON
-        retrieved from the catalog API.
-        """
-        # Get the thread number.
         self.number = thread_json['no']
         
         # Get the time of the last reply or thread creation time.
@@ -35,45 +31,46 @@ class ThreadInfo:
         else:
             last_reply_time = int(thread_json['time'])
 
-        # Note the timezone-aware datetime.
-        self.last_reply_time = pytz.utc.localize(datetime.datetime.fromtimestamp(last_reply_time))
+        # Add timezone information to the datetime.
+        self.last_reply_time = pytz.utc.localize(
+            datetime.datetime.fromtimestamp(last_reply_time)
+        )
 
-        # Get the number of the replies in the thread (first post doest not count).
+        # 4chan doesn't count the first post.
         self.replies = int(thread_json['replies'])
 
 
 class PostData:
-    """Class used for storing data about the post before saving it to the database."""
+    """Class used for storing information about the post."""
 
     def replace_content(self, text):
         """Cleans the HTML from the post comment. Returns a string."""
-
         # Remove >>quotes.
-        text = re.sub(r'\<a.*?class="quotelink".*?\>(.*?)\</a\>', r"\1", text)
+        text = re.sub(r'\<a.*?class="quotelink".*?\>(.*?)\</a\>', r'\1', text)
 
         # Remove spans: >le meme arrows/deadlinks etc.
-        text = re.sub(r'\<span.*?\>(.*?)\</span\>', r"\1", text)
+        text = re.sub(r'\<span.*?\>(.*?)\</span\>', r'\1', text)
 
-        # Code.
-        text = re.sub(r'\<pre.*?\>(.*?)\</pre\>', r"[code]\1[/code]", text)
+        # Replace <pre> with [code].
+        text = re.sub(r'\<pre.*?\>(.*?)\</pre\>', r'[code]\1[/code]', text)
 
-        # Newline.
-        text = text.replace("<br>", "\n")
+        # Replace <br> with newline character.
+        text = text.replace('<br>', '\n')
 
-        # Word break opportunity.
-        text = text.replace("<wbr>", "")
+        # Remove <wbr>.
+        text = text.replace('<wbr>', '')
 
         # Unescape characters.
         text = html.unescape(text)
 
         return text
 
-
     def __init__(self, post_json): 
-        """Constructor loads the data from JSON retrieved from the thread API."""
-
+        """Loads the data from JSON retrieved from the thread API."""
         self.number = int(post_json['no'])
-        self.time = pytz.utc.localize(datetime.datetime.fromtimestamp(int(post_json['time'])))
+        self.time = pytz.utc.localize(
+            datetime.datetime.fromtimestamp(int(post_json['time']))
+        )
 
         self.name = post_json.get('name', '')
         self.trip = post_json.get('trip', '')
@@ -96,8 +93,8 @@ class Triggers:
         self.triggers = Trigger.query.filter(Trigger.active==True).all()
 
     def check_post_type(self, trigger, thread, post_data):
-        """True if the type of the post (master - first post, sub - reply) is correct,
-        false otherwise.
+        """True if the type of the post (master - first post, sub - reply)
+        is correct, false otherwise.
         """
         # Sub post and we are looking for the master.
         if post_data.number != thread.number and trigger.post_type == 'master':
@@ -145,7 +142,6 @@ class Triggers:
 
         return False
 
-
     def get_single_trigger_actions(self, trigger, thread, post_data):
         """Returns a set of actions to execute based on one trigger."""
         if not self.check_post_type(trigger, thread, post_data):
@@ -156,7 +152,6 @@ class Triggers:
         if self.check_event(trigger, post_data):
             if trigger.save_thread:
                 actions.add(('save', 0))
-
             if trigger.tag is not None:
                 actions.add(('add_tag', trigger.tag))
 
@@ -168,15 +163,14 @@ class Triggers:
 
         # Prepare a set of actions to execute.
         for trigger in self.triggers:
-            new_actions = self.get_single_trigger_actions(trigger, thread, post_data)
-
+            new_actions = self.get_single_trigger_actions(trigger, thread,
+                                                          post_data)
             if not new_actions is None:
                 actions = actions | new_actions
-
         return actions
 
     def handle(self, post_data, thread):
-        """Actual function called to execute triggers."""
+        """Main function called to execute the triggers."""
         actions = self.get_actions(thread, post_data)
 
         # Execute actions.
@@ -188,17 +182,22 @@ class Triggers:
                     db.session.add(tag_to_thread)
 
             if action[0] == 'add_tag':
-                if TagToThread.query.join(Tag, Thread).filter(Thread==thread, Tag=action[1]).first() is None:
+                if TagToThread.query.filter(
+                        TagToThread.thread==thread,
+                        TagToThread.tag==action[1]
+                    ).first() is None:
                     tag_to_thread = TagToThread(
                         thread=thread,
                         tag=action[1],
                         automatically_added=True
                     )
-                    db.sesssion.add(tag_to_thread)
+                    db.session.add(tag_to_thread)
 
 
 class Queuer:
-    """Exposes the functions which allow the threads to synchronise their wait times."""
+    """Exposes the functions which allow the threads to synchronise their wait
+    times to prevent accessing the API to often.
+    """
 
     def __init__(self):
         self.last_api_request = None
@@ -211,47 +210,50 @@ class Queuer:
         self.api_wait_lock = threading.Lock()
 
     def get_total_wait_time(self):
-        """Get the total time for which this class forced the threads to wait."""
+        """Get the total time for which this class forced the threads to wait.
+        This is used for generating statistics.
+        """
         return datetime.timedelta(seconds=self.total_wait)
 
     def get_total_wait_time_with_lock(self):
-        """Get the total time for which this class forced the threads to wait plus the time waiting for the lock."""
+        """Get the total time for which this class forced the threads to wait
+        plus the time spent waiting for the lock. This is used for generating
+        statistics.
+        """
         return self.total_wait_time_with_lock
 
     def wait(self, time_beetwen_requests, last_request):
-        """Wait to make sure that at least time_beetwen_requests passed since last_request."""
+        """Wait to make sure that the specified time passed since the last
+        request.
+        """
         # Convert seconds to microseconds.
         time_beetwen_requests *= 1000000
-
-        # Check when the last request was performed and wait if necessary.
         if not last_request is None:
             time_passed = datetime.datetime.now() - last_request
-
-            # If not enough time passed since the last request, wait for the remaining time.
             if time_passed.microseconds < time_beetwen_requests:
-                # Calculate remaining time and convert microseconds to seconds.
-                wait_for_seconds = (time_beetwen_requests - time_passed.microseconds) / 1000000
+                wait_for_seconds = (time_beetwen_requests - \
+                                    time_passed.microseconds) / 1000000
                 self.total_wait += wait_for_seconds
                 time.sleep(wait_for_seconds)
 
     def api_wait(self):
-        """Wait in order to satisfy the API rules."""
+        """Wait in order to satisfy the API rules. Called before each API
+        query.
+        """
         wait_start = datetime.datetime.now()
-
         with self.api_wait_lock:
             self.wait(app.config.get('API_WAIT'), self.last_api_request)
             self.last_api_request = datetime.datetime.now()
-
         self.total_wait_time_with_lock += datetime.datetime.now() - wait_start
 
     def file_wait(self):
-        """Wait in order to satisfy the rules. Used before downloading images."""
+        """Wait in order to satisfy the rules. Called before each file
+        download.
+        """
         wait_start = datetime.datetime.now()
-
         with self.file_wait_lock:
             self.wait(app.config.get('FILE_WAIT'), self.last_file_request)
             self.last_file_request = datetime.datetime.now()
-
         self.total_wait_time_with_lock += datetime.datetime.now() - wait_start
 
 
@@ -259,6 +261,7 @@ class Stats:
     """Class storing the statistics. Perfomed tasks are purely informational
     are not not a part of any other mechanic.
     """
+
     def __init__(self):
         self.parameters = {
             'total_download_time': datetime.timedelta(),
@@ -286,11 +289,12 @@ class Stats:
 
     def add_to_record(self, record, total_time, **kwargs):
         """Save the statistics in the database."""
-        used_threads = kwargs.get('used_threads', app.config.get('SCRAPER_THREADS_NUMBER'))
-
-        wait_time = self.get('total_wait_time_with_lock').total_seconds() / used_threads
-        download_time = self.get('total_download_time').total_seconds() / used_threads
-
+        used_threads = kwargs.get('used_threads',
+                                  app.config.get('SCRAPER_THREADS_NUMBER'))
+        wait_time = self.get('total_wait_time_with_lock') \
+                        .total_seconds() / used_threads
+        download_time = self.get('total_download_time') \
+                            .total_seconds() / used_threads
         record.total_time = total_time.total_seconds()
         record.wait_time = wait_time
         record.download_time = download_time
@@ -300,17 +304,25 @@ class Stats:
         record.downloaded_images = self.get('downloaded_images')
         record.downloaded_thumbnails = self.get('downloaded_thumbnails')
         record.downloaded_threads = self.get('downloaded_threads')
-
         return record
 
     def get_text(self, total_time, **kwargs):
-        """Get the text for printing. Total processing time must be provided externally."""
+        """Get the text for printing. Total processing time must be provided
+        externally.
+        """
         try:
-            wait_percent = round(self.get('total_wait_time_with_lock').total_seconds() / total_time.total_seconds() * 100 / app.config.get('SCRAPER_THREADS_NUMBER'))
-            downloading_percent = round(self.get('total_download_time').total_seconds() / total_time.total_seconds() * 100 / app.config.get('SCRAPER_THREADS_NUMBER'))
+            wait_percent = round(
+                self.get('total_wait_time_with_lock').total_seconds() \
+                / total_time.total_seconds() * 100 \
+                / app.config.get('SCRAPER_THREADS_NUMBER')
+            )
+            downloading_percent = round(
+                self.get('total_download_time').total_seconds() \
+                / total_time.total_seconds() * 100 \
+                / app.config.get('SCRAPER_THREADS_NUMBER')
+            )
 
         except:
-            raise
             # Division by zero. Set to 0 for the statistics.
             wait_percent = 0
             downloading_percent = 0
@@ -332,16 +344,16 @@ class Stats:
         for key in self.parameters:
             self.add(key, stats.get(key))
 
-class Scraper:
+
+class Scraper(object):
     """Base class for the scrapers."""
 
     def __init__(self, board, **kwargs):
         """Board is a database object, not a board name.
-        Accepted kwargs: (bool) progress, (Queuer) queuer
+        Accepted kwargs: bool progress, Queuer queuer
         """
         self.board = board
         self.stats = Stats()
-
         self.queuer = kwargs.get('queuer', Queuer())
         self.show_progress = kwargs.get('progress', False)
         
@@ -349,13 +361,16 @@ class Scraper:
         """Download data from an url."""
         download_start = datetime.datetime.now()
         data = requests.get(url, timeout=app.config.get('CONNECTION_TIMEOUT'))
-        self.stats.add('total_download_time', datetime.datetime.now() - download_start)
+        self.stats.add('total_download_time',
+                        datetime.datetime.now() - download_start)
         return data
 
+
 class ThreadScraper(Scraper):
-    """Scraper which scraps the data from a single thread."""
+    """Scraps the data from a single thread."""
 
     def __init__(self, board, thread_info, **kwargs):
+        """Accepted kwargs: Triggers triggers + base class kwargs"""
         super(ThreadScraper, self).__init__(board, **kwargs)
         self.thread_info = thread_info
         self.triggers = kwargs.get('triggers', Triggers())
@@ -363,7 +378,11 @@ class ThreadScraper(Scraper):
 
     def get_image(self, filename, extension):
         """Download an image."""
-        url = 'https://i.4cdn.org/%s/%s%s' % (self.board.name, filename, extension)
+        url = 'https://i.4cdn.org/%s/%s%s' % (
+            self.board.name,
+            filename,
+            extension
+        )
         self.queuer.file_wait()
         self.stats.add('downloaded_images', 1)
         return self.get_url(url).content
@@ -371,14 +390,16 @@ class ThreadScraper(Scraper):
     def get_thumbnail(self, filename):
         """Download a thumbnail."""
         url = 'https://t.4cdn.org/%s/%ss.jpg' % (self.board.name, filename)
-        print(url)
         self.queuer.file_wait()
         self.stats.add('downloaded_thumbnails', 1)
         return self.get_url(url).content
 
     def get_thread_json(self, thread_number):
         """Get the thread data from the official API."""
-        url = 'https://a.4cdn.org/%s/thread/%s.json' % (self.board.name, thread_number)
+        url = 'https://a.4cdn.org/%s/thread/%s.json' % (
+            self.board.name,
+            thread_number
+        )
         self.queuer.api_wait()
         self.stats.add('downloaded_threads', 1)
         return self.get_url(url).json()
@@ -389,11 +410,12 @@ class ThreadScraper(Scraper):
 
     def should_be_updated(self, thread):
         """Determine if the thread should be updated."""
-        # Should the thread be updated? Check only if there is any data about the thread
-        # (the download of the first post was successful).
+        # Should the thread be updated? Check only if there is any data about
+        # the thread (the download of the first post was successful)
         if not thread.last_reply_time() is None and thread.posts.count() > 0:
             # It has to have newer replies or different number of replies.
-            # Note: use count_replies because 4chan does not count the first post as a reply.
+            # Note: use count_replies because 4chan does not count the first
+            # post as a reply.
             if (self.thread_info.last_reply_time <= thread.last_reply_time()
                 and self.thread_info.replies == thread.count_replies()):
                 return False
@@ -402,21 +424,22 @@ class ThreadScraper(Scraper):
 
     def get_last_post_number(self, thread):
         """Determine the last post's number or pick an imaginary one.
-        Only posts with a number above this one will be added to the database."""
+        Only posts with a number above this one will be added to the database.
+        """
         last_post = thread.posts.order_by(Post.number.desc()).first()
-
         if last_post is None:
             return -1
         else:
             return last_post.number
 
     def add_post(self, post_data, thread):
-        """Add the post."""
-        # Download images first, don't waste time when in transaction.
+        """Add the post to the database."""
+        # Download the images.
         if not post_data.filename is None:
             try:
                 image_storage = FileStorage(
-                    io.BytesIO(self.get_image(post_data.filename, post_data.extension))
+                    io.BytesIO(self.get_image(post_data.filename,
+                                              post_data.extension))
                 )
                 thumbnail_storage = FileStorage(
                     io.BytesIO(self.get_thumbnail(post_data.filename))
@@ -425,11 +448,9 @@ class ThreadScraper(Scraper):
                 filename_thumbnail = '%s%s' % (post_data.filename, '.jpg')
 
             except:
-                raise
-                raise ScrapError('Unable to download an image. Stopping at this post.')
+                raise ScrapError('Image download failed. Stopping at this post.')
 
-        # Save post in the database.
-        # Do not save earlier or you might end up with a thread without posts.
+        # Save thread.
         if instance_state(thread).transient:
             db.session.add(thread)
 
@@ -456,16 +477,16 @@ class ThreadScraper(Scraper):
             if instance_state(image).transient:
                 db.session.add(image)
 
-        self.triggers.handle(post_data, thread)
+        #self.triggers.handle(post_data, thread)
 
+        # Commit transaction.
         db.session.commit()
-
-        self.stats.add('added_posts', 1)
 
         # Just to give something to look at. 
         # "_" is a post without an image, "-" is a post with an image
         if self.show_progress:
-            print('-' if post_data.filename else '_', end="", flush=True)
+            print('-' if post_data.filename else '_', end='', flush=True)
+        self.stats.add('added_posts', 1)
 
     def handle_thread(self):
         """Download/update the thread if necessary."""
@@ -474,22 +495,19 @@ class ThreadScraper(Scraper):
         if self.thread_info.replies < self.board.replies_threshold:
             return
 
-        # Get the existing entry for this thread from the database or create a new record for it.
-        # get_or_create is not used to avoid saving outside of the transaction - empty thread
-        # could be created in case of an error.
+        # Get the existing entry for this thread from the database or create
+        # a new record for it.
         try:
             thread = Thread.query.join(Board).filter(
                 Board.name==self.board.name,
                 Thread.number==self.thread_info.number
             ).one()
-
             if not self.should_be_updated(thread):
                 return
 
         except NoResultFound:
             thread = Thread(board=self.board, number=self.thread_info.number)
 
-        # Get last post number.
         last_post_number = self.get_last_post_number(thread)
 
         # Download the thread data.
@@ -499,20 +517,15 @@ class ThreadScraper(Scraper):
         except:
             raise ScrapError('Unable to download the thread data. It might not exist anymore.')
 
-        # Create a list for downloaded post numbers.
-        # We will later check if something from our database is missing in this list and remove it.
+        # Create a list for downloaded post numbers. Items present in
+        # the database but missing here will be removed.
         post_numbers = []
 
         try:
             # Add posts.
             for post_json in thread_json['posts']:
-                # Create container class and parse info in the process.
                 post_data = PostData(post_json)
-                
-                # Store post number.
                 post_numbers.append(post_data.number)
-
-                # Actual update.
                 if post_data.number > last_post_number:
                     self.modified = True
                     self.add_post(post_data, thread)
@@ -527,7 +540,7 @@ class ThreadScraper(Scraper):
         except Exception as e:
             raise
             db.session.rollback()
-            sys.stderr.write('%s\m' % (e))
+            sys.stderr.write('%s\n' % e)
             self.modified = True
 
 
@@ -540,17 +553,15 @@ class ThreadScraperThread(ThreadScraper, threading.Thread):
         self.board_scraper = board_scraper
 
     def on_task_start(self):
-        print('session remove')
         db.session()
 
     def on_task_end(self):
-        print('session remove')
         db.session.remove()
+        self.board_scraper.on_thread_scraper_done(self)
 
     def run(self):
         try:
             self.on_task_start()
-            #with app.test_request_context():
             self.handle_thread()
 
         except Exception as e:
@@ -559,10 +570,9 @@ class ThreadScraperThread(ThreadScraper, threading.Thread):
 
         finally:
             self.on_task_end()
-            self.board_scraper.on_thread_scraper_done(self)
 
 class BoardScraper(Scraper):
-    """Class which basically launches and coordinates ThreadScraperThread classes."""
+    """Class which launches and coordinates ThreadScraperThread classes."""
 
     def __init__(self, board, **kwargs):
         super(BoardScraper, self).__init__(board, **kwargs)
@@ -637,7 +647,7 @@ class BoardScraper(Scraper):
             raise
             # Remove the thread from the list of all running threads.
             self.remove_running(thread_info.number)
-            sys.stderr.write('%s\m' % (e))
+            sys.stderr.write('%s\n' % e)
 
     def get_thread(self):
         """Get the next thread."""
