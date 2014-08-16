@@ -1,7 +1,7 @@
 import datetime
 import pytz
 from sqlalchemy.orm import exc
-from flask import abort, Config
+from flask import abort
 
 
 def get_object_or_404(model, *criterion):

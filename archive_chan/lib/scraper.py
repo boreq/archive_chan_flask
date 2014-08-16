@@ -9,7 +9,6 @@ import time
 import pytz
 from sqlalchemy.orm.attributes import instance_state
 from sqlalchemy.orm.exc import NoResultFound
-from flask.ext.sqlalchemy import get_debug_queries
 from werkzeug.datastructures import FileStorage
 from .. import app
 from ..database import db
@@ -540,7 +539,6 @@ class ThreadScraper(Scraper):
 
         except Exception as e:
             db.session.rollback()
-            raise
             sys.stderr.write('%s\n' % e)
             self.modified = True
 
@@ -566,8 +564,7 @@ class ThreadScraperThread(ThreadScraper, threading.Thread):
             self.handle_thread()
 
         except Exception as e:
-            raise
-            sys.stderr.write('%s\n' % (e))
+            sys.stderr.write('%s\n' % e)
 
         finally:
             self.on_task_end()
@@ -598,8 +595,7 @@ class BoardScraper(Scraper):
             self.stats.merge(thread_scraper.stats)
         
         except Exception as e:
-            raise
-            sys.stderr.write('%s\n' % (e))
+            sys.stderr.write('%s\n' % e)
 
         finally:
             # Launch a new thread in place of the one that just finished.
@@ -646,7 +642,6 @@ class BoardScraper(Scraper):
                 thread_scraper.start()
 
         except Exception as e:
-            raise
             # Remove the thread from the list of all running threads.
             self.remove_running(thread_info.number)
             sys.stderr.write('%s\n' % e)

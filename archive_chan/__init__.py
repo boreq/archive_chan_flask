@@ -1,6 +1,5 @@
 from flask import Flask
 from werkzeug.contrib.cache import MemcachedCache, BaseCache
-from flask_debugtoolbar import DebugToolbarExtension
 
 
 app = Flask(__name__)
