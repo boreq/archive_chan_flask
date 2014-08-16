@@ -224,7 +224,7 @@ class Tag(db.Model):
     threads = association_proxy('tagtothread', 'thread')
     triggers = db.relationship('Trigger',
         cascade='all,delete',
-        backref='tag',
+        backref=db.backref('tag', lazy='joined'),
         lazy='dynamic'
     )
 
@@ -247,7 +247,7 @@ class TagToThread(db.Model):
         nullable=False
     )
     automatically_added = db.Column(db.Boolean, nullable=False)
-    save_time = db.Column(db.DateTime(timezone=True), nullable=False)
+    save_time = db.Column(db.DateTime(timezone=True), nullable=False, default=utc_now())
 
     tag = db.relationship(Tag,
         backref='tagtothread'
@@ -256,11 +256,11 @@ class TagToThread(db.Model):
         backref='tagtothread'
     )
 
-    def __init__(self, tag=None, thread=None, automatically_added=False):
-        self.tag_id = getattr(tag, 'id', None)
-        self.thread_id = getattr(thread, 'id', None)
-        self.automatically_added = automatically_added
-        self.save_time = utc_now()
+    #def __init__(self, tag=None, thread=None, automatically_added=False):
+    #    self.tag_id = getattr(tag, 'id', None)
+    #    self.thread_id = getattr(thread, 'id', None)
+    #    self.automatically_added = automatically_added
+    #    self.save_time = utc_now()
 
     def __str__(self):
         return format('%s - %s' % (self.thread, self.tag))
@@ -366,34 +366,6 @@ db.event.listen(Image, 'before_delete', pre_image_delete)
 
 
 '''
-@receiver(post_save, sender=Image)
-def post_image_save(sender, instance, created, **kwargs):
-    """Update images."""
-    if created:
-        thread = instance.post.thread
-        thread.images += 1
-        thread.save()
-
-@receiver(post_save, sender=Post)
-done
-def post_post_save(sender, instance, created, **kwargs):
-    """Update the replies, last_reply and first_reply."""
-    if created:
-        thread = instance.thread
-
-        # Replies.
-        thread.replies += 1
-
-        # Last reply.
-        if thread.last_reply is None or instance.time > thread.last_reply:
-            thread.last_reply = instance.time
-
-        # First reply.
-        if thread.first_reply is None or instance.time < thread.first_reply:
-            thread.first_reply = instance.time
-
-        thread.save()
-
 @receiver(post_delete, sender=Post)
 def post_post_delete(sender, instance, **kwargs):
     """Update replies, images, last_reply, first_reply."""

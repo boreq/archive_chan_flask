@@ -9,6 +9,7 @@ import time
 import pytz
 from sqlalchemy.orm.attributes import instance_state
 from sqlalchemy.orm.exc import NoResultFound
+from flask.ext.sqlalchemy import get_debug_queries
 from werkzeug.datastructures import FileStorage
 from .. import app
 from ..database import db
@@ -90,7 +91,7 @@ class Triggers:
 
     def __init__(self):
         # Prepare trigger list.
-        self.triggers = Trigger.query.filter(Trigger.active==True).all()
+        self.triggers = Trigger.query.join(Tag).filter(Trigger.active==True).all()
 
     def check_post_type(self, trigger, thread, post_data):
         """True if the type of the post (master - first post, sub - reply)
@@ -187,11 +188,12 @@ class Triggers:
                         TagToThread.tag==action[1]
                     ).first() is None:
                     tag_to_thread = TagToThread(
-                        thread=thread,
-                        tag=action[1],
+                        thread_id=thread.id,
+                        tag_id=action[1].id,
                         automatically_added=True
                     )
-                    db.session.add(tag_to_thread)
+                    if instance_state(tag_to_thread).transient:
+                        db.session.add(tag_to_thread)
 
 
 class Queuer:
@@ -373,7 +375,7 @@ class ThreadScraper(Scraper):
         """Accepted kwargs: Triggers triggers + base class kwargs"""
         super(ThreadScraper, self).__init__(board, **kwargs)
         self.thread_info = thread_info
-        self.triggers = kwargs.get('triggers', Triggers())
+        self.triggers = Triggers()
         self.modified = False
 
     def get_image(self, filename, extension):
@@ -427,10 +429,9 @@ class ThreadScraper(Scraper):
         Only posts with a number above this one will be added to the database.
         """
         last_post = thread.posts.order_by(Post.number.desc()).first()
-        if last_post is None:
-            return -1
-        else:
+        if last_post is not None:
             return last_post.number
+        return -1
 
     def add_post(self, post_data, thread):
         """Add the post to the database."""
@@ -449,10 +450,6 @@ class ThreadScraper(Scraper):
 
             except:
                 raise ScrapError('Image download failed. Stopping at this post.')
-
-        # Save thread.
-        if instance_state(thread).transient:
-            db.session.add(thread)
 
         # Save post.
         post = Post(
@@ -477,16 +474,15 @@ class ThreadScraper(Scraper):
             if instance_state(image).transient:
                 db.session.add(image)
 
-        #self.triggers.handle(post_data, thread)
-
-        # Commit transaction.
-        db.session.commit()
-
         # Just to give something to look at. 
         # "_" is a post without an image, "-" is a post with an image
         if self.show_progress:
             print('-' if post_data.filename else '_', end='', flush=True)
         self.stats.add('added_posts', 1)
+
+    def delete_post(self, post):
+        db.session.delete(post)
+        self.stats.add('removed_posts', 1)
 
     def handle_thread(self):
         """Download/update the thread if necessary."""
@@ -506,18 +502,22 @@ class ThreadScraper(Scraper):
                 return
 
         except NoResultFound:
-            thread = Thread(board=self.board, number=self.thread_info.number)
+            thread = Thread(board_id=self.board.name, number=self.thread_info.number)
+
+        if not thread.id:
+            db.session.add(thread)
+            db.session.flush()
+            db.session.refresh(thread)
 
         last_post_number = self.get_last_post_number(thread)
 
         # Download the thread data.
         try:
             thread_json = self.get_thread_json(self.thread_info.number)
-
         except:
             raise ScrapError('Unable to download the thread data. It might not exist anymore.')
 
-        # Create a list for downloaded post numbers. Items present in
+        # Create a list of downloaded post numbers. Items present in
         # the database but missing here will be removed.
         post_numbers = []
 
@@ -529,17 +529,19 @@ class ThreadScraper(Scraper):
                 if post_data.number > last_post_number:
                     self.modified = True
                     self.add_post(post_data, thread)
+                    self.triggers.handle(post_data, thread)
+                    db.session.commit()
 
             # Remove posts which don't exist in the thread.
             for post in thread.posts.all():
                 if not post.number in post_numbers:
-                    self.stats.add('removed_posts', 1)
                     self.modified = True
-                    post.delete()
+                    self.delete_post(post)
+                    db.session.commit()
 
         except Exception as e:
-            raise
             db.session.rollback()
+            raise
             sys.stderr.write('%s\n' % e)
             self.modified = True
 
@@ -570,6 +572,7 @@ class ThreadScraperThread(ThreadScraper, threading.Thread):
 
         finally:
             self.on_task_end()
+
 
 class BoardScraper(Scraper):
     """Class which launches and coordinates ThreadScraperThread classes."""

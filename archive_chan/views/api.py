@@ -130,7 +130,7 @@ class StatusView(ApiView):
             db.func.avg(Update.total_time).label('average_time'),
             db.func.avg(Update.added_posts).label('average_posts'),
             db.func.date(Update.end).label('date')
-        ).group_by('date').order_by('date').all()
+        ).filter(Update.status==Update.COMPLETED).group_by('date').order_by('date').all()
 
         response_data['chart_data'] = self.get_chart_data(updates)
 
