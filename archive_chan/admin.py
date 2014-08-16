@@ -6,12 +6,13 @@ from .auth import generate_password_hash
 from .database import db
 
 
-admin = Admin(name='Archive Chan')
+admin = Admin(app, name='Archive Chan')
 
 
 class BoardView(ModelView):
     form_create_rules = ('active', 'store_threads_for', 'replies_threshold')
     column_list = ('name', 'active', 'store_threads_for', 'replies_threshold')
+    form_excluded_columns = ('updates', 'threads',)
 
     def __init__(self, session, **kwargs):
         super(BoardView, self).__init__(models.Board, session, **kwargs)
@@ -70,6 +71,7 @@ class TriggerView(ModelView):
 class ThreadView(ModelView):
     def __init__(self, session, **kwargs):
         super(ThreadView, self).__init__(models.Thread, session, **kwargs)
+
 
 admin.add_view(BoardView(db.session))
 admin.add_view(UserView(db.session))

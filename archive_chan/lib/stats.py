@@ -15,7 +15,7 @@ def get_stats(board_name=None, thread_number=None):
     queryset_threads = Thread.query.join(Board).filter(*criterions)
 
     # Time between the last and first post [hours] used when selecting data
-    # for a chart and recent posts. Prevents dispalaying unreadable amounts
+    # for a chart and recent posts. Prevents displaying unreadable amount
     # of data. Ensures correct results when calculating posts per hour
     # (old saved threads which do not get deleted would alter the results).
     timespan = current_app.config.get('RECENT_POSTS_AGE')

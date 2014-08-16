@@ -91,7 +91,7 @@ class Triggers:
 
     def __init__(self):
         # Prepare trigger list.
-        self.triggers = Trigger.query.join(Tag).filter(Trigger.active==True).all()
+        self.triggers = Trigger.query.outerjoin(Tag).filter(Trigger.active==True).all()
 
     def check_post_type(self, trigger, thread, post_data):
         """True if the type of the post (master - first post, sub - reply)
@@ -179,8 +179,7 @@ class Triggers:
             if action[0] == 'save' and not thread.saved:
                 thread.saved = True
                 thread.auto_saved = True
-                if not instance_state(image).pending:
-                    db.session.add(tag_to_thread)
+                db.session.add(thread)
 
             if action[0] == 'add_tag':
                 if TagToThread.query.filter(
@@ -198,7 +197,7 @@ class Triggers:
 
 class Queuer:
     """Exposes the functions which allow the threads to synchronise their wait
-    times to prevent accessing the API to often.
+    times to prevent accessing the API too often.
     """
 
     def __init__(self):

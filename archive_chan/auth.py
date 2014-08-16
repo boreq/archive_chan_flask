@@ -1,19 +1,20 @@
 """
     Implementes methods related to user authentication.
 
-    Basic functionality is provided by flask-login extension.
-    Bcrypt provided by flask-bcrypt extension is used instead of default
-    Werkzeug hash implementation.
+    Basic functionality is provided by flask-login.
+    Bcrypt provided by flask-bcrypt is used instead of default Werkzeug hash
+    implementation.
 """
 
 
 from flask.ext.bcrypt import Bcrypt
 from flask.ext.login import LoginManager, login_user, logout_user
+from . import app
 from .models import User
 
 
-login_manager = LoginManager()
-bcrypt = Bcrypt()
+login_manager = LoginManager(app)
+bcrypt = Bcrypt(app)
 
 
 @login_manager.user_loader
