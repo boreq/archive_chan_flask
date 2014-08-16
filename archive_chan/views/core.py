@@ -21,7 +21,7 @@ class TemplateView(View):
 
 
 class BodyIdMixin(object):
-    """This mixin adds an easy way to add body_id to the context."""
+    """Adds an easy way to add body_id to the context."""
     def get_context_data(self, **kwargs):
         context = super(BodyIdMixin, self).get_context_data(**kwargs)
         context['body_id'] = getattr(self, 'body_id', None)
@@ -29,11 +29,12 @@ class BodyIdMixin(object):
 
 
 class UniversalViewMixin(BodyIdMixin):
-    """This mixin automatically adds board_name and thread_number to the context."""
+    """Adds board_name and thread_number to the context."""
     def get_context_data(self, **kwargs):
         context = super(UniversalViewMixin, self).get_context_data(**kwargs)
         context['board_name'] = self.kwargs.get('board', None)
-        context['thread_number'] = int(self.kwargs['thread']) if 'thread' in self.kwargs else None
+        context['thread_number'] = int(self.kwargs['thread'])
+                                   if 'thread' in self.kwargs else None
         return context
 
 
@@ -75,8 +76,12 @@ class BoardView(BodyIdMixin, TemplateView):
         'tagged': (
             ('all', ('All', None)),
             ('yes', ('Yes', (Thread.tags.any(),))),
-            ('auto', ('Automatically', (Thread.tagtothreads.any(TagToThread.automatically_added==True),))),
-            ('user', ('Manually', (Thread.tagtothreads.any(TagToThread.automatically_added==False),))),
+            ('auto', ('Automatically', (Thread.tagtothreads.any(
+                TagToThread.automatically_added==True
+            ),))),
+            ('user', ('Manually', (Thread.tagtothreads.any(
+                TagToThread.automatically_added==False
+            ),))),
             ('no', ('No', (~Thread.tags.any(),))),
         )
     }
