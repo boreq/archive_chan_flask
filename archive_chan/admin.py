@@ -5,6 +5,7 @@
 
 from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
+from flask.ext.login import current_user
 from wtforms import PasswordField, SelectField
 from . import models, app
 from .auth import generate_password_hash
@@ -13,22 +14,25 @@ from .database import db
 
 admin = Admin(app, name='Archive Chan')
 
+class CustomModelView(ModelView):
+    def is_accessible(self):
+        return current_user.is_authenticated()
 
-class BoardView(ModelView):
+    def __init__(self, session, **kwargs):
+        super(CustomModelView, self).__init__(self.model, session, **kwargs)
+
+
+class BoardView(CustomModelView):
+    model = models.Board
     form_create_rules = ('active', 'store_threads_for', 'replies_threshold')
     column_list = ('name', 'active', 'store_threads_for', 'replies_threshold')
     form_excluded_columns = ('updates', 'threads',)
 
-    def __init__(self, session, **kwargs):
-        super(BoardView, self).__init__(models.Board, session, **kwargs)
 
-
-class UserView(ModelView):
+class UserView(CustomModelView):
+    model = models.User
     form_excluded_columns = ('password',)
     column_list = ('username',)
-
-    def __init__(self, session, **kwargs):
-        super(UserView, self).__init__(models.User, session, **kwargs)
 
     def scaffold_form(self):
         form_class = super(UserView, self).scaffold_form()
@@ -43,14 +47,13 @@ class UserView(ModelView):
             model.password = generate_password_hash(form.new_password1.data)
 
 
-class TagView(ModelView):
+class TagView(CustomModelView):
+    model = models.Tag
     form_excluded_columns = ('tagtothread',)
 
-    def __init__(self, session, **kwargs):
-        super(TagView, self).__init__(models.Tag, session, **kwargs)
 
-
-class TriggerView(ModelView):
+class TriggerView(CustomModelView):
+    model = models.Trigger
     form_excluded_columns = ('tagtothread',)
     form_overrides = {
         'field': SelectField,
@@ -69,13 +72,9 @@ class TriggerView(ModelView):
         },
     }
 
-    def __init__(self, session, **kwargs):
-        super(TriggerView, self).__init__(models.Trigger, session, **kwargs)
 
-
-class ThreadView(ModelView):
-    def __init__(self, session, **kwargs):
-        super(ThreadView, self).__init__(models.Thread, session, **kwargs)
+class ThreadView(CustomModelView):
+    model = models.Thread
 
 
 admin.add_view(BoardView(db.session))

@@ -20,7 +20,7 @@ def login():
 def logout():
     auth.logout_user()
     flash('Logged out')
-    return redirect(url_for('.index'))
+    return redirect(url_for('core.index'))
 
 
 bl.add_url_rule('/login/', 'login', view_func=login, methods=('GET', 'POST'))
