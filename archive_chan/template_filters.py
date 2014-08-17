@@ -14,7 +14,7 @@ _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
 @app.template_filter()
 @evalcontextfilter
 def formatpost(eval_ctx, text):
-    """This filter formats a post comment before displaying it in the template."""
+    """Formats a comment before displaying it in the template."""
     text = str(escape(text))
 
     # >>quote
@@ -48,6 +48,7 @@ def formatpost(eval_ctx, text):
 @app.template_filter()
 @evalcontextfilter
 def nl2br(eval_ctx, value):
+    """Replaces new lines with <br> tags."""
     result = u'\n\n'.join(u'<p>%s</p>' % p.replace('\n', '<br>\n') \
         for p in _paragraph_re.split(escape(value)))
     if eval_ctx.autoescape:
@@ -57,6 +58,7 @@ def nl2br(eval_ctx, value):
 
 @app.template_filter()
 def datetimeformat(datetime, timeago=True):
+    """Converts datetime to <time> tag or readable string."""
     readable = datetime.strftime('%Y-%m-%d %H:%M:%S %z')
     if not timeago:
         return readable

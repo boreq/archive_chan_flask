@@ -13,7 +13,7 @@ from . import app
 from .models import User
 
 
-login_manager = LoginManager(app)
+login_manager = LoginManager(app, add_context_processor=False)
 bcrypt = Bcrypt(app)
 
 
