@@ -47,6 +47,11 @@
             <div class="wrapper">
                 <ul class="links">
                     <li><a href="{{ url_for('core.status') }}">status</a></li>
+                    {% if user.is_authenticated() %}
+                        <li><a href="{{ url_for('auth.logout') }}">log out</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('auth.login') }}">log in</a></li>
+                    {% endif %}
                 </ul>
                 <div>
                     All content is generated automatically and originates from <a href="http://4chan.org">4chan</a>.
