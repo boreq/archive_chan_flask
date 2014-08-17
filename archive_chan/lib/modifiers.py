@@ -1,6 +1,5 @@
 """
-    Modifiers are objects which assist in modyfing the queryset using
-    the user-defined parameters.
+    Modifiers assist in modyfing the queryset using the user-defined parameters.
 """
 
 
@@ -11,6 +10,7 @@ from ..models import Thread, Tag
 
 class Modifier:
     """All sort/filter modifiers are based on this class."""
+
     def __init__(self, settings):
         """Constructor loads settings and user defined parameters and performs
         sanity checks on them.
@@ -36,6 +36,7 @@ class SimpleFilter(Modifier):
     """Simple filter which can apply certain criterions based on a single
     parameter.
     """
+
     def __init__(self, settings, parameter):
         super(SimpleFilter, self).__init__(settings)
         self.parameter = parameter
@@ -59,6 +60,7 @@ class TimeFilter(SimpleFilter):
     """Time based filter. It converts part of the criterion to datetime before
     applying it.
     """
+
     def execute(self, queryset):
         time_cond = dict(self.settings)[self.parameter][1]
         if time_cond is None:
@@ -72,6 +74,7 @@ class TimeFilter(SimpleFilter):
 
 class TagFilter(Modifier):
     """Special tag filter accepting multiple parameters. It is not really reusable."""
+
     def __init__(self, parameter):
         super(TagFilter, self).__init__(None)
         self.parameter = parameter
@@ -90,6 +93,7 @@ class TagFilter(Modifier):
 
 class SimpleSort(Modifier):
     """Adds order_by to the queryset."""
+
     def __init__(self, settings, *args):
         super(SimpleSort, self).__init__(settings)
         # Reverse sorting?

@@ -2,6 +2,7 @@ import json
 from flask import Blueprint, Response, request
 from flask.views import View
 from flask.ext.login import current_user
+from sqlalchemy.orm.exc import NoResultFound
 from ..database import db
 from ..models import Board, Thread, Post, Image, Tag, TagToThread, Update
 from ..lib import stats, helpers
@@ -30,6 +31,42 @@ class NotImplementedApiError(ApiError):
         )
 
 
+class MethodNotAllowedApiError(ApiError):
+    def __init__(self, **kwargs):
+        status_code = kwargs.get('status_code', 405)
+        error_code = kwargs.get('error_code', 'method_not_allowed')
+        message = kwargs.get('message', 'Method not allowed')
+        super(MethodNotAllowedApiError, self).__init__(
+            status_code,
+            error_code,
+            message
+        )
+
+
+class NotAuthorizedApiError(ApiError):
+    def __init__(self, **kwargs):
+        status_code = kwargs.get('status_code', 401)
+        error_code = kwargs.get('error_code', 'unauthorized')
+        message = kwargs.get('message', 'Log in.')
+        super(MethodNotAllowedApiError, self).__init__(
+            status_code,
+            error_code,
+            message
+        )
+
+
+class NotFoundApiError(ApiError):
+    def __init__(self, **kwargs):
+        status_code = kwargs.get('status_code', 404)
+        error_code = kwargs.get('error_code', 'not_found')
+        message = kwargs.get('message', 'Item could not be found.')
+        super(NotFoundApiError, self).__init__(
+            status_code,
+            error_code,
+            message
+        )
+
+
 class ApiView(View):
     methods = ['GET']
 
@@ -47,11 +84,14 @@ class ApiView(View):
         """
         try:
             attr_name = request.method.lower() + '_api_response'
-            if request.method in self.methods and hasattr(self, attr_name):
+            if not request.method in self.methods:
+                raise MethodNotAllowedApiError
+
+            if hasattr(self, attr_name):
                 response_data = getattr(self, attr_name)(*args, **kwargs)
                 status_code = 200
             else:
-                return self.http_method_not_allowed(request, *args, **kwargs)
+                raise NotImplementedApiError
 
         # Handle the exceptions thrown on purpose.
         except ApiError as e:
@@ -59,6 +99,7 @@ class ApiView(View):
 
         # Handle other exceptions.
         except Exception as e:
+            raise
             response_data, status_code = self.handle_exception(ApiError())
 
         return Response(json.dumps(response_data, indent=4),
@@ -67,7 +108,7 @@ class ApiView(View):
         )
 
 
-class StatusView(ApiView):
+class Status(ApiView):
     def get_chart_data(self, queryset):
         """Creates data structured as required by Google Charts."""
         chart_data = {
@@ -136,7 +177,7 @@ class StatusView(ApiView):
         return response_data
 
 
-class StatsView(ApiView):
+class Stats(ApiView):
     def get_api_response(self, *args, **kwargs):
         return stats.get_stats(
             board_name=request.args.get('board'),
@@ -144,7 +185,7 @@ class StatsView(ApiView):
         )
 
 
-class GalleryView(ApiView):
+class Gallery(ApiView):
     def get_api_response(self, *args, **kwargs):
         board_name = request.args.get('board')
         thread_number = request.args.get('thread')
@@ -183,131 +224,98 @@ class GalleryView(ApiView):
         }
 
 
-def ajax_save_thread():
-    """View used for AJAX save thread calls."""
-    response = {}
+class SaveThread(ApiView):
+    methods = ['POST']
 
-    if current_user.is_authenticated():
-        try:
-            thread_number = int(request.form['thread'])
-            board_name = request.form['board']
-            state = (request.form['state'] == 'true')
+    def post_api_response(self, *args, **kwargs):
+        if not current_user.is_authenticated():
+            raise NotAuthorizedApiError
+       
+        thread_number = int(request.form['thread'])
+        board_name = request.form['board']
+        state = (request.form['state'] == 'true')
 
-            thread = Thread.query.join(Board).filter(
-                Board.name==board_name,
-                Thread.number==thread_number
-            ).one()
-            thread.saved = state
-            db.session.commit()
+        thread = Thread.query.join(Board).filter(
+            Board.name==board_name,
+            Thread.number==thread_number
+        ).one()
+        thread.saved = state
+        db.session.commit()
 
-            response = {
-                'state': thread.saved
-            }
-
-        except:
-            response = {
-                'error': 'Error.'
-            }
-    else:
-        response = {
-            'error': 'Not authorized.'
+        return {
+            'state': thread.saved
         }
 
-    return Response(json.dumps(response), mimetype='application/json')
 
-
-def ajax_get_parent_thread():
+class GetParentThread(ApiView):
     """Returns a number of a thread the specified post belongs to."""
-    response = {}
 
-    try:
-        post_number = int(request.form['post'])
-        board_name = request.form['board']
+    def get_api_response(self, *args, **kwargs):
+        post_number = int(request.args['post'])
+        board_name = request.args['board']
 
-        parent_thread_number = Post.objects.join(Thread, Board).filter(
-            Board.name==board_name,
-            Thread.number==post_number
-        ).one().thread.number
+        try:
+            parent_thread_number = Post.query.join(Thread, Board).filter(
+                Board.name==board_name,
+                Thread.number==post_number
+            ).one().thread.number
+        except NoResultFound:
+            raise NotFoundApiError
 
-        response = {
+        return {
             'parent_thread': parent_thread_number
         }
 
-    except:
-        response = {
-            'error': 'Error.'
-        }
 
-    return Response(json.dumps(response), mimetype='application/json')
-
-
-def ajax_suggest_tag():
-    """View used for AJAX tag suggestions in the 'new tag' field in the thread view."""
-    response = {}
-
-    try:
+class SuggestTag(ApiView):
+    def get_api_response(self):
         query = request.args['query']
-
         tags = Tag.query.filter(Tag.name.like('%' + query + '%')).limit(5)
-
-        response = {
+        return {
             'query': query, 
             'suggestions': [tag.name for tag in tags]
         }
 
-    except:
-        response = {
-            'error': 'Error.'
-        }
 
-    return Response(json.dumps(response), mimetype='application/json')
+class AddTag(ApiView):
+    methods = ['POST']
 
+    def post_api_response(self):
+        if not current_user.is_authenticated():
+            raise NotAuthorizedApiError
 
-def ajax_add_tag():
-    """View used for adding a tag to a thread."""
-    response = {}
+        thread_number = int(request.form['thread'])
+        board_name = request.form['board']
+        tag = request.form['tag']
 
-    if current_user.is_authenticated():
         try:
-            thread_number = int(request.form['thread'])
-            board_name = request.form['board']
-            tag = request.form['tag']
-
             thread = Thread.query.join(Board).filter(
                 Thread.number==thread_number, 
                 Board.name==board_name
             ).one()
+        except NoResultFound:
+            raise NotFoundApiError(message='Thread does not exist.')
 
-            exists = TagToThread.query.join(Tag).filter(
-                TagToThread.thread==thread,
-                Tag.name==tag
-            ).first() is not None
-                
-            if not exists:
-                tag, created_new_tag = helpers.get_or_create(db.session, Tag,
-                    name=tag
-                )
-                db.session.commit()
-                thread.tags.append(tag)
-                db.session.commit()
-                added = True
-            else:
-                added = False
+        exists = TagToThread.query.join(Tag).filter(
+            TagToThread.thread==thread,
+            Tag.name==tag
+        ).first() is not None
+            
+        if not exists:
+            tag, created_new_tag = helpers.get_or_create(db.session, Tag,
+                name=tag
+            )
+            db.session.commit()
+            thread.tags.append(tag)
+            db.session.commit()
+            added = True
+        else:
+            added = False
 
-            response = {
-                'added': added
-            }
-
-        except:
-            response = {
-                'error': 'Error.'
-            }
-    else:
-        response = {
-            'error': 'Not authorized.'
+        return {
+            'added': added
         }
 
-    return Response(json.dumps(response), mimetype='application/json')
 
 def ajax_remove_tag():
     """View used to remove a tag related to a thread."""
@@ -343,14 +351,14 @@ def ajax_remove_tag():
     return Response(json.dumps(response), mimetype='application/json')
 
 
-bl.add_url_rule('/gallery/', view_func=GalleryView.as_view('api_gallery'))
-bl.add_url_rule('/stats/', view_func=StatsView.as_view('api_stats'))
-bl.add_url_rule('/status/', view_func=StatusView.as_view('api_status'))
+bl.add_url_rule('/gallery/', view_func=Gallery.as_view('api_gallery'))
+bl.add_url_rule('/stats/', view_func=Stats.as_view('api_stats'))
+bl.add_url_rule('/status/', view_func=Status.as_view('api_status'))
 
-bl.add_url_rule('/thread/save/', view_func=ajax_save_thread, methods=('POST',))
-bl.add_url_rule('/get_parent_thread/', view_func=ajax_get_parent_thread)
+bl.add_url_rule('/thread/save/', view_func=SaveThread.as_view('save_thread'), methods=('POST',))
+bl.add_url_rule('/get_parent_thread/', view_func=GetParentThread.as_view('get_parent_thread'))
 
-bl.add_url_rule('/tag/suggest/', view_func=ajax_suggest_tag)
-bl.add_url_rule('/tag/add/', view_func=ajax_add_tag, methods=('POST',))
+bl.add_url_rule('/tag/suggest/', view_func=SuggestTag.as_view('suggest_tag'))
+bl.add_url_rule('/tag/add/', view_func=AddTag.as_view('add_tag'))
 bl.add_url_rule('/tag/remove/', view_func=ajax_remove_tag, methods=('POST',))
 

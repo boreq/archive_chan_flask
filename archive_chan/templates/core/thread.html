@@ -9,11 +9,13 @@
             thread_number: {{ thread_number }},
             board_url: '{{ url_for('.board', board=board_name) }}',
             thread_url: '{{ url_for('.thread', board=board_name, thread=thread_number) }}',
-            ajax_url_save: '{{ url_for('api.ajax_save_thread') }}',
-            ajax_url_get_parent_thread: '{{ url_for('api.ajax_get_parent_thread') }}',
-            ajax_url_suggest_tag: '{{ url_for('api.ajax_suggest_tag') }}',
-            ajax_url_add_tag: '{{ url_for('api.ajax_add_tag') }}',
-            ajax_url_remove_tag: '{{ url_for('api.ajax_remove_tag') }}'
+            ajax_url_save: '{{ url_for('api.save_thread') }}',
+            ajax_url_get_parent_thread: '{{ url_for('api.get_parent_thread') }}',
+            ajax_url_suggest_tag: '{{ url_for('api.suggest_tag') }}',
+            ajax_url_add_tag: '{{ url_for('api.add_tag') }}',
+            {#
+            ajax_url_remove_tag: '{{ url_for('api.remove_tag') }}'
+            #}
         };
     </script>
 {% endblock %}

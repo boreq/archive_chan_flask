@@ -11,7 +11,7 @@ def login():
         password = request.form.get('password')
         if auth.login(username, password):
             flash('Successfully logged in')
-            return redirect(url_for('.index'))
+            return redirect(url_for('core.index'))
         else:
             flash('Invalid username or password')
     return render_template('auth/login.html')

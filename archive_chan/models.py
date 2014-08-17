@@ -262,11 +262,11 @@ class TagToThread(db.Model):
         backref='tagtothread'
     )
 
-    #def __init__(self, tag=None, thread=None, automatically_added=False):
-    #    self.tag_id = getattr(tag, 'id', None)
-    #    self.thread_id = getattr(thread, 'id', None)
-    #    self.automatically_added = automatically_added
-    #    self.save_time = utc_now()
+    def __init__(self, tag=None, thread=None, automatically_added=False):
+        self.tag_id = getattr(tag, 'id', None)
+        self.thread_id = getattr(thread, 'id', None)
+        self.automatically_added = automatically_added
+        self.save_time = utc_now()
 
     def __str__(self):
         return format('%s - %s' % (self.thread, self.tag))
@@ -369,34 +369,3 @@ def pre_image_delete(mapper, connection, target):
     """Delete the files from the HDD while deleting the database record."""
     target.delete_files()
 db.event.listen(Image, 'before_delete', pre_image_delete)
-
-
-'''
-@receiver(post_delete, sender=Post)
-def post_post_delete(sender, instance, **kwargs):
-    """Update replies, images, last_reply, first_reply."""
-    thread = instance.thread
-
-    # Replies
-    thread.replies -= 1
-
-    # Images.
-    try:
-        if instance.image:
-            thread.images -= 1
-
-    except:
-        pass
-
-    # First and last reply.
-    if thread.first_reply == instance.time or thread.last_reply == instance.time:
-        thread_recount = Thread.objects.annotate(
-            min_post=Min('post__time'),
-            max_post=Max('post__time')
-        ).get(pk=instance.thread.pk)
-        
-        thread.first_reply=thread_recount.min_post
-        thread.last_reply=thread_recount.max_post
-
-    thread.save()
-'''
