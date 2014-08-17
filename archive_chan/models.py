@@ -269,7 +269,7 @@ class TagToThread(db.Model):
         self.save_time = utc_now()
 
     def __str__(self):
-        return format('%s - %s' % (self.thread, self.tag))
+        return '%s - %s' % (self.thread, self.tag)
 
 
 class Trigger(db.Model):

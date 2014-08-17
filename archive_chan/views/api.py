@@ -122,14 +122,14 @@ class Status(ApiView):
             return chart_data
 
         for entry in queryset:
-            value_string = format("Date(%s, %s, %s, %s, %s, %s)" % (
+            value_string = 'Date(%s, %s, %s, %s, %s, %s)' % (
                 entry.date.year,
                 entry.date.month - 1, # JavaScript months start at 0.
                 entry.date.day,
                 0,
                 0,
                 0
-            ))
+            )
 
             label_string = entry.date.strftime('%Y-%m-%d')
 
