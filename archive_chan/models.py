@@ -262,11 +262,12 @@ class TagToThread(db.Model):
         backref='tagtothread'
     )
 
-    def __init__(self, tag=None, thread=None, automatically_added=False):
+    def __init__(self, tag=None, thread=None, automatically_added=False, **kwargs):
         self.tag_id = getattr(tag, 'id', None)
         self.thread_id = getattr(thread, 'id', None)
         self.automatically_added = automatically_added
         self.save_time = utc_now()
+        db.Model.__init__(self, **kwargs)
 
     def __str__(self):
         return '%s - %s' % (self.thread, self.tag)
