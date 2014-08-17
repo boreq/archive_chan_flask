@@ -86,6 +86,12 @@ class Thread(db.Model):
         self.images = kwargs.get('images', 0)
         db.Model.__init__(self, **kwargs)
 
+    def post_deleted(self):
+        self.posts -= 1
+
+    def image_deleted(self):
+        self.images -= 1
+
     # Used by scraper.
     def last_reply_time(self):
         last = self.posts.order_by(Post.time.desc()).first()

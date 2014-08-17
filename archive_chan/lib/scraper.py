@@ -479,6 +479,13 @@ class ThreadScraper(Scraper):
         self.stats.add('added_posts', 1)
 
     def delete_post(self, post):
+        # ORM Events can modify the related object and it is not possible
+        # to create a single trigger for all supported databases.
+        post.thread.post_deleted()
+        if post.image is not None:
+            post.thread.image_deleted()
+        db.session.add(post.thread)
+
         db.session.delete(post)
         self.stats.add('removed_posts', 1)
 

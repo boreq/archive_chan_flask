@@ -1,8 +1,3 @@
-"""
-    Run this command to update the archive.
-"""
-
-
 import datetime
 import sys
 from flask.ext import script
@@ -69,7 +64,7 @@ class Command(script.Command):
     option_list = (
         script.Option(
             '--progress',
-            action="store_true",
+            action='store_true',
             dest='progress',
             help='Display progress.',
         ),
