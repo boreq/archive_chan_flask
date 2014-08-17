@@ -33,8 +33,8 @@ class UniversalViewMixin(BodyIdMixin):
     def get_context_data(self, **kwargs):
         context = super(UniversalViewMixin, self).get_context_data(**kwargs)
         context['board_name'] = self.kwargs.get('board', None)
-        context['thread_number'] = int(self.kwargs['thread'])
-                                   if 'thread' in self.kwargs else None
+        context['thread_number'] = int(self.kwargs['thread']) \
+            if 'thread' in self.kwargs else None
         return context
 
 

@@ -1,5 +1,5 @@
 import datetime
-from flask import current_app
+from .. import app
 from ..models import Board, Thread, Post, Image
 from ..database import db
 
@@ -18,7 +18,7 @@ def get_stats(board_name=None, thread_number=None):
     # for a chart and recent posts. Prevents displaying unreadable amount
     # of data. Ensures correct results when calculating posts per hour
     # (old saved threads which do not get deleted would alter the results).
-    timespan = current_app.config.get('RECENT_POSTS_AGE')
+    timespan = app.config['RECENT_POSTS_AGE']
 
     # Select all data in the thread mode.
     if board_name and thread_number:
@@ -43,13 +43,14 @@ def get_stats(board_name=None, thread_number=None):
         *criterions
     ).order_by('date', 'hour').all()
 
-    context = {}
-    context['chart_data'] = get_posts_chart_data(posts)
-    context['total_posts'] = queryset_posts.count()
-    context['total_image_posts'] = queryset_posts.join(Image).count()
-    context['recent_posts'] = queryset_posts.filter(Post.time>first_post_time).count()
-    context['recent_posts_timespan'] = timespan
-    context['total_threads'] = queryset_threads.count()
+    context = {
+        'total_threads': queryset_threads.count(),
+        'total_posts': queryset_posts.count(),
+        'total_image_posts': queryset_posts.join(Image).count(),
+        'recent_posts': queryset_posts.filter(Post.time>first_post_time).count(),
+        'recent_posts_timespan': timespan,
+        'chart_data': get_posts_chart_data(posts),
+    }
     return context
 
 
@@ -72,14 +73,14 @@ def get_posts_chart_data(queryset):
             datetime.time(hour=int(entry.hour))
         )
 
-        value_string = format("Date(%s, %s, %s, %s, %s, %s)" % (
+        value_string = 'Date(%s, %s, %s, %s, %s, %s)' % (
             entry_time.year,
             entry_time.month - 1, # JavaScript months start at 0.
             entry_time.day,
             entry_time.hour,
             entry_time.minute,
             entry_time.second
-        ))
+        )
 
         label_string = entry_time.strftime('%Y-%m-%d %H:%M')
 

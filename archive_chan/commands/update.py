@@ -1,6 +1,10 @@
+"""
+    Run this command to update the archive.
+"""
+
+
 import datetime
 import sys
-from flask import current_app
 from flask.ext import script
 from tendo import singleton
 from .. import app
@@ -20,7 +24,7 @@ class UpdateInfo(object):
         self.update = Update(
             board=self.board,
             start=self.processing_start,
-            used_threads=current_app.config.get('SCRAPER_THREADS_NUMBER')
+            used_threads=app.config['SCRAPER_THREADS_NUMBER']
         )
         db.session.add(self.update)
         db.session.commit()
@@ -61,6 +65,7 @@ class Command(script.Command):
     This command should be run periodically to download new threads, posts
     and images.
     """
+
     option_list = (
         script.Option(
             '--progress',
@@ -70,23 +75,21 @@ class Command(script.Command):
         ),
     )
 
-
     def run(self, progress):
         # Prevent multiple instances.
         me = singleton.SingleInstance()
-
         boards = Board.query.filter(Board.active==True).all()
 
         for board in boards:
-            update = UpdateInfo(board)
+            update_info = UpdateInfo(board)
             scraper = BoardScraper(board, progress=progress)
 
             try:
                 scraper.update()
 
             except Exception as e:
-                update.encoutered_error(e)
+                update_info.encoutered_error(e)
                 sys.stderr.write('%s\n' % e)
 
             finally:
-                update.end(scraper)
+                update_info.end(scraper)

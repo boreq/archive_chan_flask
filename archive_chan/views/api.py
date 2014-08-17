@@ -34,7 +34,7 @@ class ApiView(View):
     methods = ['GET']
 
     def handle_exception(self, exception):
-        """Extract exception parameters."""
+        """Converts exception to JSON response and status code."""
         response_data = {
             'error_code': exception.error_code,
             'message': str(exception),
@@ -53,13 +53,12 @@ class ApiView(View):
             else:
                 return self.http_method_not_allowed(request, *args, **kwargs)
 
-        # Handle the exceptions thorown on purpose.
+        # Handle the exceptions thrown on purpose.
         except ApiError as e:
             response_data, status_code = self.handle_exception(e)
 
         # Handle other exceptions.
         except Exception as e:
-            raise
             response_data, status_code = self.handle_exception(ApiError())
 
         return Response(json.dumps(response_data, indent=4),
@@ -179,7 +178,7 @@ class GalleryView(ApiView):
                 'post': image.post.number,
                 'extension': image.get_extension(),
                 'url': image.image_url,
-                'post_url': image.post.get_absolute_url()        
+                'post_url': image.post.get_absolute_url(),
             } for image in queryset]
         }
 

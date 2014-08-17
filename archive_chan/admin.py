@@ -1,3 +1,8 @@
+"""
+    Model views for flask-admin.
+"""
+
+
 from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
 from wtforms import PasswordField, SelectField
@@ -52,17 +57,17 @@ class TriggerView(ModelView):
         'event': SelectField,
         'post_type': SelectField,
     }
-    form_args = dict(
-        field=dict(
-            choices=models.Trigger.FIELD_CHOICES
-        ),
-        event=dict(
-            choices=models.Trigger.EVENT_CHOICES
-        ),
-        post_type=dict(
-            choices=models.Trigger.POST_TYPE_CHOICES
-        )
-    )
+    form_args = {
+        'field': {
+            'choices': models.Trigger.FIELD_CHOICES
+        },
+        'event': {
+            'choices': models.Trigger.EVENT_CHOICES
+        },
+        'post_type': {
+            'choices': models.Trigger.POST_TYPE_CHOICES
+        },
+    }
 
     def __init__(self, session, **kwargs):
         super(TriggerView, self).__init__(models.Trigger, session, **kwargs)
