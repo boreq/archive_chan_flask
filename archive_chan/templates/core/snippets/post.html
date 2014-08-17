@@ -53,7 +53,7 @@
                 {% endif %}
 
                 <li class="post-time">
-                    <time class="timeago" datetime="{{ post.time }}">{{ post.time }}</time>
+                    {{ post.time|datetimeformat }}
                 </li>
 
                 <li class="post-number">

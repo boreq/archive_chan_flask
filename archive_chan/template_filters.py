@@ -11,9 +11,9 @@ from . import app
 _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
 
 
-@app.template_filter('formatpost')
+@app.template_filter()
 @evalcontextfilter
-def format_post(eval_ctx, text):
+def formatpost(eval_ctx, text):
     """This filter formats a post comment before displaying it in the template."""
     text = str(escape(text))
 
@@ -45,7 +45,7 @@ def format_post(eval_ctx, text):
     return text
 
 
-@app.template_filter('nl2br')
+@app.template_filter()
 @evalcontextfilter
 def nl2br(eval_ctx, value):
     result = u'\n\n'.join(u'<p>%s</p>' % p.replace('\n', '<br>\n') \
@@ -53,3 +53,15 @@ def nl2br(eval_ctx, value):
     if eval_ctx.autoescape:
         result = Markup(result)
     return result
+
+
+@app.template_filter()
+def datetimeformat(datetime, timeago=True):
+    readable = datetime.strftime('%Y-%m-%d %H:%M:%S %z')
+    if not timeago:
+        return readable
+    iso_format = datetime.strftime('%Y-%m-%dT%H:%M:%S%z')
+    return Markup('<time class=timeago datetime="%s">%s</time>' % (
+        iso_format,
+        readable
+    ))

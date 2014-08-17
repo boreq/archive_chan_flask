@@ -26,10 +26,7 @@
 
                             <div class="thread-info">
                                 <div class="thread-info-time">
-                                    last 
-                                    <time class="timeago" datetime="{{ thread.last_reply }}">
-                                        {{ thread.last_reply }}
-                                    </time>
+                                    last {{ thread.last_reply|datetimeformat }}
                                 </div>
                                 <div class="thread-info-stats">
                                     <i class="fa fa-comment-o"></i> {{ thread.replies - 1 }}

@@ -14,6 +14,7 @@ from .database import db
 
 admin = Admin(app, name='Archive Chan')
 
+
 class CustomModelView(ModelView):
     def is_accessible(self):
         return current_user.is_authenticated()
