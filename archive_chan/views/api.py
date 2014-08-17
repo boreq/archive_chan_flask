@@ -99,7 +99,6 @@ class ApiView(View):
 
         # Handle other exceptions.
         except Exception as e:
-            raise
             response_data, status_code = self.handle_exception(ApiError())
 
         return Response(json.dumps(response_data, indent=4),
@@ -317,48 +316,38 @@ class AddTag(ApiView):
         }
 
 
-def ajax_remove_tag():
-    """View used to remove a tag related to a thread."""
-    response = {}
+class RemoveTag(ApiView):
+    methods = ['POST']
 
-    if current_user.is_authenticated():
-        try:
-            thread_number = int(request.form['thread'])
-            board_name = request.form['board']
-            tag = request.form['tag']
+    def post_api_response(self):
+        if not current_user.is_authenticated():
+            raise NotAuthorizedApiError
 
-            tagtothread = TagToThread.query.join(Thread, Board, Tag).filter(
-                Thread.number==thread_number, 
-                Board.name==board_name,
-                Tag.name==tag
-            ).one()
-            db.session.delete(tagtothread)
-            db.session.commit()
+        thread_number = int(request.form['thread'])
+        board_name = request.form['board']
+        tag = request.form['tag']
 
-            response = {
-                'removed': True
-            }
+        tagtothread = TagToThread.query.join(Thread, Board, Tag).filter(
+            Thread.number==thread_number, 
+            Board.name==board_name,
+            Tag.name==tag
+        ).one()
+        db.session.delete(tagtothread)
+        db.session.commit()
 
-        except:
-           response = {
-                'error': 'Error.'
-            }
-    else:
-        response = {
-            'error': 'Not authorized.'
+        return {
+            'removed': True,
+            'tag': tag,
         }
-
-    return Response(json.dumps(response), mimetype='application/json')
 
 
 bl.add_url_rule('/gallery/', view_func=Gallery.as_view('api_gallery'))
 bl.add_url_rule('/stats/', view_func=Stats.as_view('api_stats'))
 bl.add_url_rule('/status/', view_func=Status.as_view('api_status'))
 
-bl.add_url_rule('/thread/save/', view_func=SaveThread.as_view('save_thread'), methods=('POST',))
+bl.add_url_rule('/thread/save/', view_func=SaveThread.as_view('save_thread'))
 bl.add_url_rule('/get_parent_thread/', view_func=GetParentThread.as_view('get_parent_thread'))
 
 bl.add_url_rule('/tag/suggest/', view_func=SuggestTag.as_view('suggest_tag'))
 bl.add_url_rule('/tag/add/', view_func=AddTag.as_view('add_tag'))
-bl.add_url_rule('/tag/remove/', view_func=ajax_remove_tag, methods=('POST',))
-
+bl.add_url_rule('/tag/remove/', view_func=RemoveTag.as_view('remove_tag'))
