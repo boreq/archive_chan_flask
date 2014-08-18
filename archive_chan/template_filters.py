@@ -9,6 +9,9 @@ from . import app
 
 
 _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
+_post_link_re = re.compile(r'(?P<text>&gt;&gt;(?P<post_id>[0-9]+))')
+_quote_re = re.compile(r'^(&gt;.*)$', flags=re.MULTILINE)
+_code_re = re.compile(r'\[code\](.*?)\[\/code\]', flags=re.MULTILINE|re.DOTALL)
 
 
 @app.template_filter()
@@ -19,25 +22,23 @@ def formatpost(eval_ctx, text):
 
     # >>quote
     text = re.sub(
-        r'(?P<text>&gt;&gt;(?P<post_id>[0-9]+))',
+        _post_link_re,
         r'<a class="post-link" post_id="\g<post_id>">\g<text></a>',
         text
     )
 
     # >le meme arrows
     text = re.sub(
-        r'^(&gt;.*)$',
+        _quote_re,
         r'<span class="greentext">\1</span>',
-        text,
-        flags=re.MULTILINE
+        text
     )
 
     # [code]i++;[/code]
     text = re.sub(
-        r'\[code\](.*?)\[\/code\]',
+        _code_re,
         r'<pre><code>\1</code></pre>',
-        text,
-        flags=re.MULTILINE|re.DOTALL
+        text
     )
 
     if eval_ctx.autoescape:
