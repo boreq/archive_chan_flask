@@ -10,9 +10,9 @@ app.config.from_object('archive_chan.settings')
 app.config.from_envvar('ARCHIVE_CHAN_SETTINGS', True)
 
 
-# Check if the SECRET_KEY is changed.
-if not app.config['SECRET_KEY'] \
-    or (app.config['SECRET_KEY'] == 'dev_key' and not app.config['DEBUG']):
+# Check if the SECRET_KEY has been changed.
+if not (app.config['DEBUG'] or app.config['TESTING']) \
+    and app.config['SECRET_KEY'] in ['', 'dev_key']:
     raise Exception('Set your secret key.')
 
 
