@@ -91,7 +91,7 @@ class Thread(db.Model):
         db.Model.__init__(self, **kwargs)
 
     def post_deleted(self):
-        self.posts -= 1
+        self.replies -= 1
 
     def image_deleted(self):
         self.images -= 1

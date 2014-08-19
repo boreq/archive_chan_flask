@@ -44,7 +44,7 @@ def create_app(config=None, envvar='ARCHIVE_CHAN_SETTINGS'):
             toolbar = DebugToolbarExtension(app)
         except ImportError as e:
             import sys
-            sys.stderr.write('Flask Debug Toolbar was not loaded. Error: %s\n' % e)
+            sys.stderr.write('Flask Debug Toolbar was not loaded. You can install it with `pip install flask-debugtoolbar`.\nError: %s\n' % e)
 
     init_app(app)
 
