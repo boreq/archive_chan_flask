@@ -341,9 +341,9 @@ class RemoveTag(ApiView):
         }
 
 
-bl.add_url_rule('/gallery/', view_func=Gallery.as_view('api_gallery'))
-bl.add_url_rule('/stats/', view_func=Stats.as_view('api_stats'))
-bl.add_url_rule('/status/', view_func=Status.as_view('api_status'))
+bl.add_url_rule('/gallery/', view_func=Gallery.as_view('gallery'))
+bl.add_url_rule('/stats/', view_func=Stats.as_view('stats'))
+bl.add_url_rule('/status/', view_func=Status.as_view('status'))
 
 bl.add_url_rule('/thread/save/', view_func=SaveThread.as_view('save_thread'))
 bl.add_url_rule('/get_parent_thread/', view_func=GetParentThread.as_view('get_parent_thread'))

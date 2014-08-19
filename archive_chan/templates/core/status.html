@@ -4,7 +4,7 @@
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script>
         var info_data = {
-            api_url: '{{ url_for('api.api_status') }}'
+            api_url: '{{ url_for('api.status') }}'
         };
     </script>
     <script src="{{ url_for('static', filename='js/status.js') }}"></script>

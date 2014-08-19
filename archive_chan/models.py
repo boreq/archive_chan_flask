@@ -355,11 +355,6 @@ class Update(db.Model):
     downloaded_images = db.Column(db.Integer, nullable=False, default=0)
     downloaded_thumbnails = db.Column(db.Integer, nullable=False, default=0)
     downloaded_threads = db.Column(db.Integer, nullable=False, default=0)
-    
-    def __init__(self, board=None, start=None, used_threads=None):
-        self.board_id = board.id
-        self.start = start
-        self.used_threads = used_threads
         
     def get_status_display(self):
         return dict(self.STATUS_CHOICES)[self.status]

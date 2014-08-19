@@ -3,8 +3,34 @@ import json
 import os
 import tempfile
 import unittest
-from flask import Config
+from flask import url_for
 import archive_chan
+from archive_chan.database import db
+from archive_chan.lib.helpers import utc_now
+
+
+def add_model(model, **kwargs):
+    item = model(**kwargs)
+    db.session.add(item)
+    db.session.commit()
+    db.session.refresh(item)
+    return item
+
+    
+def add_board(**kwargs):
+    return add_model(archive_chan.models.Board, **kwargs)
+
+
+def add_thread(**kwargs):
+    return add_model(archive_chan.models.Thread, **kwargs)
+
+
+def add_post(**kwargs):
+    return add_model(archive_chan.models.Post, **kwargs)
+
+
+def add_update(**kwargs):
+    return add_model(archive_chan.models.Update, **kwargs)
 
 
 class BaseTestCase(unittest.TestCase):
@@ -14,7 +40,8 @@ class BaseTestCase(unittest.TestCase):
             'TESTING': True,
             'SQLALCHEMY_DATABASE_URI': 'sqlite:///' + self.db_path,
         }
-        self.app = archive_chan.create_app(config).test_client()
+        self.app = archive_chan.create_app(config)
+        self.client = self.app.test_client()
         archive_chan.database.init_db()
         self.set_up()
 
@@ -30,6 +57,10 @@ class BaseTestCase(unittest.TestCase):
     def tear_down(self):
         """Custom tear down here."""
         pass
+
+    def url_for(self, name, **kwargs):
+        with self.app.test_request_context():
+            return url_for(name, **kwargs)
 
 
 class SimpleFilterTest(BaseTestCase):
@@ -68,44 +99,43 @@ class SimpleFilterTest(BaseTestCase):
         self.assertEqual(modifier.get(), 'default')
 
 
-'''
 class SimpleSortTest(BaseTestCase):
-    def setUp(self):
+    def set_up(self):
         self.parameters = (
             ('default', ('Last reply', 'field', None)),
-            ('option', ('Creation date', 'other_field', {'annotate': 'field'})),
+            ('option', ('Creation date', 'other_field', None)),
         )
 
     def test_none(self):
-        modifier = modifiers.SimpleSort(
+        modifier = archive_chan.lib.modifiers.SimpleSort(
             self.parameters,
             None
         )
         self.assertEqual(modifier.get(), ('default', True))
 
     def test_default(self):
-        modifier = modifiers.SimpleSort(
+        modifier = archive_chan.lib.modifiers.SimpleSort(
             self.parameters,
             'default'
         )
         self.assertEqual(modifier.get(), ('default', False))
 
     def test_option(self):
-        modifier = modifiers.SimpleSort(
+        modifier = archive_chan.lib.modifiers.SimpleSort(
             self.parameters,
             'option'
         )
         self.assertEqual(modifier.get(), ('option', False))
 
     def test_option_reverse(self):
-        modifier = modifiers.SimpleSort(
+        modifier = archive_chan.lib.modifiers.SimpleSort(
             self.parameters,
             '-option'
         )
         self.assertEqual(modifier.get(), ('option', True))
 
     def test_wrong(self):
-        modifier = modifiers.SimpleSort(
+        modifier = archive_chan.lib.modifiers.SimpleSort(
             self.parameters,
             'wrong_value'
         )
@@ -113,94 +143,90 @@ class SimpleSortTest(BaseTestCase):
 
 
 class ViewsTest(BaseTestCase):
-    def setUp(self):
-        self.views = [
-            ('index', ()),
-            ('stats', ()),
-            ('gallery', ()),
-            ('search', ()),
-            ('status', ()),
-        ]
+    def check_list(self, blueprint_name, view_list):
+        for view in view_list:
+            url = self.url_for('%s.%s' % (blueprint_name, view[0]), **view[1])
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
 
-        self.client = Client()
-
-    def test_views(self):
-        """Check if views return status code 200. AJAX/API views are not tested here."""
-        def test_list(view_list):
-            for view in view_list:
-                response = self.client.get(reverse('archive_chan:%s' % view[0], args=view[1]))
-                self.assertEqual(response.status_code, 200)
-
-        # Empty.
-        test_list(self.views)
-
-        board = models.Board.objects.create(name='a')
-
-        self.views.extend([
-            ('board', (board.name)),
-            ('board_stats', (board.name)),
-            ('board_gallery', (board.name)),
-            ('board_search', (board.name)),
-        ])
-
-        # Board only.
-        test_list(self.views)
-
-        thread = models.Thread.objects.create(board=board, number=1, first_reply=now, last_reply=now)
-
-        self.views.extend([
-            ('thread', (board.name, thread.number)),
-            ('thread_stats', (board.name, thread.number)),
-            ('thread_gallery', (board.name, thread.number)),
-            ('thread_search', (board.name, thread.number)),
-        ])
-
-        # Board and empty thread.
-        test_list(self.views)
-
-        post = models.Post.objects.create(thread=thread, number=1, time=now)
-
-        # Board and thread with one post.
-        test_list(self.views)
-
-
-class ApiTest(BaseTestCase):
-    def setUp(self):
-        self.client = Client()
-
-        self.board_a = models.Board.objects.create(name='a')
-        self.board_b = models.Board.objects.create(name='b')
-
-    def get_api(self, url):
-        response = self.client.get(url)
-        response_data = json.loads(response.content.decode())
+    def get_json(self, url, method='GET'):
+        response = self.client.get(url, method=method)
+        response_data = json.loads(response.data.decode())
         return (response, response_data)
 
-    def test_status(self):
+    def test_core(self):
+        """Check if core views return status code 200."""
+
+        views = [
+            ('index', {}),
+            ('stats', {}),
+            ('gallery', {}),
+            ('status', {}),
+        ]
+
+        # Empty.
+        self.check_list('core', views)
+
+        # Board only.
+        board = add_board(name='board')
+        params = {'board': board.name}
+        views.extend([
+            ('board', params),
+            ('board_stats', params),
+            ('board_gallery', params),
+        ])
+        self.check_list('core', views)
+
+        # Board and empty thread.
+        thread = add_thread(board=board, number=1, first_reply=utc_now(), last_reply=utc_now())
+        params = {'board': board.name, 'thread': thread.number}
+        views.extend([
+            ('thread', params),
+            ('thread_stats', params),
+            ('thread_gallery', params),
+        ])
+        self.check_list('core', views)
+
+    def test_api_status(self):
+        url = self.url_for('api.status')
+        board1 = add_board(name='board1')
+        board2 = add_board(name='board2')
+
         # Check for empty db table.
-        response, response_data = self.get_api(reverse('archive_chan:api_status'))
+        response, response_data  = self.get_json(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual('last_updates' in response_data and len(response_data['last_updates']) == 0, True)
-        self.assertEqual('chart_data' in response_data and len(response_data['chart_data']['rows']) == 0, True)
+        self.assertEqual('last_updates' in response_data, True)
+        self.assertEqual(len(response_data['last_updates']) == 0, True)
+        self.assertEqual('chart_data' in response_data, True)
+        self.assertEqual(len(response_data['chart_data']['rows']) == 0, True)
 
         # Check for one ongoing update.
-        update1 = models.Update.objects.create(board=self.board_a, start=now, end=now, status=models.Update.CURRENT, used_threads = 1)
+        update1 = add_update(board=board1, start=utc_now(), end=utc_now(),
+                             status=archive_chan.models.Update.CURRENT,
+                             used_threads=1)
 
-        response, response_data = self.get_api(reverse('archive_chan:api_status'))
+        response, response_data = self.get_json(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual('last_updates' in response_data and len(response_data['last_updates']) == 1, True)
-        self.assertEqual('chart_data' in response_data and len(response_data['chart_data']['rows']) == 0, True)
+        self.assertEqual('last_updates' in response_data, True)
+        self.assertEqual(len(response_data['last_updates']) == 1, True)
+        self.assertEqual('chart_data' in response_data, True)
+        self.assertEqual(len(response_data['chart_data']['rows']) == 0, True)
 
         # Check for multiple different updates.
-        update2 = models.Update.objects.create(board=self.board_a, start=now, end=now, status=models.Update.COMPLETED, used_threads = 1)
-        update3 = models.Update.objects.create(board=self.board_b, start=now, end=now, status=models.Update.FAILED, used_threads = 1)
+        update2 = add_update(board=board1, start=utc_now(), end=utc_now(),
+                             status=archive_chan.models.Update.COMPLETED,
+                             used_threads=1)
+        update3 = add_update(board=board2, start=utc_now(), end=utc_now(),
+                             status=archive_chan.models.Update.FAILED,
+                             used_threads=1)
 
-        response, response_data = self.get_api(reverse('archive_chan:api_status'))
+        response, response_data = self.get_json(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual('last_updates' in response_data and len(response_data['last_updates']) == 2, True)
-        self.assertEqual('chart_data' in response_data and len(response_data['chart_data']['rows']) == 1, True)
+        self.assertEqual('last_updates' in response_data, True)
+        self.assertEqual(len(response_data['last_updates']) == 2, True)
+        self.assertEqual('chart_data' in response_data, True)
+        self.assertEqual(len(response_data['chart_data']['rows']) == 1, True)
 
-'''
 
 if __name__ == '__main__':
     unittest.main()

@@ -6,7 +6,7 @@
         var info_data = {
             {% if board_name %}board: '{{ board_name }}',{% endif %}
             {% if thread_number %}thread: '{{ thread_number }}',{% endif %}
-            api_url: '{{ url_for('api.api_stats') }}'
+            api_url: '{{ url_for('api.stats') }}'
         };
     </script>
     <script src="{{ url_for('static', filename='js/stats.js') }}"></script>
