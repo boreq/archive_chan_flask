@@ -53,6 +53,7 @@ def init_app(app):
     from .auth import login_manager, bcrypt
 
     db.init_app(app)
+    db.app = app
     admin.init_app(app)
     login_manager.init_app(app)
     bcrypt.init_app(app)

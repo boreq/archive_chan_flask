@@ -1,65 +1,74 @@
 import datetime
 import json
+import os
+import tempfile
+import unittest
+from flask import Config
 import archive_chan
+
 
 class BaseTestCase(unittest.TestCase):
     def setUp(self):
-        archive_chan.app.config['TESTING'] = True
-        self.app = archive_chan.app.test_client()
-
-
-class DatabaseTestCase(BaseTestCase):
-    def setUp(self):
-        super(DatabaseTestCase, self).setUp()
         self.db_fd, self.db_path = tempfile.mkstemp()
-        print(self.db_path)
-        archive_chan.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + self.db_path
+        config = {
+            'TESTING': True,
+            'SQLALCHEMY_DATABASE_URI': 'sqlite:///' + self.db_path
+        }
+        self.app = archive_chan.create_app(config).test_client()
         archive_chan.database.init_db()
+        self.set_up()
+
+    def set_up(self):
+        """Custom set up here."""
+        pass
 
     def tearDown(self):
+        self.tear_down()
         os.close(self.db_fd)
         os.unlink(self.db_path)
 
+    def tear_down(self):
+        """Custom tear down here."""
+        pass
 
-if __name__ == '__main__':
-    unittest.main()
-'''
+
 class SimpleFilterTest(BaseTestCase):
-    def setUp(self):
+    def set_up(self):
         self.parameters = (
             ('default', ('Default', None)),
             ('option', ('Option', {'field': True})),
         )
 
     def test_none(self):
-        modifier = modifiers.SimpleFilter(
+        modifier = archive_chan.lib.modifiers.SimpleFilter(
             self.parameters,
             None
         )
         self.assertEqual(modifier.get(), 'default')
 
     def test_default(self):
-        modifier = modifiers.SimpleFilter(
+        modifier = archive_chan.lib.modifiers.SimpleFilter(
             self.parameters,
             'default'
         )
         self.assertEqual(modifier.get(), 'default')
 
     def test_option(self):
-        modifier = modifiers.SimpleFilter(
+        modifier = archive_chan.lib.modifiers.SimpleFilter(
             self.parameters,
             'option'
         )
         self.assertEqual(modifier.get(), 'option')
 
     def test_wrong(self):
-        modifier = modifiers.SimpleFilter(
+        modifier = archive_chan.lib.modifiers.SimpleFilter(
             self.parameters,
             'wrong_value'
         )
         self.assertEqual(modifier.get(), 'default')
 
 
+'''
 class SimpleSortTest(BaseTestCase):
     def setUp(self):
         self.parameters = (
@@ -192,3 +201,6 @@ class ApiTest(BaseTestCase):
         self.assertEqual('chart_data' in response_data and len(response_data['chart_data']['rows']) == 1, True)
 
 '''
+
+if __name__ == '__main__':
+    unittest.main()
