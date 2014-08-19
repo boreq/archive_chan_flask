@@ -14,13 +14,10 @@ def create_app(config=None):
     if config is not None:
         app.config.update(config)
 
-    # Check if the SECRET_KEY has been changed.
-    if not (app.config['DEBUG'] or app.config['TESTING']) \
-        and app.config['SECRET_KEY'] in ['', 'dev_key']:
-        raise Exception('Set your secret key.')
-
-    # Init cache.
-    if not app.config['DEBUG']:
+    # Deployment version.
+    if not (app.config['DEBUG'] or app.config['TESTING']):
+        if app.config['SECRET_KEY'] in ['', 'dev_key']:
+            raise Exception('Set your secret key.')
         cache = MemcachedCache(app.config['MEMCACHED_URL'])
     else:
         cache = BaseCache()

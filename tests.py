@@ -12,7 +12,7 @@ class BaseTestCase(unittest.TestCase):
         self.db_fd, self.db_path = tempfile.mkstemp()
         config = {
             'TESTING': True,
-            'SQLALCHEMY_DATABASE_URI': 'sqlite:///' + self.db_path
+            'SQLALCHEMY_DATABASE_URI': 'sqlite:///' + self.db_path,
         }
         self.app = archive_chan.create_app(config).test_client()
         archive_chan.database.init_db()
