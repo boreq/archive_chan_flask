@@ -311,7 +311,7 @@ class Trigger(db.Model):
     tag_id = db.Column(
         'tag_thread_id',
         db.Integer,
-        db.ForeignKey(Tag.id, deferrable=True, initially='DEFFERED'),
+        db.ForeignKey(Tag.id, deferrable=True, initially='DEFERRED'),
         nullable=True
     )
 
