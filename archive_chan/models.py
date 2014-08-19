@@ -1,9 +1,8 @@
 import os
-from flask import url_for
+from flask import url_for, current_app
 from flask.ext.login import UserMixin
 from werkzeug.utils import secure_filename
 from sqlalchemy.ext.associationproxy import association_proxy
-from . import app
 from .database import db
 from .lib.helpers import utc_now
 
@@ -185,29 +184,29 @@ class Image(db.Model):
 
     @property
     def image_url(self):
-        return url_for('media', filename=self.image)
+        return url_for('files.media', filename=self.image)
 
     @property
     def thumbnail_url(self):
-        return url_for('media', filename=self.thumbnail)
+        return url_for('files.media', filename=self.thumbnail)
 
     def save_image(self, file_storage, filename):
         filename = secure_filename(filename)
         path = os.path.join('post_images', filename)
         self.image = path
-        path = os.path.join(app.config['MEDIA_ROOT'], path)
+        path = os.path.join(current_app.config['MEDIA_ROOT'], path)
         file_storage.save(path)
 
     def save_thumbnail(self, file_storage, filename):
         filename = secure_filename(filename)
         path = os.path.join('post_thumbnails', filename)
         self.thumbnail = path
-        path = os.path.join(app.config['MEDIA_ROOT'], path)
+        path = os.path.join(current_app.config['MEDIA_ROOT'], path)
         file_storage.save(path)
 
     def delete_files(self):
         for filename in [self.image, self.thumbnail]:
-            path = os.path.join(app.config['MEDIA_ROOT'], filename)
+            path = os.path.join(current_app.config['MEDIA_ROOT'], filename)
             try:
                 os.remove(path)
             except FileNotFoundError:

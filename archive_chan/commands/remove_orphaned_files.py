@@ -1,7 +1,7 @@
 import datetime
 from os import path, listdir, remove
+from flask import current_app
 from flask.ext import script
-from .. import app
 from ..models import Image
 
 class Command(script.Command):
@@ -52,7 +52,7 @@ class Command(script.Command):
         """Search for orphaned files and remove them."""
         files_deleted = 0
 
-        dir_path = path.join(app.config['MEDIA_ROOT'], directory)
+        dir_path = path.join(current_app.config['MEDIA_ROOT'], directory)
 
         if path.isdir(dir_path):
             for (index, filename) in enumerate(listdir(dir_path)):

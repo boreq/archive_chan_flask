@@ -6,18 +6,21 @@
 
 import copy
 import urllib
+from flask import Blueprint
 from flask.ext.login import current_user
-from . import app
 from .lib.helpers import utc_now
 
 
-@app.context_processor
+bl = Blueprint('context_processors', __name__)
+
+
+@bl.app_context_processor
 def now():
     """Injects current time."""
     return dict(now=utc_now())
 
 
-@app.context_processor
+@bl.app_context_processor
 def user():
     """Injects the object used by flask-login extension to represent
     the current user.
@@ -25,7 +28,7 @@ def user():
     return dict(user=current_user)
 
 
-@app.context_processor
+@bl.app_context_processor
 def board_url_query():
     """Injects method used to build the query part of the board url."""
     def url_query(parameters, name=None, value=None):

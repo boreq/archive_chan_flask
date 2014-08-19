@@ -1,8 +1,8 @@
 import datetime
 import sys
+from flask import current_app
 from flask.ext import script
 from tendo import singleton
-from .. import app
 from ..database import db
 from ..models import Board, Update
 from ..lib.helpers import utc_now
@@ -19,7 +19,7 @@ class UpdateInfo(object):
         self.update = Update(
             board=self.board,
             start=self.processing_start,
-            used_threads=app.config['SCRAPER_THREADS_NUMBER']
+            used_threads=current_app.config['SCRAPER_THREADS_NUMBER']
         )
         db.session.add(self.update)
         db.session.commit()

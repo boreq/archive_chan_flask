@@ -7,10 +7,10 @@ import sys
 import threading
 import time
 import pytz
+from flask import current_app
 from sqlalchemy.orm.attributes import instance_state
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import FileStorage
-from .. import app
 from ..database import db
 from ..models import Board, Thread, Post, Image, Trigger, TagToThread, Update, Tag
 
@@ -242,7 +242,7 @@ class Queuer:
         """
         wait_start = datetime.datetime.now()
         with self.api_wait_lock:
-            self.wait(app.config.get('API_WAIT'), self.last_api_request)
+            self.wait(current_app.config.get('API_WAIT'), self.last_api_request)
             self.last_api_request = datetime.datetime.now()
         self.total_wait_time_with_lock += datetime.datetime.now() - wait_start
 
@@ -252,7 +252,7 @@ class Queuer:
         """
         wait_start = datetime.datetime.now()
         with self.file_wait_lock:
-            self.wait(app.config.get('FILE_WAIT'), self.last_file_request)
+            self.wait(current_app.config.get('FILE_WAIT'), self.last_file_request)
             self.last_file_request = datetime.datetime.now()
         self.total_wait_time_with_lock += datetime.datetime.now() - wait_start
 
@@ -290,7 +290,7 @@ class Stats:
     def add_to_record(self, record, total_time, **kwargs):
         """Save the statistics in the database."""
         used_threads = kwargs.get('used_threads',
-                                  app.config.get('SCRAPER_THREADS_NUMBER'))
+                                  current_app.config.get('SCRAPER_THREADS_NUMBER'))
         wait_time = self.get('total_wait_time_with_lock') \
                         .total_seconds() / used_threads
         download_time = self.get('total_download_time') \
@@ -314,12 +314,12 @@ class Stats:
             wait_percent = round(
                 self.get('total_wait_time_with_lock').total_seconds() \
                 / total_time.total_seconds() * 100 \
-                / app.config.get('SCRAPER_THREADS_NUMBER')
+                / current_app.config.get('SCRAPER_THREADS_NUMBER')
             )
             downloading_percent = round(
                 self.get('total_download_time').total_seconds() \
                 / total_time.total_seconds() * 100 \
-                / app.config.get('SCRAPER_THREADS_NUMBER')
+                / current_app.config.get('SCRAPER_THREADS_NUMBER')
             )
 
         except:
@@ -360,7 +360,7 @@ class Scraper(object):
     def get_url(self, url):
         """Download data from an url."""
         download_start = datetime.datetime.now()
-        data = requests.get(url, timeout=app.config.get('CONNECTION_TIMEOUT'))
+        data = requests.get(url, timeout=current_app.config.get('CONNECTION_TIMEOUT'))
         self.stats.add('total_download_time',
                         datetime.datetime.now() - download_start)
         return data
@@ -639,7 +639,7 @@ class BoardScraper(Scraper):
 
         try:
             # Launch the thread.
-            with app.test_request_context():
+            with current_app.test_request_context():
                 thread_scraper = ThreadScraperThread(self.board, thread_info, self,
                     queuer=self.queuer,
                     triggers=self.triggers,
@@ -680,7 +680,7 @@ class BoardScraper(Scraper):
             raise ScrapError('Unable to download or parse the catalog data. Board update stopped.')
 
         # Launch the initial threads. Next ones will be launched automatically.
-        for i in range(0, app.config.get('SCRAPER_THREADS_NUMBER')):
+        for i in range(0, current_app.config.get('SCRAPER_THREADS_NUMBER')):
             self.launch_thread()
 
         # Wait for all threads to finish.

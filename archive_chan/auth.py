@@ -9,12 +9,11 @@
 
 from flask.ext.bcrypt import Bcrypt
 from flask.ext.login import LoginManager, login_user, logout_user
-from . import app
 from .models import User
 
 
-login_manager = LoginManager(app, add_context_processor=False)
-bcrypt = Bcrypt(app)
+login_manager = LoginManager(add_context_processor=False)
+bcrypt = Bcrypt()
 
 
 @login_manager.user_loader

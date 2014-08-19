@@ -5,7 +5,10 @@
 
 import re
 from jinja2 import Markup, escape, evalcontextfilter
-from . import app
+from flask import Blueprint
+
+
+bl = Blueprint('template_filters', __name__)
 
 
 _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
@@ -14,7 +17,7 @@ _quote_re = re.compile(r'^(&gt;.*)$', flags=re.MULTILINE)
 _code_re = re.compile(r'\[code\](.*?)\[\/code\]', flags=re.MULTILINE|re.DOTALL)
 
 
-@app.template_filter()
+@bl.app_template_filter()
 @evalcontextfilter
 def formatpost(eval_ctx, text):
     """Formats a comment before displaying it in the template."""
@@ -46,7 +49,7 @@ def formatpost(eval_ctx, text):
     return text
 
 
-@app.template_filter()
+@bl.app_template_filter()
 @evalcontextfilter
 def nl2br(eval_ctx, value):
     """Replaces new lines with <br> tags."""
@@ -57,7 +60,7 @@ def nl2br(eval_ctx, value):
     return result
 
 
-@app.template_filter()
+@bl.app_template_filter()
 def datetimeformat(datetime, timeago=True):
     """Converts datetime to <time> tag or readable string."""
     readable = datetime.strftime('%Y-%m-%d %H:%M:%S %z')

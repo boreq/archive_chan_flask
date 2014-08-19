@@ -3,34 +3,42 @@
 """
 
 
+from flask import current_app
 from flask.ext.admin import Admin
-from flask.ext.admin.contrib.sqla import ModelView
+from flask.ext.admin.contrib import sqla
 from flask.ext.login import current_user
 from wtforms import PasswordField, SelectField
-from . import models, app
+from . import models
 from .auth import generate_password_hash
 from .database import db
 
 
-admin = Admin(app, name='Archive Chan')
+admin = Admin(name='Archive Chan')
 
 
-class CustomModelView(ModelView):
+class ModelView(sqla.ModelView):
     def is_accessible(self):
         return current_user.is_authenticated()
 
     def __init__(self, session, **kwargs):
-        super(CustomModelView, self).__init__(self.model, session, **kwargs)
+        super(ModelView, self).__init__(self.model, session, **kwargs)
 
 
-class BoardView(CustomModelView):
+class DebugModelView(ModelView):
+    def is_accessible(self):
+        if not current_app.config['DEBUG']:
+            return False
+        return super(DebugModelView, self).is_accessible()
+
+
+class BoardView(ModelView):
     model = models.Board
     form_create_rules = ('active', 'store_threads_for', 'replies_threshold')
     column_list = ('name', 'active', 'store_threads_for', 'replies_threshold')
     form_excluded_columns = ('updates', 'threads',)
 
 
-class UserView(CustomModelView):
+class UserView(ModelView):
     model = models.User
     form_excluded_columns = ('password',)
     column_list = ('username',)
@@ -48,12 +56,12 @@ class UserView(CustomModelView):
             model.password = generate_password_hash(form.new_password1.data)
 
 
-class TagView(CustomModelView):
+class TagView(ModelView):
     model = models.Tag
     form_excluded_columns = ('tagtothread',)
 
 
-class TriggerView(CustomModelView):
+class TriggerView(ModelView):
     model = models.Trigger
     form_excluded_columns = ('tagtothread',)
     form_overrides = {
@@ -74,7 +82,7 @@ class TriggerView(CustomModelView):
     }
 
 
-class ThreadView(CustomModelView):
+class ThreadView(DebugModelView):
     model = models.Thread
 
 
@@ -82,6 +90,4 @@ admin.add_view(BoardView(db.session))
 admin.add_view(UserView(db.session))
 admin.add_view(TagView(db.session))
 admin.add_view(TriggerView(db.session))
-
-if app.config['DEBUG']:
-    admin.add_view(ThreadView(db.session))
+admin.add_view(ThreadView(db.session))

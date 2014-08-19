@@ -1,5 +1,5 @@
 import datetime
-from .. import app
+from flask import current_app
 from ..models import Board, Thread, Post, Image
 from ..database import db
 
@@ -18,7 +18,7 @@ def get_stats(board_name=None, thread_number=None):
     # for a chart and recent posts. Prevents displaying unreadable amount
     # of data. Ensures correct results when calculating posts per hour
     # (old saved threads which do not get deleted would alter the results).
-    timespan = app.config['RECENT_POSTS_AGE']
+    timespan = current_app.config['RECENT_POSTS_AGE']
 
     # Select all data in the thread mode.
     if board_name and thread_number:

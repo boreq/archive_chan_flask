@@ -1,5 +1,5 @@
 from flask import Blueprint, request, render_template, flash, redirect, url_for
-from .. import app, auth
+from .. import auth
 
 
 bl = Blueprint('auth', __name__)
