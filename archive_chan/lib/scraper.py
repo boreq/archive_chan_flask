@@ -11,8 +11,12 @@ from flask import current_app
 from sqlalchemy.orm.attributes import instance_state
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import FileStorage
+from .. import create_app
 from ..database import db
 from ..models import Board, Thread, Post, Image, Trigger, TagToThread, Update, Tag
+
+
+app = create_app()
 
 
 class ScrapError(Exception):
@@ -567,8 +571,9 @@ class ThreadScraperThread(ThreadScraper, threading.Thread):
 
     def run(self):
         try:
-            self.on_task_start()
-            self.handle_thread()
+            with app.test_request_context():
+                self.on_task_start()
+                self.handle_thread()
 
         except Exception as e:
             sys.stderr.write('%s\n' % e)
@@ -639,7 +644,7 @@ class BoardScraper(Scraper):
 
         try:
             # Launch the thread.
-            with current_app.test_request_context():
+            with app.test_request_context():
                 thread_scraper = ThreadScraperThread(self.board, thread_info, self,
                     queuer=self.queuer,
                     triggers=self.triggers,

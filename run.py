@@ -1,7 +1,8 @@
 from flask.ext.script import Manager
-from archive_chan import app
+from archive_chan import create_app
 
 
+app = create_app()
 manager = Manager(app)
 
 
