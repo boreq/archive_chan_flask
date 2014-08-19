@@ -1,6 +1,7 @@
 import datetime
 import html
 import io
+from queue import Queue
 import re
 import requests
 import sys
@@ -90,15 +91,17 @@ class PostData:
 
 
 class Triggers:
-    """Class handling triggers."""
+    """Class handling triggers. It analyzes the post, prepares the actions and
+    executes them.
+    """
 
     def __init__(self):
-        # Prepare trigger list.
+        # Prepare trigger list, there is no need to get it every time.
         self.triggers = Trigger.query.outerjoin(Tag).filter(Trigger.active==True).all()
 
     def check_post_type(self, trigger, thread, post_data):
-        """True if the type of the post (master - first post, sub - reply)
-        is correct, false otherwise.
+        """True if the type of the post is correct, false otherwise.
+        (master - first post, sub - reply)
         """
         # Sub post and we are looking for the master.
         if post_data.number != thread.number and trigger.post_type == 'master':
@@ -263,7 +266,7 @@ class Queuer:
 
 class Stats:
     """Class storing the statistics. Perfomed tasks are purely informational
-    are not not a part of any other mechanic.
+    are not a part of any other mechanic.
     """
 
     def __init__(self):
@@ -282,17 +285,19 @@ class Stats:
         self.lock = threading.Lock()
 
     def add(self, name, value):
-        """Add a value to the specified statistic."""
+        """Add a value to a specified statistic."""
         with self.lock:
             self.parameters[name] += value
 
     def get(self, name):
-        """Get a value of the specified statistic."""
+        """Get a value of a specified statistic."""
         with self.lock:
             return self.parameters[name]
 
     def add_to_record(self, record, total_time, **kwargs):
-        """Save the statistics in the database."""
+        """Set the values of the models.Update object to those present in this 
+        class.
+        """
         used_threads = kwargs.get('used_threads',
                                   current_app.config.get('SCRAPER_THREADS_NUMBER'))
         wait_time = self.get('total_wait_time_with_lock') \
@@ -313,6 +318,8 @@ class Stats:
     def get_text(self, total_time, **kwargs):
         """Get the text for printing. Total processing time must be provided
         externally.
+
+        total_time: timedelta object
         """
         try:
             wait_percent = round(
@@ -353,18 +360,29 @@ class Scraper(object):
     """Base class for the scrapers."""
 
     def __init__(self, board, **kwargs):
-        """Board is a database object, not a board name.
-        Accepted kwargs: bool progress, Queuer queuer
+        """Objects passed as **kwargs are created in the master BoardScraper
+        and passed to created scrapers in order to synchronise actions like API
+        access. The new instance of the object which can be passed as kwarg
+        will be created if not provided so the initialization of those
+        parameters can be skipped in the master class.
+
+        board: Board object representing the board scrapper by this object
+
+        **kwargs:
+        progress: bool value, indicates if the progress should be displayed.
+        queuer: Queuer object
+        triggers: Triggers object
         """
         self.board = board
         self.stats = Stats()
         self.queuer = kwargs.get('queuer', Queuer())
+        self.triggers = kwargs.get('triggers', Triggers())
         self.show_progress = kwargs.get('progress', False)
         
     def get_url(self, url):
         """Download data from an url."""
         download_start = datetime.datetime.now()
-        data = requests.get(url, timeout=current_app.config.get('CONNECTION_TIMEOUT'))
+        data = requests.get(url, timeout=current_app.config['CONNECTION_TIMEOUT'])
         self.stats.add('total_download_time',
                         datetime.datetime.now() - download_start)
         return data
@@ -377,16 +395,12 @@ class ThreadScraper(Scraper):
         """Accepted kwargs: Triggers triggers + base class kwargs"""
         super(ThreadScraper, self).__init__(board, **kwargs)
         self.thread_info = thread_info
-        self.triggers = kwargs.get('triggers', Triggers())
         self.modified = False
 
     def get_image(self, filename, extension):
         """Download an image."""
-        url = 'https://i.4cdn.org/%s/%s%s' % (
-            self.board.name,
-            filename,
-            extension
-        )
+        url = 'https://i.4cdn.org/%s/%s%s' % (self.board.name, filename,
+                                              extension)
         self.queuer.file_wait()
         self.stats.add('downloaded_images', 1)
         return self.get_url(url).content
@@ -400,10 +414,8 @@ class ThreadScraper(Scraper):
 
     def get_thread_json(self, thread_number):
         """Get the thread data from the official API."""
-        url = 'https://a.4cdn.org/%s/thread/%s.json' % (
-            self.board.name,
-            thread_number
-        )
+        url = 'https://a.4cdn.org/%s/thread/%s.json' % (self.board.name,
+                                                        thread_number)
         self.queuer.api_wait()
         self.stats.add('downloaded_threads', 1)
         return self.get_url(url).json()
@@ -414,21 +426,21 @@ class ThreadScraper(Scraper):
 
     def should_be_updated(self, thread):
         """Determine if the thread should be updated."""
-        # Should the thread be updated? Check only if there is any data about
-        # the thread (the download of the first post was successful)
+        # Check only if there are other posts in the thread otherwise it
+        # certainly has to be updated. Check last_reply_time before counting
+        # the posts to avoid querying the database if possible.
         if not thread.last_reply_time() is None and thread.posts.count() > 0:
-            # It has to have newer replies or different number of replies.
+            # Thread has to have new replies or different number of replies.
             # Note: use count_replies because 4chan does not count the first
             # post as a reply.
             if (self.thread_info.last_reply_time <= thread.last_reply_time()
                 and self.thread_info.replies == thread.count_replies()):
                 return False
-
         return True
 
     def get_last_post_number(self, thread):
-        """Determine the last post's number or pick an imaginary one.
-        Only posts with a number above this one will be added to the database.
+        """Get the last post's number or pick an imaginary one. Only posts with
+        a higher number will be added to the database.
         """
         last_post = thread.posts.order_by(Post.number.desc()).first()
         if last_post is not None:
@@ -449,7 +461,6 @@ class ThreadScraper(Scraper):
                 )
                 filename_image = '%s%s' % (post_data.filename, post_data.extension)
                 filename_thumbnail = '%s%s' % (post_data.filename, '.jpg')
-
             except:
                 raise ScrapError('Image download failed. Stopping at this post.')
 
@@ -484,7 +495,8 @@ class ThreadScraper(Scraper):
 
     def delete_post(self, post):
         # SQL Alchemy's ORM events can not modify related objects and it is not
-        # possible to create a single trigger for all supported databases.
+        # possible to create a single trigger for all supported databases. The
+        # denormalized number of posts must be adjusted here manually.
         post.thread.post_deleted()
         if post.image is not None:
             post.thread.image_deleted()
@@ -554,144 +566,127 @@ class ThreadScraper(Scraper):
             self.modified = True
 
 
-class ThreadScraperThread(ThreadScraper, threading.Thread):
-    """This is simply a ThreadScraper which is supposed to run as a thread."""
+class ThreadScraperWorker(Scraper, threading.Thread):
+    """Worker which processes threads. While running it gets the ThreadInfo
+    objects from the queue and creates the ThreadScraper to processes them.
+    It inherits from scraper because it must hold similar properties like
+    Triggers or Queuer to pass them to created ThreadScraper objects.
+    """
 
-    def __init__(self, board, thread_info, board_scraper, **kwargs):
-        super().__init__(board, thread_info, **kwargs)
+    def __init__(self, board, board_scraper, queue, **kwargs):
+        super().__init__(board, **kwargs)
         threading.Thread.__init__(self)
         self.board_scraper = board_scraper
+        self.queue = queue
 
     def on_task_start(self):
         db.session()
 
     def on_task_end(self):
         db.session.remove()
-        self.board_scraper.on_thread_scraper_done(self)
+
+    def get_thread_scraper(self, thread_info):
+        """ThreadScraper factory."""
+        return ThreadScraper(self.board, thread_info, queuer=self.queuer,
+                             triggers=self.triggers, progress=self.show_progress)
 
     def run(self):
-        try:
-            with app.test_request_context():
-                self.on_task_start()
-                self.handle_thread()
+        """Main method which gets the items from the queue and processes them."""
+        while True:
+            thread_info = self.queue.get()
+            try:
+                with app.test_request_context():
+                    self.on_task_start()
+                    thread_scraper = self.get_thread_scraper(thread_info)
+                    try:
+                        thread_scraper.handle_thread()
+                    finally:
+                        self.board_scraper.on_thread_scraper_done(thread_scraper)
 
-        except Exception as e:
-            sys.stderr.write('%s\n' % e)
+            except Exception as e:
+                sys.stderr.write('%s\n' % e)
 
-        finally:
-            self.on_task_end()
+            finally:
+                self.on_task_end()
+                self.queue.task_done()
 
 
 class BoardScraper(Scraper):
-    """Class which launches and coordinates ThreadScraperThread classes."""
-
-    def __init__(self, board, **kwargs):
-        super(BoardScraper, self).__init__(board, **kwargs)
-        self.triggers = Triggers()
-        self.thread_gen = None
-        self.running_threads = []
-        self.running_threads_lock = threading.Lock()
+    """Main class which launches workers scrapping threads and assings tasks
+    to them. It downloads the catalog, starts the workers and populates
+    the queue with the data about the threads which need to be scrapped. After
+    that it waits for all workers to finish processing the threads.
+    """
 
     def get_catalog_json(self):
         """Get the catalog data from the official API."""
-        url = 'https://a.4cdn.org/%s/catalog.json' % (self.board.name)
+        url = 'https://a.4cdn.org/%s/catalog.json' % self.board.name
         self.queuer.api_wait()
         return self.get_url(url).json()
 
     def on_thread_scraper_done(self, thread_scraper):
-        """Called by a child thread after it finishes working."""
+        """Called by a ThreadScraperWorker after a ThreadScraper finishes its
+        work. This is used only to merge the stats.
+        """
         try:
-            # Merge the stats from the child thread.
             self.stats.merge(thread_scraper.stats)
+            self.stats.add('processed_threads', 1)
         
         except Exception as e:
             sys.stderr.write('%s\n' % e)
 
-        finally:
-            # Launch a new thread in place of the one that just finished.
-            self.launch_thread()
-
-            # Remove the thread from the list of running threads.
-            self.remove_running(thread_scraper.get_thread_number())
-
-    def add_running(self, thread_number):
-        """Add a thread to the list of the running threads."""
-        with self.running_threads_lock:
-            self.running_threads.append(thread_number)
-
-    def remove_running(self, thread_number):
-        """Remove a thread from the list of running threads."""
-        with self.running_threads_lock:
-            if thread_number in self.running_threads:
-                self.running_threads.remove(thread_number)
-
-    def launch_thread(self):
-        """Launch a new ThreadScraperThread."""
-        self.stats.add('processed_threads', 1)
-
-        # Get a new thread from the generator.
-        thread_data = self.get_thread()
-        if thread_data is None:
-            return
-
-        # Prepare thread info class based on returned JSON.
-        thread_info = ThreadInfo(thread_data)
-
-        # Add a new thread to the list of all running threads.
-        self.add_running(thread_info.number)
-
-        try:
-            # Launch the thread.
-            with app.test_request_context():
-                thread_scraper = ThreadScraperThread(self.board, thread_info, self,
-                    queuer=self.queuer,
-                    triggers=self.triggers,
-                    progress=self.show_progress
-                )
-                thread_scraper.daemon = True
-                thread_scraper.start()
-
-        except Exception as e:
-            # Remove the thread from the list of all running threads.
-            self.remove_running(thread_info.number)
-            sys.stderr.write('%s\n' % e)
-
-    def get_thread(self):
-        """Get the next thread."""
-        if self.thread_gen is None:
-            self.thread_gen = self.thread_generator()
-
-        try:
-            return next(self.thread_gen)
-
-        except StopIteration:
-            return None
+    def launch_worker(self, queue):
+        """Launch a new worker."""
+        worker = ThreadScraperWorker(self.board, self, queue,
+                                     queuer=self.queuer,
+                                     triggers=self.triggers,
+                                     progress=self.show_progress)
+        worker.daemon = True
+        worker.start()
 
     def thread_generator(self):
-        """Generator for the thread JSON."""
+        """Generator for the thread data objects. Simplifies the loop in the
+        update method.
+        """
         for page in self.catalog:
             for thread in page['threads']:
                 yield thread
 
+    def add_to_queue(self, queue, thread_data):
+        """Converts the data downloaded from the API to ThreadInfo and adds it
+        to the queue.
+        """
+        try:
+            thread_info = ThreadInfo(thread_data)
+            queue.put(thread_info)
+        except:
+            pass
+
     def update(self):
-        """Call this to update the database."""
-        # Get the catalog from the API.
+        """Call this to update the database.
+        """
+        # Get catalog.
         try:
             self.catalog = self.get_catalog_json()
-
         except:
-            raise ScrapError('Unable to download or parse the catalog data. Board update stopped.')
+            raise ScrapError('Unable to download or parse the catalog data.\
+                              Board update stopped.')
 
-        # Launch the initial threads. Next ones will be launched automatically.
-        for i in range(0, current_app.config.get('SCRAPER_THREADS_NUMBER')):
-            self.launch_thread()
+        queue = Queue()
 
-        # Wait for all threads to finish.
-        while True:
-            time.sleep(1)
-            with self.running_threads_lock:
-                if not len(self.running_threads):
-                    break
+        # Launch workers.
+        for i in range(current_app.config['SCRAPER_THREADS_NUMBER']):
+            self.launch_worker(queue)
 
+        # Populate queue.
+        for thread_data in self.thread_generator():
+            self.add_to_queue(queue, thread_data)
+        
+        # Wait for all tasks to finish.
+        queue.join()
+
+        # Save total wait time in stats (self.queuer is passed everywhere so
+        # it contains the total amount).
         self.stats.add('total_wait_time', self.queuer.get_total_wait_time())
-        self.stats.add('total_wait_time_with_lock', self.queuer.get_total_wait_time_with_lock())
+        self.stats.add('total_wait_time_with_lock',
+                       self.queuer.get_total_wait_time_with_lock())
