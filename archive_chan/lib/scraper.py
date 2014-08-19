@@ -96,7 +96,7 @@ class Triggers:
     """
 
     def __init__(self):
-        # Prepare trigger list, there is no need to get it every time.
+        # Prepare a list, there is no need to get it every time.
         self.triggers = Trigger.query.outerjoin(Tag).filter(Trigger.active==True).all()
 
     def check_post_type(self, trigger, thread, post_data):
