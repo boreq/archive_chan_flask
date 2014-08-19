@@ -21,7 +21,7 @@
                         <a href="{{ thread.get_absolute_url() }}">
                             {% set post=thread.first_post() %}
                             <div class="img-container">
-                                <img src="{{ post.image.image_url }}">
+                                <img src="{{ post.image.thumbnail_url }}">
                             </div>
 
                             <div class="thread-info">

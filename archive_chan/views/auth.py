@@ -5,6 +5,7 @@ from .. import auth
 bl = Blueprint('auth', __name__)
 
 
+@bl.route('/login/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -17,11 +18,8 @@ def login():
     return render_template('auth/login.html')
 
 
+@bl.route('/logout/')
 def logout():
     auth.logout_user()
     flash('Logged out')
     return redirect(url_for('core.index'))
-
-
-bl.add_url_rule('/login/', 'login', view_func=login, methods=('GET', 'POST'))
-bl.add_url_rule('/logout/', 'logout', view_func=logout)

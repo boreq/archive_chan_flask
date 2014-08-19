@@ -377,7 +377,7 @@ class ThreadScraper(Scraper):
         """Accepted kwargs: Triggers triggers + base class kwargs"""
         super(ThreadScraper, self).__init__(board, **kwargs)
         self.thread_info = thread_info
-        self.triggers = Triggers()
+        self.triggers = kwargs.get('triggers', Triggers())
         self.modified = False
 
     def get_image(self, filename, extension):
@@ -587,9 +587,7 @@ class BoardScraper(Scraper):
 
     def __init__(self, board, **kwargs):
         super(BoardScraper, self).__init__(board, **kwargs)
-
         self.triggers = Triggers()
-
         self.thread_gen = None
         self.running_threads = []
         self.running_threads_lock = threading.Lock()
