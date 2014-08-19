@@ -483,8 +483,8 @@ class ThreadScraper(Scraper):
         self.stats.add('added_posts', 1)
 
     def delete_post(self, post):
-        # ORM Events can modify the related object and it is not possible
-        # to create a single trigger for all supported databases.
+        # SQL Alchemy's ORM events can not modify related objects and it is not
+        # possible to create a single trigger for all supported databases.
         post.thread.post_deleted()
         if post.image is not None:
             post.thread.image_deleted()
@@ -495,7 +495,7 @@ class ThreadScraper(Scraper):
 
     def handle_thread(self):
         """Download/update the thread if necessary."""
-        # Download only above certain number of posts.
+        # Download only above a certain number of posts.
         # (seriously it is wise do let the moderators do their job first)
         if self.thread_info.replies < self.board.replies_threshold:
             return
