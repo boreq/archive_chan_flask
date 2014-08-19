@@ -1,5 +1,5 @@
 """
-    Model views for flask-admin.
+    Views for flask-admin.
 """
 
 
@@ -17,6 +17,7 @@ admin = Admin(name='Archive Chan')
 
 
 class ModelView(sqla.ModelView):
+    """Model view accessible only to logged in users."""
     def is_accessible(self):
         return current_user.is_authenticated()
 
@@ -25,6 +26,7 @@ class ModelView(sqla.ModelView):
 
 
 class DebugModelView(ModelView):
+    """Model view accessible to logged in users if DEBUG mode is enabled."""
     def is_accessible(self):
         if not current_app.config['DEBUG']:
             return False

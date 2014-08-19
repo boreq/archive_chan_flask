@@ -1,6 +1,8 @@
 """
-    Implements basic database related methods.
-    flask-sqlalchemy extension provides database support.
+    Implements basic database related methods. flask-sqlalchemy extension
+    provides database support. It is preferred over raw SQLAlchemy because
+    it automatically handles the session management and binds it to request
+    context. Actual database models are defined in models module.
 """
 
 

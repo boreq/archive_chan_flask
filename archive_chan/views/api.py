@@ -1,3 +1,9 @@
+"""
+    All views used by JavaScript to get data via async calls are defined
+    here. Obviously it is also possible to use those in custom clients.
+"""
+
+
 import json
 from flask import Blueprint, Response, request
 from flask.views import View
@@ -12,86 +18,72 @@ bl = Blueprint('api', __name__)
 
 
 class ApiError(Exception):
-    def __init__(self, status_code=500, error_code='unknown',
-                 message='Unknown server error.'):
-        self.status_code = status_code
-        self.error_code = error_code
+    """Base exception for all api exceptions."""
+
+    status_code = 500
+    error_code = 'unknown'
+    message = 'Unknown server error.'
+
+    def __init__(self, status_code=None, error_code=None, message=None):
+        if status_code is not None:
+            self.status_code = status_code
+        if error_code is not None:
+            self.error_code = error_code
+        if message is not None:
+            self.message = message
         super(ApiError, self).__init__(message)
 
 
 class NotImplementedApiError(ApiError):
-    def __init__(self, **kwargs):
-        status_code = kwargs.get('status_code', 501)
-        error_code = kwargs.get('error_code', 'not_implemented')
-        message = kwargs.get('message', 'Not implemented.')
-        super(NotImplementedApiError, self).__init__(
-            status_code,
-            error_code,
-            message
-        )
+    status_code = 501
+    error_code = 'not_implemented'
+    message = 'Not implemented.'
 
 
 class MethodNotAllowedApiError(ApiError):
-    def __init__(self, **kwargs):
-        status_code = kwargs.get('status_code', 405)
-        error_code = kwargs.get('error_code', 'method_not_allowed')
-        message = kwargs.get('message', 'Method not allowed')
-        super(MethodNotAllowedApiError, self).__init__(
-            status_code,
-            error_code,
-            message
-        )
+    status_code = 405
+    error_code = 'method_not_allowed'
+    message = 'Method not allowed.'
 
 
 class NotAuthorizedApiError(ApiError):
-    def __init__(self, **kwargs):
-        status_code = kwargs.get('status_code', 401)
-        error_code = kwargs.get('error_code', 'unauthorized')
-        message = kwargs.get('message', 'Log in.')
-        super(MethodNotAllowedApiError, self).__init__(
-            status_code,
-            error_code,
-            message
-        )
+    status_code = 401
+    error_code = 'unauthorized'
+    message = 'Log in.'
 
 
 class NotFoundApiError(ApiError):
-    def __init__(self, **kwargs):
-        status_code = kwargs.get('status_code', 404)
-        error_code = kwargs.get('error_code', 'not_found')
-        message = kwargs.get('message', 'Item could not be found.')
-        super(NotFoundApiError, self).__init__(
-            status_code,
-            error_code,
-            message
-        )
+    status_code = 404
+    error_code = 'not_found'
+    message = 'Item could not be found.'
 
 
 class ApiView(View):
+    """Base api view. It automatically calls the function named 
+    <method>_api_response, e.g.: get_api_response.
+    """
+
     methods = ['GET']
 
     def handle_exception(self, exception):
-        """Converts exception to JSON response and status code."""
+        """Converts an exception to an object which can be nicely serialized to
+        JSON and to a status code."""
         response_data = {
             'error_code': exception.error_code,
-            'message': str(exception),
+            'message': exception.message,
         }
         return (response_data, exception.status_code)
 
     def dispatch_request(self, *args, **kwargs):
-        """Picks the right method and handles the exceptions.
-        This view will try to get the data from <method_name>_api_response().
-        """
+        """Executes the right method and handles the exceptions."""
         try:
             attr_name = request.method.lower() + '_api_response'
             if not request.method in self.methods:
-                raise MethodNotAllowedApiError
-
-            if hasattr(self, attr_name):
-                response_data = getattr(self, attr_name)(*args, **kwargs)
-                status_code = 200
-            else:
-                raise NotImplementedApiError
+                raise MethodNotAllowedApiError()
+            if not hasattr(self, attr_name):
+                raise NotImplementedApiError()
+            response_data = getattr(self, attr_name)(*args, **kwargs)
+            status_code = 200
 
         # Handle the exceptions thrown on purpose.
         except ApiError as e:
@@ -109,7 +101,7 @@ class ApiView(View):
 
 class Status(ApiView):
     def get_chart_data(self, queryset):
-        """Creates data structured as required by Google Charts."""
+        """Creates data structured in a form required by Google Charts."""
         chart_data = {
             'cols': [
                 {'label': 'Date', 'type': 'datetime'},
@@ -123,20 +115,14 @@ class Status(ApiView):
 
         for entry in queryset:
             value_string = 'Date(%s, %s, %s, %s, %s, %s)' % (
-                entry.date.year,
-                entry.date.month - 1, # JavaScript months start at 0.
-                entry.date.day,
-                0,
-                0,
-                0
+                entry.date.year, entry.date.month - 1, # JS months start at 0.
+                entry.date.day, 0, 0, 0
             )
-
             label_string = entry.date.strftime('%Y-%m-%d')
 
+            value = 0
             if entry.average_posts != 0:
                 value = round(entry.average_time / float(entry.average_posts), 3)
-            else:
-                value = 0
 
             chart_data['rows'].append({
                 'c': [
@@ -144,7 +130,6 @@ class Status(ApiView):
                     {'v': value},
                 ]
             })
-
         return chart_data
 
     def get_api_response(self,  *args, **kwargs):
@@ -155,7 +140,6 @@ class Status(ApiView):
                              .join(Board) \
                              .order_by(Update.board_id, Update.start.desc()) \
                              .distinct(Update.board_id)
-
         response_data['last_updates'] = [{
             'board': str(update.board),
             'start': update.start.isoformat(),
@@ -169,8 +153,10 @@ class Status(ApiView):
             db.func.avg(Update.total_time).label('average_time'),
             db.func.avg(Update.added_posts).label('average_posts'),
             db.func.date(Update.end).label('date')
-        ).filter(Update.status==Update.COMPLETED).group_by('date').order_by('date').all()
-
+        ).filter(Update.status==Update.COMPLETED) \
+         .group_by('date') \
+         .order_by('date') \
+         .all()
         response_data['chart_data'] = self.get_chart_data(updates)
 
         return response_data
@@ -192,22 +178,18 @@ class Gallery(ApiView):
         amount = int(request.args.get('amount', 10))
 
         queryset = Image.query.join(Post, Thread, Board)
-        
         if board_name:
             queryset = queryset.filter(
                 Board.name==board_name
             )
-
         if thread_number:
             queryset = queryset.filter(
                 Thread.number==thread_number
             )
-
         if last:
             queryset = queryset.filter(
                 Image.id<last
             )
-
         queryset = queryset.order_by(Image.id.desc()).limit(amount)
 
         return {
@@ -228,8 +210,8 @@ class SaveThread(ApiView):
 
     def post_api_response(self, *args, **kwargs):
         if not current_user.is_authenticated():
-            raise NotAuthorizedApiError
-       
+            raise NotAuthorizedApiError()
+
         thread_number = int(request.form['thread'])
         board_name = request.form['board']
         state = (request.form['state'] == 'true')
@@ -239,6 +221,7 @@ class SaveThread(ApiView):
             Thread.number==thread_number
         ).one()
         thread.saved = state
+        db.session.add(thread)
         db.session.commit()
 
         return {
@@ -259,7 +242,7 @@ class GetParentThread(ApiView):
                 Thread.number==post_number
             ).one().thread.number
         except NoResultFound:
-            raise NotFoundApiError
+            raise NotFoundApiError()
 
         return {
             'parent_thread': parent_thread_number
@@ -281,7 +264,7 @@ class AddTag(ApiView):
 
     def post_api_response(self):
         if not current_user.is_authenticated():
-            raise NotAuthorizedApiError
+            raise NotAuthorizedApiError()
 
         thread_number = int(request.form['thread'])
         board_name = request.form['board']
@@ -304,7 +287,6 @@ class AddTag(ApiView):
             tag, created_new_tag = helpers.get_or_create(db.session, Tag,
                 name=tag
             )
-            db.session.commit()
             thread.tags.append(tag)
             db.session.commit()
             added = True
@@ -312,7 +294,8 @@ class AddTag(ApiView):
             added = False
 
         return {
-            'added': added
+            'added': added,
+            'tag': tag,
         }
 
 
@@ -321,7 +304,7 @@ class RemoveTag(ApiView):
 
     def post_api_response(self):
         if not current_user.is_authenticated():
-            raise NotAuthorizedApiError
+            raise NotAuthorizedApiError()
 
         thread_number = int(request.form['thread'])
         board_name = request.form['board']

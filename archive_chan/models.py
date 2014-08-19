@@ -1,3 +1,8 @@
+"""
+    flask-sqlalchemy models.
+"""
+
+
 import os
 from flask import url_for, current_app
 from flask.ext.login import UserMixin
@@ -361,6 +366,6 @@ class Update(db.Model):
 
 
 def pre_image_delete(mapper, connection, target):
-    """Delete the files from the HDD while deleting the database record."""
+    """Delete the files stored on HDD while deleting the database record."""
     target.delete_files()
 db.event.listen(Image, 'before_delete', pre_image_delete)

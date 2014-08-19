@@ -1,6 +1,7 @@
 """
     Context processors are used to automatically inject variables and functions
-    into the template context.
+    into the template context. The context processors defined here are attached
+    to a blueprint which has to be registered on an application later.
 """
 
 

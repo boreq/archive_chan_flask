@@ -1,14 +1,19 @@
 """
-    Default settings for the application.
+    Default settings.
 
-    Path to the customized settings file should be specified in the
+    Path to the custom settings file should be specified in the
     ARCHIVE_CHAN_SETTINGS environment variable. Settings defined there will
-    overwrite values present in this file.  
+    overwrite values present in this file. If you want to run multiple
+    instances of the archive with different configs you can change the name
+    of the environment variable by passing the parameter to the application
+    factory. See the source in __init__.py for more details.
 
     Of course you can modify this file directly but that might cause conflicts
     while updating the repository and it is a good practice to keep the default
-    values for reference.
+    values for reference. It is also impossible to run multiple instances
+    that way.
 """
+
 
 # Delay between two calls to 4chan API (catalog/posts).
 # This should follow the API rules: https://github.com/4chan/4chan-API
