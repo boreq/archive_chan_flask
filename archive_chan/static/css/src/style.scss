@@ -229,6 +229,10 @@ input:focus{
     border: 1px solid $primary-color;
 }
 
+button{
+    border: 0;
+}
+
 /*   Content.   */
 div.content{
     padding: 1em;
@@ -592,24 +596,30 @@ code{
     margin: 1em 0;
     text-transform: uppercase;
     color: #fff;
+    border-width: 1px;
+    border-style: solid;
     font-weight: bold;
     cursor: pointer;
 }
 
 .button-green{
     background-color: #16a085;
+    border-color: #16a085;
 }
 
 .button-green:hover{
     background-color: #1abc9c;
+    border-color: #1abc9c;
 }
 
 .button-red{
     background-color: #c0392b;
+    border-color: #c0392b;
 }
 
 .button-red:hover{
     background-color: #e74c3c;
+    border-color: #e74c3c;
 }
 
 /* Stats. */
@@ -739,6 +749,19 @@ code{
         .current-selection{
             text-decoration: underline; 
         }
+    }
+}
+
+/*   Login form.   */
+.login-form{
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+
+    input, button{
+        width: 100%;
+        padding: .5em;
+        margin: .5em auto
     }
 }
 

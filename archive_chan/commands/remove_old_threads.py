@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from flask.ext import script
+from ..database import db
 from ..models import Board, Thread
 from ..lib.helpers import utc_now
 
@@ -26,9 +27,12 @@ class Command(script.Command):
             # Count for stats and delete.
             amount = queryset.count()
 
-            print(amount)
-
-            #queryset.delete()
+            # Bulk delete will not trigger Python cascades and the files must
+            # be deleted from the HDD so normal db based cascade can't be used.
+            threads = queryset.all()
+            for thread in threads:
+                db.session.delete(thread)
+                db.session.commit()
 
             processing_time = datetime.now() - processing_start
 

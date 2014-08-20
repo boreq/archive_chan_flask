@@ -3,58 +3,58 @@
     "tasks": [
         {
             "input": [
-                "archive_chan/static/archive_chan/js/lib/jquery.min.js",
-                "archive_chan/static/archive_chan/js/lib/jquery.timeago.js",
-                "archive_chan/static/archive_chan/js/lib/highlight.pack.js",
-                "archive_chan/static/archive_chan/js/lib/jquery.qtip.js",
-                "archive_chan/static/archive_chan/js/lib/jquery.cookie.js",
-                "archive_chan/static/archive_chan/js/lib/jquery.dotdotdot.min.js",
-                "archive_chan/static/archive_chan/js/lib/jquery.autocomplete.js",
-                "archive_chan/static/archive_chan/js/lib/jquery.magnific.popup.js",
-                "archive_chan/static/archive_chan/js/src/manipulate_height.js",
-                "archive_chan/static/archive_chan/js/src/utility.js",
-                "archive_chan/static/archive_chan/js/src/parse.js",
-                "archive_chan/static/archive_chan/js/src/ajax.js",
-                "archive_chan/static/archive_chan/js/src/init.js"
+                "archive_chan/static/js/lib/jquery.min.js",
+                "archive_chan/static/js/lib/jquery.timeago.js",
+                "archive_chan/static/js/lib/highlight.pack.js",
+                "archive_chan/static/js/lib/jquery.qtip.js",
+                "archive_chan/static/js/lib/jquery.cookie.js",
+                "archive_chan/static/js/lib/jquery.dotdotdot.min.js",
+                "archive_chan/static/js/lib/jquery.autocomplete.js",
+                "archive_chan/static/js/lib/jquery.magnific.popup.js",
+                "archive_chan/static/js/src/manipulate_height.js",
+                "archive_chan/static/js/src/utility.js",
+                "archive_chan/static/js/src/parse.js",
+                "archive_chan/static/js/src/ajax.js",
+                "archive_chan/static/js/src/init.js"
             ],
-            "output": "archive_chan/static/archive_chan/js/main.js"
+            "output": "archive_chan/static/js/main.js"
         },
         {
             "input": [
-                "archive_chan/static/archive_chan/js/src/stats.js"
+                "archive_chan/static/js/src/stats.js"
             ],
-            "output": "archive_chan/static/archive_chan/js/stats.js"
+            "output": "archive_chan/static/js/stats.js"
         },
         {
             "input": [
-                "archive_chan/static/archive_chan/js/src/status.js"
+                "archive_chan/static/js/src/status.js"
             ],
-            "output": "archive_chan/static/archive_chan/js/status.js"
+            "output": "archive_chan/static/js/status.js"
         },
         {
             "input": [
-                "archive_chan/static/archive_chan/js/src/search.js"
+                "archive_chan/static/js/src/search.js"
             ],
-            "output": "archive_chan/static/archive_chan/js/search.js"
+            "output": "archive_chan/static/js/search.js"
         },
         {
             "input": [
-                "archive_chan/static/archive_chan/js/lib/imagesloaded.min.js",
-                "archive_chan/static/archive_chan/js/lib/jquery.masonry.min.js",
-                "archive_chan/static/archive_chan/js/src/gallery.js"
+                "archive_chan/static/js/lib/imagesloaded.min.js",
+                "archive_chan/static/js/lib/jquery.masonry.min.js",
+                "archive_chan/static/js/src/gallery.js"
             ],
-            "output": "archive_chan/static/archive_chan/js/gallery.js"
+            "output": "archive_chan/static/js/gallery.js"
         },
         {
             "input": [
-                "archive_chan/static/archive_chan/css/src/import.css",
-                "archive_chan/static/archive_chan/css/src/reset.css",
-                "archive_chan/static/archive_chan/css/src/style.scss",
-                "archive_chan/static/archive_chan/css/lib/highlight.css",
-                "archive_chan/static/archive_chan/css/lib/jquery.qtip.css",
-                "archive_chan/static/archive_chan/css/lib/jquery.magnific.popup.css"
+                "archive_chan/static/css/src/import.css",
+                "archive_chan/static/css/src/reset.css",
+                "archive_chan/static/css/src/style.scss",
+                "archive_chan/static/css/lib/highlight.css",
+                "archive_chan/static/css/lib/jquery.qtip.css",
+                "archive_chan/static/css/lib/jquery.magnific.popup.css"
             ],
-            "output": "archive_chan/static/archive_chan/css/main.css"
+            "output": "archive_chan/static/css/main.css"
         }
     ],
     "chains": [

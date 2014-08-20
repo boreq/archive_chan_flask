@@ -1,4 +1,5 @@
 from flask import Blueprint, request, render_template, flash, redirect, url_for
+from flask.ext.login import current_user
 from .. import auth
 
 
@@ -7,6 +8,8 @@ bl = Blueprint('auth', __name__)
 
 @bl.route('/login/', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated():
+        return redirect(url_for('core.index'))
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')

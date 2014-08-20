@@ -38,6 +38,7 @@
                     <li><a href="{{ url_for('core.status') }}">status</a></li>
                     {% if user.is_authenticated() %}
                         <li><a href="{{ url_for('auth.logout') }}">log out</a></li>
+                        <li><a href="{{ url_for('admin.index') }}">admin</a></li>
                     {% else %}
                         <li><a href="{{ url_for('auth.login') }}">log in</a></li>
                     {% endif %}

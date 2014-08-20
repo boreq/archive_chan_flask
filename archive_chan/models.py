@@ -32,12 +32,12 @@ class Board(db.Model):
     replies_threshold = db.Column(db.Integer, default=20, nullable=False)
 
     threads = db.relationship('Thread',
-        cascade='all,delete',
+        cascade='all,delete-orphan',
         backref='board',
         lazy='dynamic'
     )
     updates = db.relationship('Update',
-        cascade='all,delete',
+        cascade='all,delete-orphan',
         backref='board',
         lazy='dynamic'
     )
@@ -76,12 +76,12 @@ class Thread(db.Model):
 
     tags = association_proxy('tagtothread', 'tag')
     posts = db.relationship('Post',
-        cascade='all,delete',
+        cascade='all,delete-orphan',
         backref='thread',
         lazy='dynamic'
     )
     tagtothreads = db.relationship('TagToThread',
-        cascade='all,delete',
+        cascade='all,delete-orphan',
         lazy='dynamic'
     )
 
@@ -142,7 +142,7 @@ class Post(db.Model):
     save_time = db.Column(db.DateTime(timezone=True), nullable=False, default=utc_now())
 
     image = db.relationship('Image',
-        cascade='all,delete',
+        cascade='all,delete-orphan',
         uselist=False,
         backref='post',
         lazy='joined'
@@ -233,7 +233,7 @@ class Tag(db.Model):
 
     threads = association_proxy('tagtothread', 'thread')
     triggers = db.relationship('Trigger',
-        cascade='all,delete',
+        cascade='all,delete-orphan',
         backref=db.backref('tag', lazy='joined'),
         lazy='dynamic'
     )
