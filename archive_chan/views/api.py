@@ -268,7 +268,7 @@ class AddTag(ApiView):
 
         thread_number = int(request.form['thread'])
         board_name = request.form['board']
-        tag = request.form['tag']
+        tag_name = request.form['tag']
 
         try:
             thread = Thread.query.join(Board).filter(
@@ -280,12 +280,12 @@ class AddTag(ApiView):
 
         exists = TagToThread.query.join(Tag).filter(
             TagToThread.thread==thread,
-            Tag.name==tag
+            Tag.name==tag_name
         ).first() is not None
             
         if not exists:
             tag, created_new_tag = helpers.get_or_create(db.session, Tag,
-                name=tag
+                name=tag_name
             )
             thread.tags.append(tag)
             db.session.commit()
@@ -295,7 +295,7 @@ class AddTag(ApiView):
 
         return {
             'added': added,
-            'tag': tag,
+            'tag': tag_name,
         }
 
 
@@ -308,19 +308,19 @@ class RemoveTag(ApiView):
 
         thread_number = int(request.form['thread'])
         board_name = request.form['board']
-        tag = request.form['tag']
+        tag_name = request.form['tag']
 
         tagtothread = TagToThread.query.join(Thread, Board, Tag).filter(
             Thread.number==thread_number, 
             Board.name==board_name,
-            Tag.name==tag
+            Tag.name==tag_name
         ).one()
         db.session.delete(tagtothread)
         db.session.commit()
 
         return {
             'removed': True,
-            'tag': tag,
+            'tag': tag_name,
         }
 
 

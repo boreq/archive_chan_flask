@@ -73,7 +73,6 @@ def get_cache_key(vary_on_auth):
     cache_key = get_md5(request.url)
     if vary_on_auth:
         cache_key += 'auth-%s' % current_user.is_authenticated()
-    print(cache_key)
     return cache_key
 
 
