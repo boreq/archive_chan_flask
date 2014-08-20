@@ -1,3 +1,4 @@
+import hashlib
 import memcache
 from functools import wraps
 from flask import request, Blueprint
@@ -58,7 +59,25 @@ def get_preferred_cache_system(app):
     return NullCache()
 
 
-def cached(timeout=None, key='view/%s', vary_on_auth=False):
+def get_md5(string):
+    """Returns a hash of a string."""
+    m = hashlib.md5()
+    m.update(string.encode('utf-8'))
+    return m.hexdigest()
+
+
+def get_cache_key(vary_on_auth):
+    """Construct a cache key."""
+    # Query url part matters in board view (catalog and the entire url can be
+    # very long so it is better to hash it.
+    cache_key = get_md5(request.url)
+    if vary_on_auth:
+        cache_key += 'auth-%s' % current_user.is_authenticated()
+    print(cache_key)
+    return cache_key
+
+
+def cached(timeout=None, vary_on_auth=False):
     """Simple cache decorator taken from Flask docs.
     
     timeout: Cache timeout in seconds.
@@ -68,9 +87,7 @@ def cached(timeout=None, key='view/%s', vary_on_auth=False):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            cache_key = key % request.path
-            if vary_on_auth:
-                cache_key += 'auth-' + str(current_user.is_authenticated())
+            cache_key = get_cache_key(vary_on_auth)
             rv = cache.get(cache_key)
             if rv is not None:
                 return rv
