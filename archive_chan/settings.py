@@ -6,12 +6,12 @@
     overwrite values present in this file. If you want to run multiple
     instances of the archive with different configs you can change the name
     of the environment variable by passing the parameter to the application
-    factory. See the source in __init__.py for more details.
+    factory. See the source code in __init__.py for more details.
 
     Of course you can modify this file directly but that might cause conflicts
     while updating the repository and it is a good practice to keep the default
-    values for reference. It is also impossible to run multiple instances
-    that way.
+    values for reference. Furthermore it would be impossible to run multiple
+    instances that way and your modification could influence unit testing.
 """
 
 
@@ -38,13 +38,14 @@ RECENT_POSTS_AGE = 48
 # In other words that many 4chan threads will be updated concurrently.
 SCRAPER_THREADS_NUMBER = 4
 
-# Max age of the dynamic pages (e.g. board, thread).
+# Max cache age.
+# Cache is disabled in DEBUG or TESTING mode.
+# See cache.get_preferred_cache_system to learn more.
 # [seconds]
-VIEW_CACHE_AGE = 60 * 5
+CACHE_TIMEOUT = 60 * 5
 
-# Max age of the static pages (e.g. stats, gallery, status).
-# [seconds]
-VIEW_CACHE_AGE_STATIC = 60 * 60 * 24
+# Memcached url. Set to None to disable. Must be a tuple or a list.
+MEMCACHED_URL = ['127.0.0.1:11211']
 
 # Database URI.
 # https://pythonhosted.org/Flask-SQLAlchemy/config.html#configuration-keys

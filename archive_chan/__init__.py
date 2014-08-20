@@ -1,8 +1,4 @@
 from flask import Flask
-from werkzeug.contrib.cache import MemcachedCache, BaseCache
-
-
-cache = None
 
 
 def create_app(config=None, envvar='ARCHIVE_CHAN_SETTINGS'):
@@ -29,23 +25,8 @@ def create_app(config=None, envvar='ARCHIVE_CHAN_SETTINGS'):
     if config is not None:
         app.config.update(config)
 
-    # Deployment version/debug or testing.
-    if not (app.config['DEBUG'] or app.config['TESTING']):
-        if app.config['SECRET_KEY'] in ['', 'dev_key']:
-            raise Exception('Set your secret key.')
-        cache = MemcachedCache(app.config['MEMCACHED_URL'])
-    else:
-        cache = BaseCache()
-
-    # Load debug toolbar.
-    if app.config['DEBUG']:
-        try:
-            from flask_debugtoolbar import DebugToolbarExtension
-            toolbar = DebugToolbarExtension(app)
-        except ImportError as e:
-            import sys
-            sys.stderr.write('Flask Debug Toolbar was not loaded. You can install it with `pip install flask-debugtoolbar`.\nError: %s\n' % e)
-
+    validate_config(app)
+    load_debug_toolbar(app)
     init_app(app)
 
     from . import views
@@ -64,6 +45,7 @@ def init_app(app):
     from .database import db
     from .admin import admin
     from .auth import login_manager, bcrypt
+    from . import cache
 
     db.init_app(app)
     # I am not sure why db.app isn't set automatically. It happens if the app
@@ -73,3 +55,23 @@ def init_app(app):
     admin.init_app(app)
     login_manager.init_app(app)
     bcrypt.init_app(app)
+    cache.init_app(app)
+
+
+def validate_config(app):
+    """Validates app config."""
+    # Working in deployment mode (debug and testing disabled).
+    if not (app.config['DEBUG'] or app.config['TESTING']):
+        if app.config['SECRET_KEY'] in ['', 'dev_key']:
+            raise Exception('Set your secret key.')
+
+
+def load_debug_toolbar(app):
+    """Loads the debug toolbar if possible."""
+    if app.config['DEBUG']:
+        try:
+            from flask_debugtoolbar import DebugToolbarExtension
+            toolbar = DebugToolbarExtension(app)
+        except ImportError as e:
+            import sys
+            sys.stderr.write('Flask Debug Toolbar was not loaded. You can install it with `pip install flask-debugtoolbar`.\nError: %s\n' % e)

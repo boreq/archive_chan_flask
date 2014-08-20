@@ -1,0 +1,15 @@
+flask
+flask-admin
+flask-bcrypt
+flask-login
+flask-script
+flask-sqlalchemy
+tendo
+pytz
+requests
+
+# For memcached support
+#python3-memcached
+
+# For PostgreSQL support
+#psycopg2

@@ -1,13 +1,14 @@
 import operator
 from flask import Blueprint, render_template, request
 from flask.views import View
+from ..cache import CachedBlueprint
 from ..models import Board, Thread, Post, Image, TagToThread
 from ..lib import modifiers
 from ..lib.pagination import Pagination
 from ..lib.helpers import get_object_or_404
 
 
-bl = Blueprint('core', __name__)
+bl = CachedBlueprint('core', __name__, vary_on_auth=True)
 
 
 class TemplateView(View):
