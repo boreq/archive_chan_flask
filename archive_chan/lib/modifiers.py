@@ -83,8 +83,7 @@ class TagFilter(Modifier):
 
     def execute(self, queryset):
         if not self.parameter is None:
-            tags = Tag.query.filter(Tag.name.in_(*self.parameter)).all()
-            queryset = queryset.filter(Thread.tags.any(*tags))
+            queryset = queryset.filter(Thread.tags.any(Tag.name.in_(self.parameter)))
         return queryset
 
     def get(self):
