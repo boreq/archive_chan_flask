@@ -166,8 +166,11 @@ class Post(db.Model):
     def __str__(self):
         return '#%s' % self.number
 
+    def get_anchor(self):
+        return '#post-%s' % self.number
+
     def get_absolute_url(self):
-        return '%s#post-%s' % (self.thread.get_absolute_url(), self.number)
+        return self.thread.get_absolute_url() + self.get_anchor()
 
 
 class Image(db.Model):

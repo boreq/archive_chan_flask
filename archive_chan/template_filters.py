@@ -69,7 +69,7 @@ def datetimeformat(datetime, timeago=True):
     if not timeago:
         return readable
     iso_format = datetime.strftime('%Y-%m-%dT%H:%M:%S%z')
-    return Markup('<time class=timeago datetime="%s">%s</time>' % (
+    return Markup('<time class="timeago" datetime="%s">%s</time>' % (
         iso_format,
         readable
     ))
