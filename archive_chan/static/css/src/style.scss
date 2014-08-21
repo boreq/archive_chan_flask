@@ -337,12 +337,12 @@ div.content{
     }
 
     .img-container{
-        min-height: 100px;
+        height: 130px;
         overflow: hidden;
 
         img{
             max-width: 100%;
-            max-height: 150px;
+            max-height: 100%;
         }
     }
 

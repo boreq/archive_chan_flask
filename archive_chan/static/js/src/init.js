@@ -1,17 +1,14 @@
-/* This file is responsible for actually executing or scheduling an execution of all other functions or plugins.
+/*
+    This file is responsible for actually executing or scheduling an execution of all other functions or plugins.
 */
+
 
 var magnificPopup;
 
+
 $(document).ready(function(){
     // Make threads in the board view (catalog) equal in height.
-    equalizeHeight('#threads .img-container');
     equalizeHeight('#threads a');
-
-    // Finish comments in a thread view with three dots...
-    $('#threads .thread-comment').dotdotdot({
-        wrap: 'letter'
-    });
 
     // Create relative dates.
     $('time.timeago').timeago();
@@ -30,7 +27,7 @@ $(document).ready(function(){
         addPostTooltip(event.target, postId);
     });
 
-    // Slowly move to the target post. It allows to spot the relative postion of two posts in a thread.
+    // Smooth scrolling when clicked on a post link.
     $('body').on('click', '.post-link', function(event){
         var selector = $.attr(this, 'href');
 
@@ -80,7 +77,8 @@ $(document).ready(function(){
         });
     }
 
-    // Additional event handling for the popup gallery link - it is necessary to close it before scrolling the page.
+    // Additional event handling for the popup gallery link - it is necessary
+    // to close the overlay before scrolling the page.
     $('body').on('click', '.gallery-post-link', function(event){
         $.magnificPopup.instance.close();
     });

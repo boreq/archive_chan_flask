@@ -40,13 +40,12 @@
                                 {% endfor %}
                             </div>
 
-                            {% if post.subject %}
-                                <div class="thread-subject">{{ post.subject }}</div>
-                            {% endif %}
-
-                            {% if post.comment %}
-                                <div class="thread-comment">{{ post.comment }}</div>
-                            {% endif %}
+                            <div class="thread-comment">
+                                {% if post.subject %}
+                                    <div class="thread-subject">{{ post.subject }}</div>
+                                {% endif %}
+                                {{ post.comment }}
+                            </div>
                         </a>
                     </li>
                 {% endfor %}
