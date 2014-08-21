@@ -506,6 +506,24 @@ class ThreadScraper(Scraper):
         db.session.delete(post)
         self.stats.add('removed_posts', 1)
 
+    def get_or_create_thread(self, board_name, thread_number):
+        """Get the existing entry for this thread from the database or create
+        a new record for it.
+        """
+        try:
+            thread = Thread.query.filter(Thread.board_id==board_name,
+                                         Thread.number==thread_number) \
+                                 .one()
+        except NoResultFound:
+            thread = Thread(board_id=board_name, number=thread_number)
+
+        if not thread.id:
+            db.session.add(thread)
+            db.session.flush()
+            db.session.refresh(thread)
+
+        return thread
+
     def handle_thread(self):
         """Download/update the thread if necessary."""
         # Download only above a certain number of posts.
@@ -513,24 +531,9 @@ class ThreadScraper(Scraper):
         if self.thread_info.replies < self.board.replies_threshold:
             return
 
-        # Get the existing entry for this thread from the database or create
-        # a new record for it.
-        try:
-            thread = Thread.query.join(Board).filter(
-                Board.name==self.board.name,
-                Thread.number==self.thread_info.number
-            ).one()
-            if not self.should_be_updated(thread):
-                return
-
-        except NoResultFound:
-            thread = Thread(board_id=self.board.name, number=self.thread_info.number)
-
-        if not thread.id:
-            db.session.add(thread)
-            db.session.flush()
-            db.session.refresh(thread)
-
+        thread = self.get_or_create_thread(self.board.name, self.thread_info.number)
+        if not self.should_be_updated(thread):
+            return
         last_post_number = self.get_last_post_number(thread)
 
         # Download the thread data.
