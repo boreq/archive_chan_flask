@@ -89,8 +89,7 @@ function getImages(){
     $.ajax({
         url: info_data.api_url,
         data: request_data,
-        type: 'GET',
-        cache: false
+        type: 'GET'
     }).done(function(response){
         addImages(response);
     }).fail(function(jqXHR){

@@ -24,8 +24,7 @@ function update(){
 
     var jsonData = $.ajax({
         url: info_data.api_url,
-        dataType: 'json',
-        cache: false
+        dataType: 'json'
     }).done(function(data){
         // Data has to be stored because the chart is redrawn on resize event.
         statsData = data.chart_data;
