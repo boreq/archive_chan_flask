@@ -4,9 +4,54 @@ import os
 import tempfile
 import unittest
 from flask import url_for
-import archive_chan
-from archive_chan.database import db
+from archive_chan import create_app, models
+from archive_chan.lib import scraper, modifiers
+from archive_chan.database import db, init_db
 from archive_chan.lib.helpers import utc_now
+
+sample_thread_json = json.loads("""
+{
+    "no":43711727,
+    "now":"08/21/14(Thu)15:54:54",
+    "name":"Anonymous",
+    "com":"So /g/, Google or Bing?",
+    "filename":"Bing_vs_Google",
+    "ext":".jpg",
+    "w":640,
+    "h":480,
+    "tn_w":250,
+    "tn_h":187,
+    "tim":1408650894195,
+    "time":1408650894,
+    "md5":"CpKcHHPE64XPfGl5Mo0fyg==",
+    "fsize":22710,
+    "resto":0,
+    "bumplimit":0,
+    "imagelimit":0,
+    "semantic_url":"so-g-google-or-bing",
+    "replies":17,
+    "images":2,
+    "omitted_posts":12,
+    "omitted_images":2,
+    "last_replies":[{
+        "no":43712273,
+        "now":"08/21/14(Thu)16:25:19",
+        "name":"Anonymous",
+        "com":"Comment.",
+        "filename":"your waifu is a slut",
+        "ext":".gif",
+        "w":530,
+        "h":397,
+        "tn_w":125,
+        "tn_h":93,
+        "tim":1408652719504,
+        "time":1408652719,
+        "md5":"MDTOYF2ufUDffz5M8+Qvhw==",
+        "fsize":2724240,
+        "resto":43711727
+    }]
+}
+""")
 
 
 def add_model(model, **kwargs):
@@ -18,19 +63,19 @@ def add_model(model, **kwargs):
 
     
 def add_board(**kwargs):
-    return add_model(archive_chan.models.Board, **kwargs)
+    return add_model(models.Board, **kwargs)
 
 
 def add_thread(**kwargs):
-    return add_model(archive_chan.models.Thread, **kwargs)
+    return add_model(models.Thread, **kwargs)
 
 
 def add_post(**kwargs):
-    return add_model(archive_chan.models.Post, **kwargs)
+    return add_model(models.Post, **kwargs)
 
 
 def add_update(**kwargs):
-    return add_model(archive_chan.models.Update, **kwargs)
+    return add_model(models.Update, **kwargs)
 
 
 class BaseTestCase(unittest.TestCase):
@@ -40,9 +85,9 @@ class BaseTestCase(unittest.TestCase):
             'TESTING': True,
             'SQLALCHEMY_DATABASE_URI': 'sqlite:///' + self.db_path,
         }
-        self.app = archive_chan.create_app(config)
+        self.app = create_app(config)
         self.client = self.app.test_client()
-        archive_chan.database.init_db()
+        init_db()
         self.set_up()
 
     def set_up(self):
@@ -71,28 +116,28 @@ class SimpleFilterTest(BaseTestCase):
         )
 
     def test_none(self):
-        modifier = archive_chan.lib.modifiers.SimpleFilter(
+        modifier = modifiers.SimpleFilter(
             self.parameters,
             None
         )
         self.assertEqual(modifier.get(), 'default')
 
     def test_default(self):
-        modifier = archive_chan.lib.modifiers.SimpleFilter(
+        modifier = modifiers.SimpleFilter(
             self.parameters,
             'default'
         )
         self.assertEqual(modifier.get(), 'default')
 
     def test_option(self):
-        modifier = archive_chan.lib.modifiers.SimpleFilter(
+        modifier = modifiers.SimpleFilter(
             self.parameters,
             'option'
         )
         self.assertEqual(modifier.get(), 'option')
 
     def test_wrong(self):
-        modifier = archive_chan.lib.modifiers.SimpleFilter(
+        modifier = modifiers.SimpleFilter(
             self.parameters,
             'wrong_value'
         )
@@ -107,35 +152,35 @@ class SimpleSortTest(BaseTestCase):
         )
 
     def test_none(self):
-        modifier = archive_chan.lib.modifiers.SimpleSort(
+        modifier = modifiers.SimpleSort(
             self.parameters,
             None
         )
         self.assertEqual(modifier.get(), ('default', True))
 
     def test_default(self):
-        modifier = archive_chan.lib.modifiers.SimpleSort(
+        modifier = modifiers.SimpleSort(
             self.parameters,
             'default'
         )
         self.assertEqual(modifier.get(), ('default', False))
 
     def test_option(self):
-        modifier = archive_chan.lib.modifiers.SimpleSort(
+        modifier = modifiers.SimpleSort(
             self.parameters,
             'option'
         )
         self.assertEqual(modifier.get(), ('option', False))
 
     def test_option_reverse(self):
-        modifier = archive_chan.lib.modifiers.SimpleSort(
+        modifier = modifiers.SimpleSort(
             self.parameters,
             '-option'
         )
         self.assertEqual(modifier.get(), ('option', True))
 
     def test_wrong(self):
-        modifier = archive_chan.lib.modifiers.SimpleSort(
+        modifier = modifiers.SimpleSort(
             self.parameters,
             'wrong_value'
         )
@@ -187,45 +232,28 @@ class ViewsTest(BaseTestCase):
         ])
         self.check_list('core', views)
 
-    def test_api_status(self):
-        url = self.url_for('api.status')
-        board1 = add_board(name='board1')
-        board2 = add_board(name='board2')
 
-        # Check for empty db table.
-        response, response_data  = self.get_json(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual('last_updates' in response_data, True)
-        self.assertEqual(len(response_data['last_updates']) == 0, True)
-        self.assertEqual('chart_data' in response_data, True)
-        self.assertEqual(len(response_data['chart_data']['rows']) == 0, True)
+class ScraperTest(BaseTestCase):
+    def set_up(self):
+        self.thread_info = scraper.ThreadInfo(sample_thread_json)
+        self.thread_scraper = scraper.ThreadScraper(None, self.thread_info)
+        self.thread = models.Thread(last_reply=self.thread_info.last_reply_time,
+                                    replies=self.thread_info.replies + 1)
+        
+    def test_should_update_same(self):
+        self.assertFalse(self.thread_scraper.should_be_updated(self.thread))
 
-        # Check for one ongoing update.
-        update1 = add_update(board=board1, start=utc_now(), end=utc_now(),
-                             status=archive_chan.models.Update.CURRENT,
-                             used_threads=1)
+    def test_should_update_less_replies(self):
+        self.thread.replies -= 1
+        self.assertTrue(self.thread_scraper.should_be_updated(self.thread))
 
-        response, response_data = self.get_json(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual('last_updates' in response_data, True)
-        self.assertEqual(len(response_data['last_updates']) == 1, True)
-        self.assertEqual('chart_data' in response_data, True)
-        self.assertEqual(len(response_data['chart_data']['rows']) == 0, True)
+    def test_should_update_older(self):
+        self.thread.last_reply -= datetime.timedelta(minutes=2)
+        self.assertTrue(self.thread_scraper.should_be_updated(self.thread))
 
-        # Check for multiple different updates.
-        update2 = add_update(board=board1, start=utc_now(), end=utc_now(),
-                             status=archive_chan.models.Update.COMPLETED,
-                             used_threads=1)
-        update3 = add_update(board=board2, start=utc_now(), end=utc_now(),
-                             status=archive_chan.models.Update.FAILED,
-                             used_threads=1)
-
-        response, response_data = self.get_json(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual('last_updates' in response_data, True)
-        self.assertEqual(len(response_data['last_updates']) == 2, True)
-        self.assertEqual('chart_data' in response_data, True)
-        self.assertEqual(len(response_data['chart_data']['rows']) == 1, True)
+    def test_should_update_broken(self):
+        broken_thread = models.Thread(last_reply=None, replies=0)
+        self.assertTrue(self.thread_scraper.should_be_updated(broken_thread))
 
 
 if __name__ == '__main__':

@@ -97,15 +97,8 @@ class Thread(db.Model):
         self.images -= 1
 
     # Used by scraper.
-    def last_reply_time(self):
-        last = self.posts.order_by(Post.time.desc()).first()
-        if last is not None:
-            return last.time
-        return None
-
-    # Used by scraper.
     def count_replies(self):
-        return self.posts.count() - 1
+        return self.replies - 1
 
     # Used by board template.
     def first_post(self):

@@ -24,6 +24,13 @@ class ScrapError(Exception):
     pass
 
 
+def timestamp_to_datetime(timestamp):
+    """Convert UNIX timestamp (seconds from epoch in UTC) to Python datetime
+    in UTC.
+    """
+    return datetime.datetime.fromtimestamp(timestamp, pytz.utc)
+
+
 class ThreadInfo:
     """Class used for storing information about the thread."""
 
@@ -35,11 +42,7 @@ class ThreadInfo:
             last_reply_time = int(thread_json['last_replies'][-1]['time'])
         else:
             last_reply_time = int(thread_json['time'])
-
-        # Add timezone information to the datetime.
-        self.last_reply_time = pytz.utc.localize(
-            datetime.datetime.fromtimestamp(last_reply_time)
-        )
+        self.last_reply_time = timestamp_to_datetime(last_reply_time)
 
         # 4chan doesn't count the first post.
         self.replies = int(thread_json['replies'])
@@ -73,7 +76,7 @@ class PostData:
     def __init__(self, post_json): 
         """Loads the data from JSON retrieved from the thread API."""
         self.number = int(post_json['no'])
-        self.time = datetime.datetime.fromtimestamp(int(post_json['time']), pytz.utc)
+        self.time = timestamp_to_datetime(int(post_json['time']))
 
         self.name = post_json.get('name', '')
         self.trip = post_json.get('trip', '')
@@ -425,13 +428,13 @@ class ThreadScraper(Scraper):
     def should_be_updated(self, thread):
         """Determine if the thread should be updated."""
         # Check only if there are other posts in the thread otherwise it
-        # certainly has to be updated. Check last_reply_time before counting
+        # certainly has to be updated. Check last_reply time before counting
         # the posts to avoid querying the database if possible.
-        if not thread.last_reply_time() is None and thread.posts.count() > 0:
+        if not thread.last_reply is None and thread.replies > 0:
             # Thread has to have new replies or different number of replies.
             # Note: use count_replies because 4chan does not count the first
             # post as a reply.
-            if (self.thread_info.last_reply_time <= thread.last_reply_time()
+            if (self.thread_info.last_reply_time <= thread.last_reply
                 and self.thread_info.replies == thread.count_replies()):
                 return False
         return True
