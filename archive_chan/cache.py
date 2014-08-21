@@ -103,16 +103,23 @@ class CachedBlueprint(Blueprint):
 
     timeout: Cache timeout.
     vary_on_auth: Should different cache be served to authenticated users.
+    default_cached: Should views be cached by default?
     """
 
     def __init__(self, *args, **kwargs):
         self.timeout = kwargs.pop('timeout', None)
         self.vary_on_auth = kwargs.pop('vary_on_auth', False)
+        self.default_cached = kwargs.pop('default_cached', True)
         super(CachedBlueprint, self).__init__(*args, **kwargs)
 
     def add_url_rule(self, *args, **kwargs):
-        kwargs['view_func'] = cached(
-            timeout=self.timeout,
-            vary_on_auth=self.vary_on_auth
-        )(kwargs['view_func'])
+        """Like add_url_rule but with cache settings.
+
+        cached: Should this view be cached?
+        """
+        if kwargs.pop('cached', self.default_cached):
+            kwargs['view_func'] = cached(
+                timeout=self.timeout,
+                vary_on_auth=self.vary_on_auth
+            )(kwargs['view_func'])
         super(CachedBlueprint, self).add_url_rule(*args, **kwargs)

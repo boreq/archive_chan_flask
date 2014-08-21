@@ -10,11 +10,12 @@ from flask.views import View
 from flask.ext.login import current_user
 from sqlalchemy.orm.exc import NoResultFound
 from ..database import db
+from ..cache import CachedBlueprint
 from ..models import Board, Thread, Post, Image, Tag, TagToThread, Update
 from ..lib import stats, helpers
 
 
-bl = Blueprint('api', __name__)
+bl = CachedBlueprint('api', __name__, default_cached=False)
 
 
 class ApiError(Exception):
@@ -325,13 +326,13 @@ class RemoveTag(ApiView):
         }
 
 
-bl.add_url_rule('/gallery/', view_func=Gallery.as_view('gallery'))
-bl.add_url_rule('/stats/', view_func=Stats.as_view('stats'))
-bl.add_url_rule('/status/', view_func=Status.as_view('status'))
+bl.add_url_rule('/gallery/', view_func=Gallery.as_view('gallery'), cached=True)
+bl.add_url_rule('/stats/', view_func=Stats.as_view('stats'), cached=True)
+bl.add_url_rule('/status/', view_func=Status.as_view('status'), cached=True)
 
 bl.add_url_rule('/thread/save/', view_func=SaveThread.as_view('save_thread'))
-bl.add_url_rule('/get_parent_thread/', view_func=GetParentThread.as_view('get_parent_thread'))
+bl.add_url_rule('/get_parent_thread/', view_func=GetParentThread.as_view('get_parent_thread'), cached=True)
 
-bl.add_url_rule('/tag/suggest/', view_func=SuggestTag.as_view('suggest_tag'))
+bl.add_url_rule('/tag/suggest/', view_func=SuggestTag.as_view('suggest_tag'), cached=True)
 bl.add_url_rule('/tag/add/', view_func=AddTag.as_view('add_tag'))
 bl.add_url_rule('/tag/remove/', view_func=RemoveTag.as_view('remove_tag'))
