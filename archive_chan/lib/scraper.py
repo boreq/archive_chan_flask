@@ -73,9 +73,7 @@ class PostData:
     def __init__(self, post_json): 
         """Loads the data from JSON retrieved from the thread API."""
         self.number = int(post_json['no'])
-        self.time = pytz.utc.localize(
-            datetime.datetime.fromtimestamp(int(post_json['time']))
-        )
+        self.time = datetime.datetime.fromtimestamp(int(post_json['time']), pytz.utc)
 
         self.name = post_json.get('name', '')
         self.trip = post_json.get('trip', '')
@@ -663,8 +661,7 @@ class BoardScraper(Scraper):
             pass
 
     def update(self):
-        """Call this to update the database.
-        """
+        """Call this to update the database."""
         # Get catalog.
         try:
             self.catalog = self.get_catalog_json()
