@@ -1,8 +1,15 @@
+/*
+    Script which creates an infinite scroll effect on the gallery page.
+*/
+
+
 var resizeTimeout;
 var container = '#gallery-images';
+var lastImage = null, update = false, end = false;
+
 
 $(function(){
-    // Get first images.
+    // Get first set of images.
     getImages();
 
     // Detect scrolling.
@@ -10,12 +17,13 @@ $(function(){
         updateIfNeeded();
     });
 
-    // Reposiiton masonry on windows resize.
+    // Reposiiton masonry on window resize event.
     $(window).on('resize', function(){
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(repositionMasonry, 200);
     });
 });
+
 
 function repositionMasonry(){
     if ("object" === typeof $(container).data('masonry')){
@@ -23,9 +31,9 @@ function repositionMasonry(){
     }
 }
 
-var lastImage = null, update = false, end = false;
 
-// Check if more content should be loaded and trigger the update function if necessary.
+// Check if more content should be loaded and trigger the update function if
+// necessary.
 function updateIfNeeded(){
     var windowBottom = $(window).scrollTop() + $(window).height();
     var listBottom = $(container).offset().top + $(container).outerHeight();
@@ -35,6 +43,7 @@ function updateIfNeeded(){
         getImages();
     }
 }
+
 
 // Init popup image gallery.
 function popup(){
@@ -54,16 +63,14 @@ function popup(){
     });
 }
 
+
 // Main update function.
 function getImages(){
-    // Do not update if another update has not been completed yet or there are no more items to fetch.
-    if (update || end){
+    // Do not update if another update has not been completed yet or there
+    // are no more items to fetch.
+    if (update || end)
         return;
-    }
-
     updateStart();
-
-
     request_data = {}
 
     if (info_data.thread)
@@ -85,41 +92,40 @@ function getImages(){
         type: 'GET',
         cache: false
     }).done(function(response){
-        if (response['error']){
-            alert(response['error']);
-            updateEnd();
-        }else{
-            addImages(response);
-        }
-    }).fail(function(){
+        addImages(response);
+    }).fail(function(jqXHR){
         updateEnd();
+        var responseText = $.parseJSON(jqXHR.responseText);
+        if (response['message'])
+            alert(response['message']);
     });
 }
+
 
 function updateStart(){
     update = true;
     $(container).after('<p class="gallery-throbber"><i class="fa fa-spinner fa-spin"></i></p>');
 }
 
+
 function updateEnd(){
     update = false;
     $('.gallery-throbber').remove();
-
-    if (end){
+    if (end)
         $(container).after('<p class="gallery-end"><i class="fa fa-circle-o"></i></p>')
-    }
 }
+
 
 // This functions appends new images to the list.
 function addImages(response){
     var arrayLength = response.images.length, images = '';
 
     // List is not full, further updates might be disabled now.
-    if (arrayLength < 10){
+    if (arrayLength < 10)
         end = true;
-    }
 
-    // Received an empty list, that means that there are no more images to download.
+    // Received an empty list, that means that there are no more images
+    // to download.
     if (arrayLength == 0){
         updateEnd();
         end = true;
@@ -132,11 +138,10 @@ function addImages(response){
         images += createImage(image);
 
         // Store the lowest received id.
-        if (lastImage !== null){
+        if (lastImage !== null)
             lastImage = Math.min(image.id, lastImage);
-        }else{
+        else
             lastImage = image.id;
-        }
     }
 
     images = $(images)
@@ -164,13 +169,14 @@ function addImages(response){
     }
 }
 
+
 // Helper function creating html.
 function createImage(image){
     var imageHtml;
     if (image.extension == '.webm'){
-        imageHtml = '<video src="' + image.url + '" controls></video>';
+        imageHtml = '<video src="' + image.image_url + '" controls></video>';
     }else{
-        imageHtml = '<a class="gallery-image" href="' + image.url + '"><img src="' + image.url + '"></a>';
+        imageHtml = '<a class="gallery-image" href="' + image.image_url + '"><img src="' + image.image_url + '"></a>';
     }
 
     return '<li style="display: none" board="' + image.board + '" post="' + image.post  + '"><div>' + imageHtml + '<a class="post-link" href="' + image.post_url  + '">&gt;&gt;/' + image.board + '/' + image.post + '</a></div></li>';

@@ -1,16 +1,16 @@
-/* This script contains functions which assist with manipulating height of various page elements.
-Unfortunately those can't be solved with CSS.
+/*
+    Functions which are used to change the height of various page elements.
 */
 
-// Sets the height of all matched elements to the height of the highest of those elements.
+
+// Sets the height of all matched elements to the height of the highest of
+// those elements.
 function equalizeHeight(selector){
     var maxHeight = 0;
-
     $(selector).each(function(){
-       if ($(this).height() > maxHeight){
-           maxHeight = $(this).height();
-       }
+        var height = $(this).height();
+        if (height > maxHeight)
+            maxHeight = height;
     });
-
     $(selector).height(maxHeight);
 }

@@ -199,7 +199,8 @@ class Gallery(ApiView):
                 'thread': image.post.thread.number,
                 'post': image.post.number,
                 'extension': image.get_extension(),
-                'url': image.image_url,
+                'thumbnail_url': image.thumbnail_url,
+                'image_url': image.image_url,
                 'post_url': image.post.get_absolute_url(),
             } for image in queryset]
         }
