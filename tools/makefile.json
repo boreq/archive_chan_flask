@@ -51,7 +51,8 @@
                 "archive_chan/static/css/src/style.scss",
                 "archive_chan/static/css/lib/highlight.css",
                 "archive_chan/static/css/lib/jquery.qtip.css",
-                "archive_chan/static/css/lib/jquery.magnific.popup.css"
+                "archive_chan/static/css/lib/jquery.magnific.popup.css",
+                "archive_chan/static/css/lib/font-awesome.css"
             ],
             "output": "archive_chan/static/css/main.css"
         }
