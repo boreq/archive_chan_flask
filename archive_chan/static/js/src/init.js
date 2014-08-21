@@ -23,8 +23,8 @@ $(document).ready(function(){
             return;
         }
 
-        var postId = $(event.target).attr("post_id");
-        addPostTooltip(event.target, postId);
+        var postNumber = $(event.target).attr("post_id");
+        addPostTooltip(event.target, postNumber);
     });
 
     // Smooth scrolling when clicked on a post link.

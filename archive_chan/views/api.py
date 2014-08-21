@@ -239,7 +239,7 @@ class GetParentThread(ApiView):
         try:
             parent_thread_number = Post.query.join(Thread, Board).filter(
                 Board.name==board_name,
-                Thread.number==post_number
+                Post.number==post_number
             ).one().thread.number
         except NoResultFound:
             raise NotFoundApiError()
