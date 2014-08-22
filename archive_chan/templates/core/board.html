@@ -19,9 +19,8 @@
                         <li>
                     {% endif %}
                         <a href="{{ thread.get_absolute_url() }}">
-                            {% set post=thread.first_post() %}
                             <div class="img-container">
-                                <img src="{{ post.image.thumbnail_url }}">
+                                <img src="{{ thread.first_post.image.thumbnail_url }}">
                             </div>
 
                             <div class="thread-info">
@@ -41,10 +40,10 @@
                             </div>
 
                             <div class="thread-comment">
-                                {% if post.subject %}
-                                    <div class="thread-subject">{{ post.subject }}</div>
+                                {% if thread.first_post.subject %}
+                                    <div class="thread-subject">{{ thread.first_post.subject }}</div>
                                 {% endif %}
-                                {{ post.comment }}
+                                {{ thread.first_post.comment }}
                             </div>
                         </a>
                     </li>

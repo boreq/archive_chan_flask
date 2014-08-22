@@ -6,7 +6,10 @@
     overwrite values present in this file. If you want to run multiple
     instances of the archive with different configs you can change the name
     of the environment variable by passing the parameter to the application
-    factory. See the source code in __init__.py for more details.
+    factory. See the source code in __init__.py for more details. To set the 
+    environment variable use the export command:
+
+    export ARCHIVE_CHAN_SETTINGS=/path/to/settings.py
 
     Of course you can modify this file directly but that might cause conflicts
     while updating the repository and it is a good practice to keep the default

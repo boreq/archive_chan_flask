@@ -13,6 +13,8 @@ from .lib.helpers import utc_now
 
 
 class User(UserMixin, db.Model):
+    """User model and at the same time an user object used by flask-login."""
+
     __tablename__ = 'archive_chan_user'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -75,6 +77,12 @@ class Thread(db.Model):
     last_reply = db.Column(db.DateTime(timezone=True), nullable=True, default=None)
 
     tags = association_proxy('tagtothread', 'tag')
+
+    # An easy way to access the master post. Can be used in joins.
+    first_post = db.relationship('Post',
+        primaryjoin='and_(Thread.id==Post.thread_id, Thread.number==Post.number)',
+        uselist=False
+    )
     posts = db.relationship('Post',
         cascade='all,delete-orphan',
         backref='thread',
@@ -86,22 +94,29 @@ class Thread(db.Model):
     )
 
     def __init__(self, **kwargs):
+        """Default value of a db.Column is set too late, those values must be
+        available earlier.
+        """
         self.replies = kwargs.get('replies', 0)
         self.images = kwargs.get('images', 0)
         db.Model.__init__(self, **kwargs)
 
     def post_deleted(self):
+        """Called when a post is deleted to update the properties."""
         self.replies -= 1
 
     def image_deleted(self):
+        """Called when an image is deleted to update the properties."""
         self.images -= 1
 
-    # Used by scraper.
     def count_replies(self):
+        """Used by ThreadScraper to get the amount of replies which excludes
+        the first post.
+        """
         return self.replies - 1
 
-    # Used by board template.
-    def first_post(self):
+    def old_first_post(self):
+        """Used in the board template."""
         return self.posts.order_by(Post.number).first()
 
     def __str__(self):
@@ -142,6 +157,7 @@ class Post(db.Model):
     )
 
     def __init__(self, **kwargs):
+        """Constructor updates the denormalized data."""
         thread = kwargs['thread']
         thread.replies += 1
 
@@ -180,6 +196,7 @@ class Image(db.Model):
     thumbnail = db.Column(db.String(255), nullable=False)
 
     def __init__(self, **kwargs):
+        """Constructor updates the denormalized data."""
         kwargs['post'].thread.images += 1
         db.Model.__init__(self, **kwargs)
 

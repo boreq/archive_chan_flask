@@ -1,6 +1,7 @@
 import operator
 from flask import Blueprint, render_template, request
 from flask.views import View
+from sqlalchemy.orm import joinedload, subqueryload
 from ..cache import CachedBlueprint
 from ..models import Board, Thread, Post, Image, TagToThread
 from ..lib import modifiers
@@ -125,7 +126,7 @@ class BoardView(BodyIdMixin, TemplateView):
         queryset = Thread.query.join(Board).filter(
             Board.name==self.kwargs['board'],
             Thread.replies>1
-        )
+        ).options(joinedload('first_post'))
 
         for key, modifier in self.modifiers.items():
             queryset = modifier.execute(queryset)
