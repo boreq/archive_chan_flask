@@ -12,12 +12,8 @@ from flask import current_app
 from sqlalchemy.orm.attributes import instance_state
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import FileStorage
-from .. import create_app
 from ..database import db
 from ..models import Board, Thread, Post, Image, Trigger, TagToThread, Update, Tag
-
-
-app = create_app()
 
 
 class ScrapError(Exception):
@@ -35,10 +31,10 @@ class ThreadInfo:
     """Class used for storing information about the thread."""
 
     def __init__(self, thread_json): 
-        self.number = thread_json['no']
+        self.number = int(thread_json['no'])
         
         # Get the time of the last reply or thread creation time.
-        if 'last_replies' in thread_json and len(thread_json) > 0:
+        if 'last_replies' in thread_json and len(thread_json['last_replies']) > 0:
             last_reply_time = int(thread_json['last_replies'][-1]['time'])
         else:
             last_reply_time = int(thread_json['time'])
@@ -250,7 +246,7 @@ class Queuer:
         """
         wait_start = datetime.datetime.now()
         with self.api_wait_lock:
-            self.wait(current_app.config.get('API_WAIT'), self.last_api_request)
+            self.wait(current_app.config['API_WAIT'], self.last_api_request)
             self.last_api_request = datetime.datetime.now()
         self.total_wait_time_with_lock += datetime.datetime.now() - wait_start
 
@@ -260,7 +256,7 @@ class Queuer:
         """
         wait_start = datetime.datetime.now()
         with self.file_wait_lock:
-            self.wait(current_app.config.get('FILE_WAIT'), self.last_file_request)
+            self.wait(current_app.config['FILE_WAIT'], self.last_file_request)
             self.last_file_request = datetime.datetime.now()
         self.total_wait_time_with_lock += datetime.datetime.now() - wait_start
 
@@ -300,7 +296,7 @@ class Stats:
         class.
         """
         used_threads = kwargs.get('used_threads',
-                                  current_app.config.get('SCRAPER_THREADS_NUMBER'))
+                                  current_app.config['SCRAPER_THREADS_NUMBER'])
         wait_time = self.get('total_wait_time_with_lock') \
                         .total_seconds() / used_threads
         download_time = self.get('total_download_time') \
@@ -326,12 +322,12 @@ class Stats:
             wait_percent = round(
                 self.get('total_wait_time_with_lock').total_seconds() \
                 / total_time.total_seconds() * 100 \
-                / current_app.config.get('SCRAPER_THREADS_NUMBER')
+                / current_app.config['SCRAPER_THREADS_NUMBER']
             )
             downloading_percent = round(
                 self.get('total_download_time').total_seconds() \
                 / total_time.total_seconds() * 100 \
-                / current_app.config.get('SCRAPER_THREADS_NUMBER')
+                / current_app.config['SCRAPER_THREADS_NUMBER']
             )
 
         except:
@@ -575,13 +571,17 @@ class ThreadScraperWorker(Scraper, threading.Thread):
     objects from the queue and creates the ThreadScraper to processes them.
     It inherits from scraper because it must hold similar properties like
     Triggers or Queuer to pass them to created ThreadScraper objects.
+
+    This requires an app to be passed since it needs to create an application
+    context required to access the database and config in the ThreadScrapers.
     """
 
-    def __init__(self, board, board_scraper, queue, **kwargs):
+    def __init__(self, app, board, board_scraper, queue, **kwargs):
         super().__init__(board, **kwargs)
         threading.Thread.__init__(self)
         self.board_scraper = board_scraper
         self.queue = queue
+        self.app = app
 
     def on_task_start(self):
         db.session()
@@ -599,7 +599,7 @@ class ThreadScraperWorker(Scraper, threading.Thread):
         while True:
             thread_info = self.queue.get()
             try:
-                with app.test_request_context():
+                with self.app.app_context():
                     self.on_task_start()
                     thread_scraper = self.get_thread_scraper(thread_info)
                     try:
@@ -641,7 +641,10 @@ class BoardScraper(Scraper):
 
     def launch_worker(self, queue):
         """Launch a new worker."""
-        worker = ThreadScraperWorker(self.board, self, queue,
+        # See werkzeug.local.LocalProxy for details about current_app. Remember
+        # to pass a real object, not the LocalProxy used to access it.
+        worker = ThreadScraperWorker(current_app._get_current_object(),
+                                     self.board, self, queue,
                                      queuer=self.queuer,
                                      triggers=self.triggers,
                                      progress=self.show_progress)

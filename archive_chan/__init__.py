@@ -46,12 +46,7 @@ def init_app(app):
     from .admin import admin
     from .auth import login_manager, bcrypt
     from . import cache
-
     db.init_app(app)
-    # I am not sure why db.app isn't set automatically. It happens if the app
-    # object is passed directly to the constructor but not if the init_app
-    # method is called later.
-    db.app = app
     admin.init_app(app)
     login_manager.init_app(app)
     bcrypt.init_app(app)

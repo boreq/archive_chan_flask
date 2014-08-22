@@ -4,12 +4,12 @@ import os
 import tempfile
 import unittest
 from flask import url_for
-from archive_chan import create_app, models
+from archive_chan import create_app, models, database
 from archive_chan.lib import scraper, modifiers
-from archive_chan.database import db, init_db
 from archive_chan.lib.helpers import utc_now
 
-sample_thread_json = json.loads("""
+
+_sample_thread_json = json.loads("""
 {
     "no":43711727,
     "now":"08/21/14(Thu)15:54:54",
@@ -53,29 +53,25 @@ sample_thread_json = json.loads("""
 }
 """)
 
-
-def add_model(model, **kwargs):
-    item = model(**kwargs)
-    db.session.add(item)
-    db.session.commit()
-    db.session.refresh(item)
-    return item
-
-    
-def add_board(**kwargs):
-    return add_model(models.Board, **kwargs)
-
-
-def add_thread(**kwargs):
-    return add_model(models.Thread, **kwargs)
-
-
-def add_post(**kwargs):
-    return add_model(models.Post, **kwargs)
-
-
-def add_update(**kwargs):
-    return add_model(models.Update, **kwargs)
+_sample_post_json = json.loads("""
+{
+    "no":43722387,
+    "now":"08/22/14(Fri)04:22:23",
+    "name":"Anonymous",
+    "com":"Comment.",
+    "filename":"1408694335049",
+    "ext":".png",
+    "w":616,
+    "h":294,
+    "tn_w":125,
+    "tn_h":59,
+    "tim":1408695743383,
+    "time":1408695743,
+    "md5":"zB7h9/tETw1UON1PXEyefQ==",
+    "fsize":53382,
+    "resto":43722299
+}
+""")
 
 
 class BaseTestCase(unittest.TestCase):
@@ -87,25 +83,43 @@ class BaseTestCase(unittest.TestCase):
         }
         self.app = create_app(config)
         self.client = self.app.test_client()
-        init_db()
+        self.ctx = self.app.app_context()
+        self.ctx.push()
+        database.init_db()
         self.set_up()
-
-    def set_up(self):
-        """Custom set up here."""
-        pass
 
     def tearDown(self):
         self.tear_down()
+        self.ctx.pop()
         os.close(self.db_fd)
         os.unlink(self.db_path)
 
+    def set_up(self):
+        """Custom setup here."""
+        pass
+
     def tear_down(self):
-        """Custom tear down here."""
+        """Custom teardown here."""
         pass
 
     def url_for(self, name, **kwargs):
         with self.app.test_request_context():
             return url_for(name, **kwargs)
+
+    def add_model(self, model, **kwargs):
+        item = model(**kwargs)
+        database.db.session.add(item)
+        database.db.session.commit()
+        database.db.session.refresh(item)
+        return item
+
+    @property
+    def sample_thread_json(self):
+        return _sample_thread_json.copy()
+
+    @property
+    def sample_post_json(self):
+        return _sample_post_json.copy()
 
 
 class SimpleFilterTest(BaseTestCase):
@@ -213,7 +227,7 @@ class ViewsTest(BaseTestCase):
         self.check_list('core', views)
 
         # Board only.
-        board = add_board(name='board')
+        board = self.add_model(models.Board, name='board')
         params = {'board': board.name}
         views.extend([
             ('board', params),
@@ -223,7 +237,8 @@ class ViewsTest(BaseTestCase):
         self.check_list('core', views)
 
         # Board and empty thread.
-        thread = add_thread(board=board, number=1, first_reply=utc_now(), last_reply=utc_now())
+        thread = self.add_model(models.Thread, board=board, number=1,
+                           first_reply=utc_now(), last_reply=utc_now())
         params = {'board': board.name, 'thread': thread.number}
         views.extend([
             ('thread', params),
@@ -233,9 +248,9 @@ class ViewsTest(BaseTestCase):
         self.check_list('core', views)
 
 
-class ScraperTest(BaseTestCase):
+class ThreadScraperTest(BaseTestCase):
     def set_up(self):
-        self.thread_info = scraper.ThreadInfo(sample_thread_json)
+        self.thread_info = scraper.ThreadInfo(self.sample_thread_json)
         self.thread_scraper = scraper.ThreadScraper(None, self.thread_info)
         self.thread = models.Thread(last_reply=self.thread_info.last_reply_time,
                                     replies=self.thread_info.replies + 1)
@@ -255,6 +270,46 @@ class ScraperTest(BaseTestCase):
         broken_thread = models.Thread(last_reply=None, replies=0)
         self.assertTrue(self.thread_scraper.should_be_updated(broken_thread))
 
+
+class ThreadInfoTest(BaseTestCase):
+    def test_last_reply_time_gone(self):
+        thread_json = self.sample_thread_json
+        thread_json.pop('last_replies')
+        thread_info = scraper.ThreadInfo(thread_json)
+
+    def test_last_reply_time_empty(self):
+        thread_json = self.sample_thread_json
+        thread_json['last_replies'] = []
+        thread_info = scraper.ThreadInfo(thread_json)
+
+    def test_check_post_type(self):
+        board = self.add_model(models.Board, name='board')
+
+
+class TriggersTest(BaseTestCase):
+    def test_check_post_type(self):
+        board = self.add_model(models.Board, name='board')
+        thread = self.add_model(models.Thread, board=board, number=1)
+
+        triggers = scraper.Triggers()
+        post_data = scraper.PostData(self.sample_post_json)
+
+        post_data.number = 1
+        trigger = models.Trigger(post_type='master')
+        self.assertTrue(triggers.check_post_type(trigger, thread, post_data))
+
+        post_data.number = 2
+        trigger = models.Trigger(post_type='master')
+        self.assertFalse(triggers.check_post_type(trigger, thread, post_data))
+
+        post_data.number = 1
+        trigger = models.Trigger(post_type='sub')
+        self.assertFalse(triggers.check_post_type(trigger, thread, post_data))
+
+        post_data.number = 2
+        trigger = models.Trigger(post_type='master')
+        self.assertFalse(triggers.check_post_type(trigger, thread, post_data))
+        
 
 if __name__ == '__main__':
     unittest.main()
