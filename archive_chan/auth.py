@@ -1,9 +1,9 @@
 """
     Implementes methods related to user authentication.
 
-    Basic functionality is provided by flask-login.
-    Bcrypt provided by flask-bcrypt is used instead of default Werkzeug hash
-    implementation.
+    Core functionality is provided by flask-login extension. Bcrypt provided by
+    flask-bcrypt extension is used instead of the default password hashing
+    implementation introduced in Werkzeug which uses.
 """
 
 
@@ -18,25 +18,28 @@ bcrypt = Bcrypt()
 
 @login_manager.user_loader
 def load_user(user_id):
-    """Loads the User object based on the given id. Required by
-    flask-login extension.
+    """Returns an object used to represent a user. Required by flask-login
+    extension.
     """
     return User.query.get(user_id)
 
 
 def login(username, password, remember=False):
-    """Logs in the user. Returns True on success and False on failure
-    (invalid username/password).
+    """Logs in the user. Returns True on success or False on failure (in case of
+    invalid username or password).
+    
+    username: String containing an username.
+    password: String containing a password.
+    remember: Bool indicating whether the user should be remembered after his
+              session expires.
     """
     if not username or not password:
         return False
 
-    # Get the User object.
     user = User.query.filter(User.username==username).first()
     if user is None:
         return False
 
-    # Check if the password is correct.
     password_correct = check_password_hash(user.password, password)
     if not password_correct:
         return False

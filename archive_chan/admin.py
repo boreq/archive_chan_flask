@@ -1,5 +1,5 @@
 """
-    Views for flask-admin.
+    Implements admin panel. Uses flask-admin extension.
 """
 
 
@@ -18,6 +18,7 @@ admin = Admin(name='Archive Chan')
 
 class ModelView(sqla.ModelView):
     """Model view accessible only to logged in users."""
+
     def is_accessible(self):
         return current_user.is_authenticated()
 
@@ -26,7 +27,8 @@ class ModelView(sqla.ModelView):
 
 
 class DebugModelView(ModelView):
-    """Model view accessible to logged in users if DEBUG mode is enabled."""
+    """Model view accessible to logged in users only if DEBUG mode is enabled."""
+
     def is_accessible(self):
         if not current_app.config['DEBUG']:
             return False

@@ -1,5 +1,7 @@
 """
-    Modifiers assist in modyfing the queryset using the user-defined parameters.
+    Modifiers modify the queryset based on the user-defined parameters. They
+    can be used to allow the user to filter database results easily using
+    predefined settings.
 """
 
 
@@ -9,7 +11,11 @@ from ..models import Thread, Tag
 
 
 class Modifier:
-    """All sort/filter modifiers are based on this class."""
+    """Base class for the modifiers.
+
+    settings: Settings for the modifier. Can be anything since the base class
+              doesn't implement anything.
+    """
 
     def __init__(self, settings):
         """Constructor loads settings and user defined parameters and performs
@@ -33,8 +39,13 @@ class Modifier:
 
 
 class SimpleFilter(Modifier):
-    """Simple filter which can apply certain criterions based on a single
-    parameter.
+    """Simple filter which can apply certain criteria to a queryset.
+
+    settings: Tuple or list which can be casted to a dict in the following form
+              ((parameter, ('Pretty name', criterion_list)))
+    parameter: User defined parameter. Criteria for this parameter will be
+               applied. If the specified parameter does not exist it will
+               default to the first element of the settings.
     """
 
     def __init__(self, settings, parameter):
@@ -58,7 +69,8 @@ class SimpleFilter(Modifier):
 
 class TimeFilter(SimpleFilter):
     """Time based filter. It converts part of the criterion to datetime before
-    applying it.
+    applying it. Accepts only one criterion in settings in the following form:
+    (operator, model field, number of hours)
     """
 
     def execute(self, queryset):
@@ -73,7 +85,7 @@ class TimeFilter(SimpleFilter):
 
 
 class TagFilter(Modifier):
-    """Special tag filter accepting multiple parameters. It is not really reusable."""
+    """Special tag filter. It is not really reusable."""
 
     def __init__(self, parameter):
         super(TagFilter, self).__init__(None)
@@ -93,16 +105,13 @@ class TagFilter(Modifier):
 class SimpleSort(Modifier):
     """Adds order_by to the queryset."""
 
-    def __init__(self, settings, *args):
+    def __init__(self, settings, parameter):
         super(SimpleSort, self).__init__(settings)
-        # Reverse sorting?
-        if not args[0] is None:
-            self.parameter = args[0]
+        self.parameter = parameter
+        if not parameter is None:
             self.reverse = self.parameter.startswith('-')
             self.parameter = self.parameter.strip('-')
-            if not self.parameter in dict(self.settings):
-                self.load_default()
-        else:
+        if not self.parameter in dict(self.settings):
             self.load_default()
 
     def execute(self, queryset):

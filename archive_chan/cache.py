@@ -1,3 +1,8 @@
+"""
+    Implements caching.
+"""
+
+
 import hashlib
 import memcache
 from functools import wraps
@@ -10,12 +15,11 @@ cache = None
 
 
 class PatchedMemcachedCache(MemcachedCache):
-    """Stupid patch for python3-memcached. Keys must be str not bytes."""
+    """Stupid patch for python3-memcached. Key must be string not bytes."""
 
     def __init__(self, *args, **kwargs):
         super(PatchedMemcachedCache, self).__init__(*args, **kwargs)
         if self.client_is_memcached:
-            # key_prefix is encoded to bytes in the base constructor.
             self.key_prefix = self.key_prefix.decode()
 
     @property
@@ -41,14 +45,13 @@ class PatchedMemcachedCache(MemcachedCache):
 
 
 def init_app(app):
+    """Call this to init the cache object depending on the app config."""
     global cache
     cache = get_preferred_cache_system(app)
 
 
 def get_preferred_cache_system(app):
-    """Returns an initialized cache system object. The choice is based on the
-    app config.
-    """
+    """Returns an initialized cache object."""
     if not (app.config['DEBUG'] or app.config['TESTING']):
         if app.config['MEMCACHED_URL']:
             return PatchedMemcachedCache(
@@ -69,7 +72,7 @@ def get_md5(string):
 def get_cache_key(vary_on_auth):
     """Construct a cache key."""
     # Query url part matters in board view (catalog and the entire url can be
-    # very long so it is better to hash it.
+    # very long and may contain weird characters it is better to hash it).
     cache_key = get_md5(request.url)
     if vary_on_auth:
         cache_key += 'auth-%s' % current_user.is_authenticated()
@@ -79,9 +82,10 @@ def get_cache_key(vary_on_auth):
 def cached(timeout=None, vary_on_auth=False):
     """Simple cache decorator taken from Flask docs.
     
-    timeout: Cache timeout in seconds.
-    key: cache key, specified % conversion gets replaced with request.path.
-    vary_on_auth: Should different cache be served to authenticated users.
+    timeout: Cache timeout in seconds. Defaults to the default timeout set for
+             the cache system if None.
+    vary_on_auth: Indicates whether a different cache should be served to
+                  authenticated users.
     """
     def decorator(f):
         @wraps(f)
@@ -98,12 +102,12 @@ def cached(timeout=None, vary_on_auth=False):
 
 
 class CachedBlueprint(Blueprint):
-    """Blueprint which automatically caches all functions added by add_url_rule
-    method.
+    """Blueprint which automatically adds cached decorator to all views added
+    by add_url_rule method.
 
-    timeout: Cache timeout.
-    vary_on_auth: Should different cache be served to authenticated users.
-    default_cached: Should views be cached by default?
+    timeout: See cached decorator.
+    vary_on_auth: See cached decorator.
+    default_cached: Indicates whether the views should be cached by default.
     """
 
     def __init__(self, *args, **kwargs):
@@ -113,9 +117,10 @@ class CachedBlueprint(Blueprint):
         super(CachedBlueprint, self).__init__(*args, **kwargs)
 
     def add_url_rule(self, *args, **kwargs):
-        """Like add_url_rule but with cache settings.
+        """Exactly like add_url_rule but adds cache decorator if requested.
 
-        cached: Should this view be cached?
+        cached: Indicates whether the view should be cached. Defaults to 
+                default_cached.
         """
         if kwargs.pop('cached', self.default_cached):
             kwargs['view_func'] = cached(
