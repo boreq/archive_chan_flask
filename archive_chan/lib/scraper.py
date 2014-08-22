@@ -675,8 +675,7 @@ class BoardScraper(Scraper):
         try:
             self.catalog = self.get_catalog_json()
         except:
-            raise ScrapError('Unable to download or parse the catalog data.\
-                              Board update stopped.')
+            raise ScrapError('Unable to download or parse the catalog data. Board update stopped.')
 
         queue = Queue()
 
