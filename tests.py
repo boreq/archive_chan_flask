@@ -75,6 +75,7 @@ _sample_post_json = json.loads("""
 
 
 class BaseTestCase(unittest.TestCase):
+
     def setUp(self):
         self.db_fd, self.db_path = tempfile.mkstemp()
         config = {
@@ -123,6 +124,7 @@ class BaseTestCase(unittest.TestCase):
 
 
 class SimpleFilterTest(BaseTestCase):
+
     def set_up(self):
         self.parameters = (
             ('default', ('Default', None)),
@@ -159,6 +161,7 @@ class SimpleFilterTest(BaseTestCase):
 
 
 class SimpleSortTest(BaseTestCase):
+
     def set_up(self):
         self.parameters = (
             ('default', ('Last reply', 'field', None)),
@@ -202,6 +205,7 @@ class SimpleSortTest(BaseTestCase):
 
 
 class ViewsTest(BaseTestCase):
+
     def check_list(self, blueprint_name, view_list):
         for view in view_list:
             url = self.url_for('%s.%s' % (blueprint_name, view[0]), **view[1])
@@ -249,6 +253,7 @@ class ViewsTest(BaseTestCase):
 
 
 class ThreadScraperTest(BaseTestCase):
+
     def set_up(self):
         self.thread_info = scraper.ThreadInfo(self.sample_thread_json)
         self.thread_scraper = scraper.ThreadScraper(None, self.thread_info)
@@ -272,6 +277,7 @@ class ThreadScraperTest(BaseTestCase):
 
 
 class ThreadInfoTest(BaseTestCase):
+
     def test_last_reply_time_gone(self):
         thread_json = self.sample_thread_json
         thread_json.pop('last_replies')
@@ -287,6 +293,7 @@ class ThreadInfoTest(BaseTestCase):
 
 
 class TriggersTest(BaseTestCase):
+
     def test_check_post_type(self):
         board = self.add_model(models.Board, name='board')
         thread = self.add_model(models.Thread, board=board, number=1)
@@ -309,7 +316,43 @@ class TriggersTest(BaseTestCase):
         post_data.number = 2
         trigger = models.Trigger(post_type='master')
         self.assertFalse(triggers.check_post_type(trigger, thread, post_data))
-        
+
+    def test_check_event(self):
+        def get_trigger(event):
+            return models.Trigger(field='comment', event=event, phrase='phrase',
+                                  case_sensitive=True)
+
+        def check(trigger_true, trigger_false):
+            self.assertTrue(triggers.check_event(trigger_true, post_data))
+            self.assertFalse(triggers.check_event(trigger_false, post_data))
+            
+        triggers = scraper.Triggers()
+        post_data = scraper.PostData(self.sample_post_json)
+
+        # contains and containsno
+        trigger = get_trigger('contains')
+        trigger_no = get_trigger('containsno')
+        post_data.comment = 'there is a phrase in this comment'
+        check(trigger, trigger_no)
+        post_data.comment = 'this one does not contain it'
+        check(trigger_no, trigger)
+
+        # is and isnot
+        trigger = get_trigger('is')
+        trigger_no = get_trigger('isnot')
+        post_data.comment = 'phrase'
+        check(trigger, trigger_no)
+        post_data.comment = 'is not a phrase'
+        check(trigger_no, trigger)
+
+        # begins and ends
+        trigger = get_trigger('begins')
+        trigger_no = get_trigger('ends')
+        post_data.comment = 'phrase starts it'
+        check(trigger, trigger_no)
+        post_data.comment = 'ends with phrase'
+        check(trigger_no, trigger)
+
 
 if __name__ == '__main__':
     unittest.main()
