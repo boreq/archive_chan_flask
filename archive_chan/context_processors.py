@@ -57,7 +57,7 @@ def search_url_query():
         parameters = copy.copy(parameters)
         if name:
             parameters[name] = value
-        query =  '?saved=%s&type=%s&created=%search=%s' % (
+        query =  '?saved=%s&type=%s&created=%s&search=%s' % (
             parameters['saved'],
             parameters['type'],
             parameters['created'],

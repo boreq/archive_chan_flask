@@ -263,8 +263,8 @@ class SearchView(UniversalViewMixin, TemplateView):
             queryset = modifier.execute(queryset)
 
         queryset = queryset.filter(
-            or_(Post.subject.like('%' + self.parameters['search'] + '%'),
-                Post.comment.like('%' + self.parameters['search'] + '%'))
+            or_(Post.subject.ilike('%' + self.parameters['search'] + '%'),
+                Post.comment.ilike('%' + self.parameters['search'] + '%'))
         ).order_by(Post.time.desc())
 
         total_count = queryset.count()
@@ -296,7 +296,9 @@ bl.add_url_rule('/search/', view_func=SearchView.as_view('search'))
 bl.add_url_rule('/board/<board>/', view_func=BoardView.as_view('board'))
 bl.add_url_rule('/board/<board>/gallery/', view_func=GalleryView.as_view('board_gallery'))
 bl.add_url_rule('/board/<board>/stats/', view_func=StatsView.as_view('board_stats'))
+bl.add_url_rule('/board/<board>/search/', view_func=SearchView.as_view('board_search'))
 
 bl.add_url_rule('/board/<board>/thread/<thread>/', view_func=ThreadView.as_view('thread'))
 bl.add_url_rule('/board/<board>/thread/<thread>/gallery/', view_func=GalleryView.as_view('thread_gallery'))
 bl.add_url_rule('/board/<board>/thread/<thread>/stats/', view_func=StatsView.as_view('thread_stats'))
+bl.add_url_rule('/board/<board>/thread/<thread>/search/', view_func=SearchView.as_view('thread_search'))

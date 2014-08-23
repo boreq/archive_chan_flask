@@ -26,8 +26,7 @@ def create_app(config=None, envvar='ARCHIVE_CHAN_SETTINGS'):
         app.config.update(config)
 
     validate_config(app)
-    if app.config['DEBUG']:
-        load_debug(app)
+    load_debug(app)
     init_app(app)
 
     from . import views
@@ -64,6 +63,9 @@ def validate_config(app):
 
 def load_debug(app):
     """Starts the debug related stuff."""
+    if not app.config['DEBUG']:
+        return
+
     # flask-debug-toolbar
     try:
         from flask_debugtoolbar import DebugToolbarExtension
@@ -73,6 +75,7 @@ def load_debug(app):
         sys.stderr.write('Flask Debug Toolbar was not loaded. You can install it with `pip install flask-debugtoolbar`.\nError: %s\n' % e)
 
     # SQLAlchemy logging (for API debug)
-    import logging
-    logging.basicConfig()
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+    if app.config.get('LOG_QUERIES'):
+        import logging
+        logging.basicConfig()
+        logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
