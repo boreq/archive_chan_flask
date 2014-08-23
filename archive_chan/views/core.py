@@ -18,20 +18,20 @@ class TemplateView(View):
     method.
     """
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, *args, **kwargs):
         return {}
 
     def dispatch_request(self, *args, **kwargs):
         self.kwargs = kwargs
-        context = self.get_context_data()
+        context = self.get_context_data(*args, **kwargs)
         return render_template(self.template_name, **context)
 
 
 class BodyIdMixin(object):
     """Adds an easy way to add body_id to the context."""
 
-    def get_context_data(self, **kwargs):
-        context = super(BodyIdMixin, self).get_context_data(**kwargs)
+    def get_context_data(self, *args, **kwargs):
+        context = super(BodyIdMixin, self).get_context_data(*args, **kwargs)
         context['body_id'] = getattr(self, 'body_id', None)
         return context
 
@@ -39,8 +39,8 @@ class BodyIdMixin(object):
 class UniversalViewMixin(BodyIdMixin):
     """Adds board_name and thread_number to the context."""
 
-    def get_context_data(self, **kwargs):
-        context = super(UniversalViewMixin, self).get_context_data(**kwargs)
+    def get_context_data(self, *args, **kwargs):
+        context = super(UniversalViewMixin, self).get_context_data(*args, **kwargs)
         context['board_name'] = self.kwargs.get('board', None)
         context['thread_number'] = int(self.kwargs['thread']) \
             if 'thread' in self.kwargs else None
@@ -53,8 +53,8 @@ class IndexView(BodyIdMixin, TemplateView):
     template_name = 'core/index.html'
     body_id = 'body-home'
 
-    def get_context_data(self, **kwargs):
-        context = super(IndexView, self).get_context_data(**kwargs)
+    def get_context_data(self, *args, **kwargs):
+        context = super(IndexView, self).get_context_data(*args, **kwargs)
         context['board_list'] = Board.query.order_by('name').all()
         return context
 
@@ -148,10 +148,10 @@ class BoardView(BodyIdMixin, TemplateView):
 
         return queryset.slice(*self.pagination.get_slice())
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, *args, **kwargs):
         self.parameters = self.get_parameters()
 
-        context = super(BoardView, self).get_context_data(**kwargs)
+        context = super(BoardView, self).get_context_data(*args, **kwargs)
         context['board_name'] = self.kwargs['board']
         context['thread_list'] = self.get_queryset()
         context['pagination'] = self.pagination
@@ -172,8 +172,8 @@ class ThreadView(UniversalViewMixin, TemplateView):
                                  Board.name==self.kwargs['board']) \
                          .order_by(Post.number)
 
-    def get_context_data(self, **kwargs):
-        context = super(ThreadView, self).get_context_data(**kwargs)
+    def get_context_data(self, *args, **kwargs):
+        context = super(ThreadView, self).get_context_data(*args, **kwargs)
         context['post_list'] = self.get_queryset()
         return context
 
@@ -274,9 +274,9 @@ class SearchView(UniversalViewMixin, TemplateView):
 
         return queryset.slice(*self.pagination.get_slice())
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, *args, **kwargs):
         self.parameters = self.get_parameters()
-        context = super(SearchView, self).get_context_data(**kwargs)
+        context = super(SearchView, self).get_context_data(*args, **kwargs)
         context['post_list'] = self.get_queryset()
         context['pagination'] = self.pagination
         context['parameters'] = self.parameters
