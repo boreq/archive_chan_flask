@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "core/snippets/post.html" import post_macro %}
 
 {% block inner_head %}
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
@@ -45,63 +46,13 @@
 
             <ul id="posts">
                 {% for post in post_list %}
-                    <li class="post" id="post-{{ post.number }}">
-                        <div class="post-image-container">
-                            {% if post.image.thumbnail %}
-                                <a href="{{ post.image.image_url }}" title="{{ post.image.original_name }}" target="_blank" class="post-image"><img src="{{ post.image.thumbnail_url }}"></a>
-                            {% endif %}
-                        </div>
-
-                        <div class="post-content">
-                            <ul class="post-header">
-                                {% if post.is_main() %}
-                                    <li class="post-icon">
-                                       <i class="fa fa-level-down" title="OP"></i> 
-                                    </li>
-                                {% endif %}
-
-                                {# Post subject. #}
-                                {% if post.subject %}
-                                    <li class="post-subject">
-                                        {{ post.subject|forceescape|highlight(parameters.search) }}
-                                    </li>
-                                {% endif %}
-
-                                {# Post author. #}
-                                <li class="post-author">
-                                    <span class="post-author-name">
-                                        {{ post.name }}
-                                    </span>
-
-                                    {% if post.trip %}
-                                        <span class="post-author-trip">
-                                            {{ post.trip }}
-                                        </span>
-                                    {% endif %}
-                                </li>
-
-                                {# Post time. #}
-                                <li class="post-time">
-                                    {{ post.time|datetimeformat }}
-                                </li>
-
-                                {# Post number. #}
-                                <li class="post-number">
-                                    <a href="{{ post.get_absolute_url() }}">{{ post }}</a>
-                                </li>
-                            </ul>
-
-                            {% if post.comment %}
-                                <div class="post-comment">{{ post.comment|forceescape|highlight(parameters.search)|formatpost|nl2br }}</div>
-                            {% endif %}
-                        </div>
-                    </li>
+                    {{ post_macro(post, user, parameters.search) }}
                 {% endfor %}
             </ul>
         </div>
     </div>
 
-    {% if pagination.is_paginated %}
+    {% if is_paginated %}
         <div class="content">
             <div class="wrapper">
                 {% from "core/snippets/pagination.html" import pagination_macro %}
