@@ -13,6 +13,10 @@ bl = CachedBlueprint('core', __name__, vary_on_auth=True)
 
 
 class TemplateView(View):
+    """Base view which renders a template with context returned by get_context_data
+    method.
+    """
+
     def get_context_data(self, **kwargs):
         return {}
 
@@ -24,6 +28,7 @@ class TemplateView(View):
 
 class BodyIdMixin(object):
     """Adds an easy way to add body_id to the context."""
+
     def get_context_data(self, **kwargs):
         context = super(BodyIdMixin, self).get_context_data(**kwargs)
         context['body_id'] = getattr(self, 'body_id', None)
@@ -32,6 +37,7 @@ class BodyIdMixin(object):
 
 class UniversalViewMixin(BodyIdMixin):
     """Adds board_name and thread_number to the context."""
+
     def get_context_data(self, **kwargs):
         context = super(UniversalViewMixin, self).get_context_data(**kwargs)
         context['board_name'] = self.kwargs.get('board', None)
@@ -42,6 +48,7 @@ class UniversalViewMixin(BodyIdMixin):
 
 class IndexView(BodyIdMixin, TemplateView):
     """View showing all boards."""
+
     template_name = 'core/index.html'
     body_id = 'body-home'
 
@@ -53,6 +60,7 @@ class IndexView(BodyIdMixin, TemplateView):
 
 class BoardView(BodyIdMixin, TemplateView):
     """View showing all threads in a specified board."""
+
     template_name = 'core/board.html'
     body_id = 'body-board'
     available_parameters = {
@@ -123,21 +131,18 @@ class BoardView(BodyIdMixin, TemplateView):
         return parameters
 
     def get_queryset(self):
-        queryset = Thread.query.join(Board).filter(
-            Board.name==self.kwargs['board'],
-            Thread.replies>1
-        ).options(joinedload('first_post'))
+        queryset = Thread.query.join(Board) \
+                               .options(joinedload('first_post')) \
+                               .filter(Board.name==self.kwargs['board'],
+                                       Thread.replies>1)
+                                           
 
         for key, modifier in self.modifiers.items():
             queryset = modifier.execute(queryset)
 
         total_count = queryset.count()
 
-        self.pagination = Pagination(
-            request.args.get('page'),
-            20,
-            total_count
-        )
+        self.pagination = Pagination(request.args.get('page'), 20, total_count)
         self.parameters['page'] = self.pagination.page
 
         return queryset.slice(*self.pagination.get_slice())
@@ -156,14 +161,15 @@ class BoardView(BodyIdMixin, TemplateView):
 
 class ThreadView(UniversalViewMixin, TemplateView):
     """View showing all posts in a specified thread."""
+
     template_name = 'core/thread.html'
     body_id = 'body-thread'
 
     def get_queryset(self):
-        return Post.query.join(Thread, Board).filter(
-            Thread.number==self.kwargs['thread'],
-            Board.name==self.kwargs['board']
-        ).order_by(Post.number)
+        return Post.query.join(Thread, Board) \
+                         .filter(Thread.number==self.kwargs['thread'],
+                                 Board.name==self.kwargs['board']) \
+                         .order_by(Post.number)
 
     def get_context_data(self, **kwargs):
         context = super(ThreadView, self).get_context_data(**kwargs)
@@ -173,18 +179,21 @@ class ThreadView(UniversalViewMixin, TemplateView):
 
 class GalleryView(UniversalViewMixin, TemplateView):
     """View displaying gallery template. Data is loaded via AJAX calls."""
+
     template_name = 'core/gallery.html'
     body_id = 'body-gallery'
 
 
 class StatsView(UniversalViewMixin, TemplateView):
     """View displaying stats template. Data is loaded via AJAX calls."""
+
     template_name = 'core/stats.html'
     body_id = 'body-stats'
 
 
 class StatusView(BodyIdMixin, TemplateView):
     """View displaying archive status. Data is loaded via AJAX calls."""
+
     template_name = 'core/status.html'
     body_id = 'body-status'
 

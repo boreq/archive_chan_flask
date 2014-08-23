@@ -18,7 +18,7 @@ class Command(script.Command):
             db.func.count(Image.id).label('correct_images'),
             db.func.min(Post.time).label('correct_first_reply'),
             db.func.max(Post.time).label('correct_last_reply'),
-        ).join(Post).outerjoin(Image).group_by(Thread.id).all()
+        ).outerjoin(Post).outerjoin(Image).group_by(Thread.id).all()
 
         total = 0
         updated = 0
