@@ -209,6 +209,7 @@ class SearchView(UniversalViewMixin, TemplateView):
         'type': (
             ('all', ('All', None)),
             ('op', ('Main post', (Post.number==Thread.number,))),
+            ('reply', ('Reply', (Post.number!=Thread.number,))),
         ),
         'saved': (
             ('all', ('All', None)),
