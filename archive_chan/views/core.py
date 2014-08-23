@@ -200,7 +200,7 @@ class StatusView(BodyIdMixin, TemplateView):
 
 
 class SearchView(UniversalViewMixin, TemplateView):
-    """Allows to perform searches."""
+    """Allows the user to perform searches."""
 
     template_name = 'core/search.html'
     body_id = 'body-search'
@@ -245,7 +245,7 @@ class SearchView(UniversalViewMixin, TemplateView):
         parameters['saved'] = self.modifiers['saved'].get()
         parameters['created'] = self.modifiers['created'].get()
         parameters['type'] = self.modifiers['type'].get()
-        parameters['search'] = request.args.get('search', None)
+        parameters['search'] = request.args.get('search', '')
         return parameters
 
     def get_queryset(self):
@@ -276,9 +276,6 @@ class SearchView(UniversalViewMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         self.parameters = self.get_parameters()
-
-        from archive_chan.lib.stats import get_posts_chart_data
-
         context = super(SearchView, self).get_context_data(**kwargs)
         context['post_list'] = self.get_queryset()
         context['pagination'] = self.pagination
