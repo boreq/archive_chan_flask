@@ -35,7 +35,7 @@ class Board(db.Model):
 
     threads = db.relationship('Thread',
         cascade='all,delete-orphan',
-        backref='board',
+        backref=db.backref('board', lazy='joined'),
         lazy='dynamic'
     )
     updates = db.relationship('Update',
@@ -85,7 +85,7 @@ class Thread(db.Model):
     )
     posts = db.relationship('Post',
         cascade='all,delete-orphan',
-        backref='thread',
+        backref=db.backref('thread', lazy='joined'),
         lazy='dynamic'
     )
     tagtothreads = db.relationship('TagToThread',
@@ -273,7 +273,8 @@ class TagToThread(db.Model):
     save_time = db.Column(db.DateTime(timezone=True), nullable=False, default=utc_now())
 
     tag = db.relationship(Tag,
-        backref='tagtothread'
+        backref='tagtothread',
+        lazy='joined'
     )
     thread = db.relationship(Thread,
         backref='tagtothread'

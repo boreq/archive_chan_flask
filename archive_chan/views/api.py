@@ -8,6 +8,7 @@ import json
 from flask import Blueprint, Response, request
 from flask.views import View
 from flask.ext.login import current_user
+from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from ..database import db
 from ..cache import CachedBlueprint
@@ -140,7 +141,8 @@ class Status(ApiView):
         last_updates = Update.query \
                              .join(Board) \
                              .order_by(Update.board_id, Update.start.desc()) \
-                             .distinct(Update.board_id)
+                             .distinct(Update.board_id) \
+                             .options(joinedload(Update.board))
         response_data['last_updates'] = [{
             'board': str(update.board),
             'start': update.start.isoformat(),
@@ -178,7 +180,9 @@ class Gallery(ApiView):
         last = request.args.get('last')
         amount = int(request.args.get('amount', 10))
 
-        queryset = Image.query.join(Post, Thread, Board)
+        queryset = Image.query.join(Post, Thread, Board) \
+                              .options(joinedload(Image.post))
+
         if board_name:
             queryset = queryset.filter(
                 Board.name==board_name

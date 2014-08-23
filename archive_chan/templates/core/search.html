@@ -1,13 +1,11 @@
-{% extends "archive_chan/base.html" %},
-{% load archive_chan_filters %}
-{% load staticfiles %}
+{% extends "base.html" %}
 
 {% block inner_head %}
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script>
         var chartData = {{ chart_data|safe }};
     </script>
-    <script src="{% static 'archive_chan/js/search.js' %}"></script>
+    <script src="{{ url_for('static', filename='js/search.js') }}"></script>
 {% endblock %}
 
 {% block content %}
@@ -20,27 +18,27 @@
                     </form>
 
                     {% if parameters.search %}
-                        <div class="search-chart">
-                            <div id="chart"></div>
-                            <p>Found {{ page_obj.paginator.count }} results.</p>
+                        <div class="search-info">
+                            <p>Found {{ pagination.total_count }} results.</p>
                         </div>
                     {% endif %}
                 </div>
 
                 <div class="search-filters">
+                    {% import "core/snippets/filters.html" as filters with context %}
                     <div>
                         <h3>Type</h3>
-                        {% simple_filter_search "type" %}
+                        {{ filters.simple_filter("type", search_url_query) }}
                     </div>
 
                     <div>
                         <h3>Created</h3>
-                        {% simple_filter_search "created" %}
+                        {{ filters.simple_filter("created", search_url_query) }}
                     </div>
 
                     <div>
                         <h3>Saved</h3>
-                        {% simple_filter_search "saved" %}
+                        {{ filters.simple_filter("saved", search_url_query) }}
                     </div>
                 </div>
             </div>
@@ -49,16 +47,14 @@
                 {% for post in post_list %}
                     <li class="post" id="post-{{ post.number }}">
                         <div class="post-image-container">
-                            {% with post.image as image %}
-                                {% if image.thumbnail %}
-                                    <a href="{{ image.image.url }}" title="{{ image.original_name }}" target="_blank" class="post-image"><img src="{{ image.thumbnail.url }}"></a>
-                                {% endif %}
-                            {% endwith %}
+                            {% if post.image.thumbnail %}
+                                <a href="{{ post.image.image_url }}" title="{{ post.image.original_name }}" target="_blank" class="post-image"><img src="{{ post.image.thumbnail_url }}"></a>
+                            {% endif %}
                         </div>
 
                         <div class="post-content">
                             <ul class="post-header">
-                                {% if post.is_main %}
+                                {% if post.is_main() %}
                                     <li class="post-icon">
                                        <i class="fa fa-level-down" title="OP"></i> 
                                     </li>
@@ -67,14 +63,14 @@
                                 {# Post subject. #}
                                 {% if post.subject %}
                                     <li class="post-subject">
-                                        {{ post.subject|force_escape|highlight:parameters.search|safe }}
+                                        {{ post.subject|forceescape|highlight(parameters.search) }}
                                     </li>
                                 {% endif %}
 
                                 {# Post author. #}
                                 <li class="post-author">
                                     <span class="post-author-name">
-                                        {{ post.get_name }}
+                                        {{ post.name }}
                                     </span>
 
                                     {% if post.trip %}
@@ -86,17 +82,17 @@
 
                                 {# Post time. #}
                                 <li class="post-time">
-                                    <time class="timeago" datetime="{{ post.time|date:"c" }}">{{ post.time }}</time>
+                                    {{ post.time|datetimeformat }}
                                 </li>
 
                                 {# Post number. #}
                                 <li class="post-number">
-                                    <a href="{{ post.get_absolute_url }}">{{ post }}</a>
+                                    <a href="{{ post.get_absolute_url() }}">{{ post }}</a>
                                 </li>
                             </ul>
 
                             {% if post.comment %}
-                                <div class="post-comment">{{ post.comment|force_escape|highlight:parameters.search|formatpost|safe|linebreaksbr }}</div>
+                                <div class="post-comment">{{ post.comment|forceescape|highlight(parameters.search)|formatpost|nl2br }}</div>
                             {% endif %}
                         </div>
                     </li>
@@ -108,8 +104,8 @@
     {% if is_paginated %}
         <div class="content">
             <div class="wrapper">
-                {% search_url_query_assign as url_query %}
-                {% include "archive_chan/snippets/pagination.html" %}
+                {% from "core/snippets/pagination.html" import pagination_macro %}
+                {{ pagination_macro(pagination, search_url_query(parameters)) }}
             </div>
         </div>
     {% endif %}

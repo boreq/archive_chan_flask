@@ -26,7 +26,8 @@ def create_app(config=None, envvar='ARCHIVE_CHAN_SETTINGS'):
         app.config.update(config)
 
     validate_config(app)
-    load_debug_toolbar(app)
+    if app.config['DEBUG']:
+        load_debug(app)
     init_app(app)
 
     from . import views
@@ -61,12 +62,17 @@ def validate_config(app):
             raise Exception('Set your secret key.')
 
 
-def load_debug_toolbar(app):
-    """Loads the debug toolbar if possible."""
-    if app.config['DEBUG']:
-        try:
-            from flask_debugtoolbar import DebugToolbarExtension
-            toolbar = DebugToolbarExtension(app)
-        except ImportError as e:
-            import sys
-            sys.stderr.write('Flask Debug Toolbar was not loaded. You can install it with `pip install flask-debugtoolbar`.\nError: %s\n' % e)
+def load_debug(app):
+    """Starts the debug related stuff."""
+    # flask-debug-toolbar
+    try:
+        from flask_debugtoolbar import DebugToolbarExtension
+        toolbar = DebugToolbarExtension(app)
+    except ImportError as e:
+        import sys
+        sys.stderr.write('Flask Debug Toolbar was not loaded. You can install it with `pip install flask-debugtoolbar`.\nError: %s\n' % e)
+
+    # SQLAlchemy logging (for API debug)
+    import logging
+    logging.basicConfig()
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)

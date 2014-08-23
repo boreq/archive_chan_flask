@@ -1,7 +1,7 @@
 """
     Template filters can be used to modify variables while displaying them
-    in the templates. The context processors defined here are attached
-    to a blueprint which has to be registered on an application later.
+    in the templates. Filters defined here are attached to a blueprint which
+    is registered on an application in create_app method.
 """
 
 
@@ -23,7 +23,7 @@ _code_re = re.compile(r'\[code\](.*?)\[\/code\]', flags=re.MULTILINE|re.DOTALL)
 @evalcontextfilter
 def formatpost(eval_ctx, text):
     """Formats a comment before displaying it in the template."""
-    text = str(escape(text))
+    text = str(text)
 
     # Transform a >>quote into a link.
     text = re.sub(
@@ -63,13 +63,31 @@ def nl2br(eval_ctx, value):
 
 
 @bl.app_template_filter()
-def datetimeformat(datetime, timeago=True):
+@evalcontextfilter
+def datetimeformat(eval_ctx, datetime, timeago=True):
     """Converts datetime to <time> tag or readable string."""
     readable = datetime.strftime('%Y-%m-%d %H:%M:%S %z')
     if not timeago:
         return readable
     iso_format = datetime.strftime('%Y-%m-%dT%H:%M:%S%z')
-    return Markup('<time class="timeago" datetime="%s">%s</time>' % (
-        iso_format,
-        readable
-    ))
+    result = '<time class="timeago" datetime="%s">%s</time>' % (iso_format,
+                                                                readable)
+    if eval_ctx.autoescape:
+        result = Markup(result)
+    return result
+
+
+@bl.app_template_filter()
+@evalcontextfilter
+def highlight(eval_ctx, text, phrase):
+    """This filter higlights the specified phrase in the text."""
+    text = str(text)
+    text = re.sub(
+        r'(' + phrase + ')',
+        r'<span class="highlight">\1</span>',
+        text,
+        flags=re.IGNORECASE
+    )
+    if eval_ctx.autoescape:
+        text = Markup(text)
+    return text

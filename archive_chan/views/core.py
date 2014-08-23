@@ -1,7 +1,8 @@
 import operator
 from flask import Blueprint, render_template, request
 from flask.views import View
-from sqlalchemy.orm import joinedload, subqueryload
+from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
 from ..cache import CachedBlueprint
 from ..models import Board, Thread, Post, Image, TagToThread
 from ..lib import modifiers
@@ -198,10 +199,99 @@ class StatusView(BodyIdMixin, TemplateView):
     body_id = 'body-status'
 
 
+class SearchView(UniversalViewMixin, TemplateView):
+    """Allows to perform searches."""
+
+    template_name = 'core/search.html'
+    body_id = 'body-search'
+
+    available_parameters = {
+        'type': (
+            ('all', ('All', None)),
+            ('op', ('Main post', (Post.number==Thread.number,))),
+        ),
+        'saved': (
+            ('all', ('All', None)),
+            ('yes', ('Yes', (Thread.saved==True,))),
+            ('no',  ('No', (Thread.saved==False,))),
+        ),
+        'created': (
+            ('always', ('Always', None)),
+            ('quarter', ('15 minutes', (operator.gt, Thread.last_reply, 0.25))),
+            ('hour', ('Hour', (operator.gt, Thread.last_reply, 1))),
+            ('day', ('Day', (operator.gt, Thread.last_reply, 24))),
+            ('week', ('Week', (operator.gt, Thread.last_reply, 24 * 7))),
+            ('month', ('Month', (operator.gt, Thread.last_reply, 24 * 30))),
+        ),
+    }
+
+    def get_parameters(self):
+        """Extracts parameters related to filtering and sorting from request."""
+        self.modifiers = {}
+        self.modifiers['saved'] = modifiers.SimpleFilter(
+            self.available_parameters['saved'],
+            request.args.get('saved', None)
+        )
+        self.modifiers['type'] = modifiers.SimpleFilter(
+            self.available_parameters['type'],
+            request.args.get('type', None)
+        )
+        self.modifiers['created'] = modifiers.TimeFilter(
+            self.available_parameters['created'],
+            request.args.get('created', None)
+        )
+
+        parameters = {}
+        parameters['saved'] = self.modifiers['saved'].get()
+        parameters['created'] = self.modifiers['created'].get()
+        parameters['type'] = self.modifiers['type'].get()
+        parameters['search'] = request.args.get('search', None)
+        return parameters
+
+    def get_queryset(self):
+        if self.parameters['search'] is None or len(self.parameters['search']) == 0:
+            self.pagination = Pagination(0, 0, 0)
+            return []
+
+        queryset = Post.query.join(Thread, Board)
+
+        if 'board' in self.kwargs:
+            queryset = queryset.filter(Board.name==self.kwargs['board'])
+        if 'thread' in self.kwargs:
+            queryset = queryset.filter(Thread.number==self.kwargs['thread'])
+        for key, modifier in self.modifiers.items():
+            queryset = modifier.execute(queryset)
+
+        queryset = queryset.filter(
+            or_(Post.subject.like('%' + self.parameters['search'] + '%'),
+                Post.comment.like('%' + self.parameters['search'] + '%'))
+        ).order_by(Post.time.desc())
+
+        total_count = queryset.count()
+
+        self.pagination = Pagination(request.args.get('page'), 20, total_count)
+        self.parameters['page'] = self.pagination.page
+
+        return queryset.slice(*self.pagination.get_slice())
+
+    def get_context_data(self, **kwargs):
+        self.parameters = self.get_parameters()
+
+        from archive_chan.lib.stats import get_posts_chart_data
+
+        context = super(SearchView, self).get_context_data(**kwargs)
+        context['post_list'] = self.get_queryset()
+        context['pagination'] = self.pagination
+        context['parameters'] = self.parameters
+        context['available_parameters'] = self.available_parameters
+        return context
+
+
 bl.add_url_rule('/', view_func=IndexView.as_view('index'))
 bl.add_url_rule('/gallery/', view_func=GalleryView.as_view('gallery'))
 bl.add_url_rule('/stats/', view_func=StatsView.as_view('stats'))
 bl.add_url_rule('/status/', view_func=StatusView.as_view('status'))
+bl.add_url_rule('/search/', view_func=SearchView.as_view('search'))
 
 bl.add_url_rule('/board/<board>/', view_func=BoardView.as_view('board'))
 bl.add_url_rule('/board/<board>/gallery/', view_func=GalleryView.as_view('board_gallery'))

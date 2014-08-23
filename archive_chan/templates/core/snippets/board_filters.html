@@ -3,22 +3,22 @@
 <div class="board-filters">
     <div>
         <h3>Order by</h3>
-        {{ filters.simple_sort("sort") }}
+        {{ filters.simple_sort("sort", board_url_query) }}
     </div>
 
     <div>
         <h3>Saved</h3>
-        {{ filters.simple_filter("saved") }}
+        {{ filters.simple_filter("saved", board_url_query) }}
     </div>
 
     <div>
         <h3>Last reply</h3>
-        {{ filters.simple_filter("last_reply") }}
+        {{ filters.simple_filter("last_reply", board_url_query) }}
     </div>
 
     <div>
         <h3>Tagged</h3>
-        {{ filters.simple_filter("tagged") }}
+        {{ filters.simple_filter("tagged", board_url_query) }}
     </div>
 
     {% if parameters.tag %}

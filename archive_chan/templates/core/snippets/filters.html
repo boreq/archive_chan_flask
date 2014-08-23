@@ -1,32 +1,32 @@
-{% macro simple_filter(name) -%}
+{% macro simple_filter(name, query_function) -%}
     <ul class="fa-ul">
         {% for item in available_parameters[name] %}
             <li>
                 {% if item[0] == parameters[name] %}
                     <i class="fa-li fa fa-check"></i>
-                    <a href="{{ board_url_query(parameters, name, item[0]) }}" class="current-selection">{{ item[1][0] }}</a>
+                    <a href="{{ query_function(parameters, name, item[0]) }}" class="current-selection">{{ item[1][0] }}</a>
                 {% else %}
-                    <a href="{{ board_url_query(parameters, name, item[0]) }}">{{ item[1][0] }}</a>
+                    <a href="{{ query_function(parameters, name, item[0]) }}">{{ item[1][0] }}</a>
                 {% endif %}
             </li>
         {% endfor %}
     </ul>
 {%- endmacro %}
 
-{% macro simple_sort(name) -%}
+{% macro simple_sort(name, query_function) -%}
     <ul class="fa-ul">
         {% for item in available_parameters[name] %}
             <li>
                 {% if item[0] == parameters[name] %}
                     {% if parameters['sort_reverse'] %}  
                         <i class="fa-li fa fa-sort-amount-desc"></i>
-                        <a href="{{ board_url_query(parameters, 'sort_with_operator', item[0]) }}" class="current-selection">{{ item[1][0] }}</a>
+                        <a href="{{ query_function(parameters, 'sort_with_operator', item[0]) }}" class="current-selection">{{ item[1][0] }}</a>
                     {% else %}
                         <i class="fa-li fa fa-sort-amount-asc"></i>
-                        <a href="{{ board_url_query(parameters, 'sort_with_operator', '-' + item[0]) }}" class="current-selection">{{ item[1][0] }}</a>
+                        <a href="{{ query_function(parameters, 'sort_with_operator', '-' + item[0]) }}" class="current-selection">{{ item[1][0] }}</a>
                     {% endif %}
                 {% else %}
-                        <a href="{{ board_url_query(parameters, 'sort_with_operator', '-' + item[0]) }}">{{ item[1][0] }}</a>
+                        <a href="{{ query_function(parameters, 'sort_with_operator', '-' + item[0]) }}">{{ item[1][0] }}</a>
                 {% endif %}
             </li>
         {% endfor %}

@@ -1,4 +1,4 @@
-{% macro post_macro(post, user) -%}
+{% macro post_macro(post, user, hide_op_related=False ) -%}
     <li class="post" id="post-{{ post.number }}">
         <div class="post-image-container">
             {% if post.image.thumbnail %}
@@ -7,7 +7,7 @@
                 </a>
             {% endif %}
 
-            {% if post.is_main() %}
+            {% if not hide_op_related and post.is_main() %}
                 {{ main_post_macro(post, user) }}
             {% endif %}
         </div>
@@ -62,7 +62,7 @@
             </ul>
 
             {% if post.comment %}
-                <div class="post-comment">{{ post.comment|formatpost|nl2br }}</div>
+                <div class="post-comment">{{ post.comment|forceescape|formatpost|nl2br }}</div>
             {% endif %}
         </div>
     </li>

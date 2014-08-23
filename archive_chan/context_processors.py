@@ -1,7 +1,7 @@
 """
     Context processors are used to automatically inject variables and functions
     into the template context. The context processors defined here are attached
-    to a blueprint which has to be registered on an application later.
+    to a blueprint which is registered on an application in create_app method.
 """
 
 
@@ -48,3 +48,21 @@ def board_url_query():
         return query
 
     return dict(board_url_query=url_query)
+
+
+@bl.app_context_processor
+def search_url_query():
+    """Injects the method used to build the query part of the seach url."""
+    def url_query(parameters, name=None, value=None):
+        parameters = copy.copy(parameters)
+        if name:
+            parameters[name] = value
+        query =  '?saved=%s&type=%s&created=%search=%s' % (
+            parameters['saved'],
+            parameters['type'],
+            parameters['created'],
+            parameters['search']
+        )
+        return query
+
+    return dict(search_url_query=url_query)

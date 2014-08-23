@@ -702,15 +702,8 @@ code{
         flex-flow: column nowrap;
         flex-grow: 1;
 
-        .search-chart{
-            background-color: #fff;
-            border: 1px solid $border-color;
+        .search-info{
             flex-grow: 1;
-            padding: 1em;
-
-            #chart{
-                height: 200px;
-            }
         }
 
         .search-form{
