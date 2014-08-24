@@ -30,6 +30,7 @@ div#site{
 #body-stats,
 #body-gallery,
 #body-search,
+#body-error,
 #body-status{
     background-color: $background-color;
 }
@@ -760,10 +761,13 @@ code{
 }
 
 /*   Error page.   */
-.error-image{
-    max-width: 100%;
-    display: block;
-    margin: 0 auto;
+.error-code{
+    text-align: center;
+
+    h2{
+        font-size: 40px;
+        margin: 0;
+    }
 }
 
 /*   Responsive.   */

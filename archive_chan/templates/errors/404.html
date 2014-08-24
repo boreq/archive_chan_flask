@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <a href="{{ url_for('core.index') }}"><img class="error-image" src="{{ url_for('static', filename='img/404.jpg') }}"></a>
+    <div class="content">
+        <div class="error-code wrapper">
+            <h2>404</h2>
+            <p>Page not found.</p>
+        </div>
+    </div>
 {% endblock %}
