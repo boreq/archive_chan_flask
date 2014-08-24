@@ -377,6 +377,7 @@ class PostDataTest(BaseTestCase):
 class TriggersTest(BaseTestCase):
 
     def test_check_post_type(self):
+        """Test if post type is checked correctly."""
         board = self.add_model(models.Board, name='board')
         thread = self.add_model(models.Thread, board=board, number=1)
 
@@ -400,6 +401,7 @@ class TriggersTest(BaseTestCase):
         self.assertFalse(triggers.check_post_type(trigger, thread, post_data))
 
     def test_check_event(self):
+        """Test if the event is checked correctly."""
         def get_trigger(event):
             return models.Trigger(field='comment', event=event, phrase='phrase',
                                   case_sensitive=True)
@@ -434,6 +436,28 @@ class TriggersTest(BaseTestCase):
         check(trigger, trigger_no)
         post_data.comment = 'ends with phrase'
         check(trigger_no, trigger)
+
+    def test_handle(self):
+        """Test if the trigger saves the thread and adds the tag."""
+        post_data = scraper.PostData(self.sample_post_json)
+
+        board = self.add_model(models.Board, name='board')
+        thread = self.add_model(models.Thread, board=board, number=1)
+        tag = self.add_model(models.Tag, name='tag')
+        trigger = self.add_model(models.Trigger, field='comment', event='is',
+                                 post_type='any', phrase=post_data.comment,
+                                 case_sensitive=True, tag=tag, save_thread=True)
+
+        triggers = scraper.Triggers()
+        triggers.handle(post_data, thread)
+        database.db.session.commit()
+
+        self.assertEqual(len(models.TagToThread.query.all()), 1,
+                         msg='Trigger failed to add the tag.')
+        self.assertTrue(models.Thread.query.first().saved, 
+                         msg='Trigger failed to save the thread.')
+        self.assertTrue(models.TagToThread.query.first().automatically_added, 
+                         msg='Tag was not marked as automatically added.')
 
 
 if __name__ == '__main__':
