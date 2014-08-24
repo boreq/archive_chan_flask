@@ -19,6 +19,13 @@
         },
         {
             "input": [
+                "archive_chan/static/js/lib/jquery.flot.js",
+                "archive_chan/static/js/lib/jquery.flot.time.js"
+            ],
+            "output": "archive_chan/static/js/flot.js"
+        },
+        {
+            "input": [
                 "archive_chan/static/js/src/stats.js"
             ],
             "output": "archive_chan/static/js/stats.js"

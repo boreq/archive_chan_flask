@@ -1,6 +1,3 @@
-google.load('visualization', '1', {packages:['corechart']});
-google.setOnLoadCallback(update);
-
 var statsData, timeout;
 
 // This is necessary to make the chart responsive.
@@ -10,6 +7,8 @@ $(window).resize(function(){
 
 // Trigger the update manually.
 $(document).ready(function(){
+    update();
+
     $('.last-update-info').on('click', '#update-now', function(){
         update();
     });
@@ -72,34 +71,24 @@ function drawData(data) {
 
 // Function drawing the chart.
 function drawChart(data) {
-  var options = {
-    fontSize: 12,
-    chartArea: {
-        left: 30,
-        top: 10,
-        width: '100%',
-        height: '90%'
-    },
-    legend: {
-        position: 'none'
-    },
-    tooltip: {
-        isHtml: true
-    },
-    series: [{
-        color: '#65c6bb'
-    }],
-    explorer: {
-        maxZoomOut: 2,
-        actions: ['dragToZoom', 'rightClickToReset'],
-        keepInBounds: true
-    },
-    vAxis:{
-        minValue: 0
-    }
-  };
+    var series = {
+        color: '#65c6bb',
+        data: data,
+        label: 'Seconds per post'
+    };
 
-  var chartData = new google.visualization.DataTable(data);
-  var chart = new google.visualization.ColumnChart(document.getElementById('chart'));
-  chart.draw(chartData, options);
+    $.plot('#chart', [series], {
+        bars: {
+            show: true,
+            lineWidth: 10
+        },
+        legend: {
+            show: false
+        },
+        xaxis: {
+            mode: 'time',
+            minTickSize: [1, 'day'],
+            autoscaleMargin: 0.02
+        }
+    });
 }

@@ -55,40 +55,14 @@ def get_stats(board_name=None, thread_number=None):
 
 
 def get_posts_chart_data(queryset):
-    """Creates data structured as required by Google Charts."""
-    chart_data = {
-        'cols': [
-            {'label': 'Date', 'type': 'datetime'},
-            {'label': 'Posts', 'type': 'number'}
-        ],
-        'rows': []
-    }
-
-    if queryset is None:
-        return chart_data
-
+    """Creates data structured as required by charts."""
+    chart_data = []
     for entry in queryset:
-        entry_time = datetime.datetime.combine(
+        date = datetime.datetime.combine(
             entry.date,
             datetime.time(hour=int(entry.hour))
         )
-
-        value_string = 'Date(%s, %s, %s, %s, %s, %s)' % (
-            entry_time.year,
-            entry_time.month - 1, # JavaScript months start at 0.
-            entry_time.day,
-            entry_time.hour,
-            entry_time.minute,
-            entry_time.second
-        )
-
-        label_string = entry_time.strftime('%Y-%m-%d %H:%M')
-
-        chart_data['rows'].append({
-            'c': [
-                {'v': value_string, 'f': label_string},
-                {'v': entry.amount}
-            ]
-        })
+        date = date.timestamp() * 1000
+        chart_data.append([date, entry.amount])
 
     return chart_data

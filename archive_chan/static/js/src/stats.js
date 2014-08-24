@@ -1,6 +1,3 @@
-google.load('visualization', '1', {packages:['corechart']});
-google.setOnLoadCallback(update);
-
 var statsData, timeout;
 
 // This is necessary to make the chart responsive.
@@ -10,6 +7,8 @@ $(window).resize(function(){
 
 // Trigger the update manually.
 $(document).ready(function(){
+    update();
+
     $('.last-update-info').on('click', '#update-now', function(){
         update();
     });
@@ -92,27 +91,23 @@ function drawStats(data) {
 
 // Function drawing the chart.
 function drawChart(data) {
-  var options = {
-    fontSize: 12,
-    chartArea: {
-        left: 50,
-        top: 10,
-        width: '100%',
-        height:  '80%'
-    },
-    legend: {
-        position: 'none'
-    },
-    tooltip: {
-        isHtml: true
-    },
-    series: [{
-        color: '#65c6bb'
-    }],
-    curveType: 'function'
-  };
+    var series = {
+        color: '#65c6bb',
+        data: data['chart_data'],
+        label: 'Posts per hour'
+    };
 
-  var chartData = new google.visualization.DataTable(data.chart_data);
-  var chart = new google.visualization.LineChart(document.getElementById('chart'));
-  chart.draw(chartData, options);
+    $.plot('#chart', [series], {
+        lines: {
+            show: true
+        },
+        legend: {
+            show: false
+        },
+        xaxis: {
+            mode: 'time',
+            minTickSize: [1, 'hour'],
+            autoscaleMargin: 0.02
+        }
+    });
 }

@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block inner_head %}
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script>
         var info_data = {
             {% if board_name %}board: '{{ board_name }}',{% endif %}
@@ -9,6 +8,7 @@
             api_url: '{{ url_for('api.stats') }}'
         };
     </script>
+    <script src="{{ url_for('static', filename='js/flot.js') }}"></script>
     <script src="{{ url_for('static', filename='js/stats.js') }}"></script>
 {% endblock %}
 

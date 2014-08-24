@@ -4,6 +4,7 @@
 """
 
 
+from datetime import datetime
 import json
 from flask import Blueprint, Response, request
 from flask.views import View
@@ -93,6 +94,7 @@ class ApiView(View):
 
         # Handle other exceptions.
         except Exception as e:
+            raise
             response_data, status_code = self.handle_exception(ApiError())
 
         return Response(json.dumps(response_data, indent=4),
@@ -103,35 +105,15 @@ class ApiView(View):
 
 class Status(ApiView):
     def get_chart_data(self, queryset):
-        """Creates data structured in a form required by Google Charts."""
-        chart_data = {
-            'cols': [
-                {'label': 'Date', 'type': 'datetime'},
-                {'label': 'Time per post', 'type': 'number'}
-            ],
-            'rows': []
-        }
-
-        if queryset is None:
-            return chart_data
-
+        """Creates data structured in a form required by charts."""
+        chart_data = []
         for entry in queryset:
-            value_string = 'Date(%s, %s, %s, %s, %s, %s)' % (
-                entry.date.year, entry.date.month - 1, # JS months start at 0.
-                entry.date.day, 0, 0, 0
-            )
-            label_string = entry.date.strftime('%Y-%m-%d')
-
+            date = datetime.combine(entry.date, datetime.min.time())
+            date = date.timestamp() * 1000
             value = 0
             if entry.average_posts != 0:
                 value = round(entry.average_time / float(entry.average_posts), 3)
-
-            chart_data['rows'].append({
-                'c': [
-                    {'v': value_string, 'f': label_string},
-                    {'v': value},
-                ]
-            })
+            chart_data.append([date, value])
         return chart_data
 
     def get_api_response(self,  *args, **kwargs):
