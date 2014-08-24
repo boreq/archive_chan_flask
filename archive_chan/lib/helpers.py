@@ -22,4 +22,13 @@ def get_or_create(session, model, **kwargs):
 
 
 def utc_now():
+    """Get a datetime representing current time in UTC."""
     return pytz.utc.localize(datetime.datetime.utcnow())
+
+
+def timestamp_to_datetime(timestamp):
+    """Convert UNIX timestamp (seconds from epoch in UTC) to Python datetime
+    in UTC.
+    """
+    return datetime.datetime.fromtimestamp(timestamp, pytz.utc)
+

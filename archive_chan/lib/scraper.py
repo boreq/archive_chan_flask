@@ -13,18 +13,12 @@ from sqlalchemy.orm.attributes import instance_state
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import FileStorage
 from ..database import db
+from .helpers import timestamp_to_datetime
 from ..models import Board, Thread, Post, Image, Trigger, TagToThread, Update, Tag
 
 
 class ScrapError(Exception):
     pass
-
-
-def timestamp_to_datetime(timestamp):
-    """Convert UNIX timestamp (seconds from epoch in UTC) to Python datetime
-    in UTC.
-    """
-    return datetime.datetime.fromtimestamp(timestamp, pytz.utc)
 
 
 class ThreadInfo:
