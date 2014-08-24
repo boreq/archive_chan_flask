@@ -76,7 +76,9 @@ class PostData:
         self.subject = self.replace_content(post_json.get('sub', ''))
         self.comment = self.replace_content(post_json.get('com', ''))
 
-        self.filename = post_json.get('tim')
+        self.filename = str(post_json.get('tim')) \
+                        if post_json.get('tim') \
+                        else None
         self.extension = post_json.get('ext')
         self.original_filename = post_json.get('filename')
 

@@ -6,7 +6,7 @@ import unittest
 from flask import url_for
 from archive_chan import create_app, models, database
 from archive_chan.lib import scraper, modifiers
-from archive_chan.lib.helpers import utc_now
+from archive_chan.lib.helpers import utc_now, timestamp_to_datetime
 
 
 _sample_thread_json = json.loads("""
@@ -59,7 +59,10 @@ _sample_post_json = json.loads("""
     "now":"08/22/14(Fri)04:22:23",
     "name":"Anonymous",
     "com":"Comment.",
+    "country":"TR",
     "filename":"1408694335049",
+    "trip":"!Mysonoot.M",
+    "sub":"Subject.",
     "ext":".png",
     "w":616,
     "h":294,
@@ -70,6 +73,13 @@ _sample_post_json = json.loads("""
     "md5":"zB7h9/tETw1UON1PXEyefQ==",
     "fsize":53382,
     "resto":43722299
+}
+""")
+
+_sample_post_json_minimal = json.loads("""
+{
+    "no":43722387,
+    "time":1408695743
 }
 """)
 
@@ -121,6 +131,10 @@ class BaseTestCase(unittest.TestCase):
     @property
     def sample_post_json(self):
         return _sample_post_json.copy()
+
+    @property
+    def sample_post_json_minimal(self):
+        return _sample_post_json_minimal.copy()
 
 
 class SimpleFilterTest(BaseTestCase):
@@ -278,18 +292,86 @@ class ThreadScraperTest(BaseTestCase):
 
 class ThreadInfoTest(BaseTestCase):
 
+    def test_basics(self):
+        """Test if all properties are populated correctly."""
+        thread_info = scraper.ThreadInfo(self.sample_thread_json)
+        # number
+        self.assertEqual(thread_info.number, self.sample_thread_json['no'])
+        self.assertEqual(type(thread_info.number), int)
+        # replies
+        self.assertEqual(thread_info.replies, self.sample_thread_json['replies'])
+        self.assertEqual(type(thread_info.replies), int)
+        # last_reply_time
+        last_reply_time = self.sample_thread_json['last_replies'][-1]['time']
+        last_reply_time = timestamp_to_datetime(last_reply_time)
+        self.assertEqual(thread_info.last_reply_time, last_reply_time)
+        self.assertEqual(type(thread_info.last_reply_time), datetime.datetime)
+
     def test_last_reply_time_gone(self):
+        """Test that there is no exception if the last_replies list doesn't
+        exist.
+        """
         thread_json = self.sample_thread_json
         thread_json.pop('last_replies')
         thread_info = scraper.ThreadInfo(thread_json)
 
     def test_last_reply_time_empty(self):
+        """Test that there is no exception if the last_replies list is empty."""
         thread_json = self.sample_thread_json
         thread_json['last_replies'] = []
         thread_info = scraper.ThreadInfo(thread_json)
 
-    def test_check_post_type(self):
-        board = self.add_model(models.Board, name='board')
+
+class PostDataTest(BaseTestCase):
+    
+    def test_basics(self):
+        """Test if all properties are populated correctly."""
+        post_data = scraper.PostData(self.sample_post_json)
+
+        # Correct copy.
+        properties = (
+            ('no', 'number', int, lambda x: x),
+            ('time', 'time', datetime.datetime, lambda x: timestamp_to_datetime(x)),
+            ('name', 'name', str, lambda x: x),
+            ('trip', 'trip', str, lambda x: x),
+            ('country', 'country', str, lambda x: x),
+            ('name', 'name', str, lambda x: x),
+            ('sub', 'subject', str, lambda x: x),
+            ('com', 'comment', str, lambda x: x),
+            ('tim', 'filename', str, lambda x: str(x)),
+            ('ext', 'extension', str, lambda x: x),
+            ('filename', 'original_filename', str, lambda x: x),
+        )
+
+        for entry in properties:
+            self.assertEqual(getattr(post_data, entry[1]),
+                             entry[3](self.sample_post_json[entry[0]]),
+                             msg='%s: does not match' % entry[1])
+
+            self.assertEqual(type(getattr(post_data, entry[1])),
+                             entry[2],
+                             msg='%s: wrong type' % entry[1])
+
+    def test_defaults(self):
+        """Test if all properties default to corect values."""
+        post_data = scraper.PostData(self.sample_post_json_minimal)
+
+        properties = (
+            ('name', ''),
+            ('trip', ''),
+            ('country', ''),
+            ('name', ''),
+            ('subject', ''),
+            ('comment', ''),
+            ('filename', None),
+            ('extension', None),
+            ('original_filename', None),
+        )
+
+        for entry in properties:
+            self.assertEqual(getattr(post_data, entry[0]),
+                             entry[1],
+                             msg='%s: wrong default' % entry[0])
 
 
 class TriggersTest(BaseTestCase):
