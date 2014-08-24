@@ -15,7 +15,9 @@ cache = None
 
 
 class PatchedMemcachedCache(MemcachedCache):
-    """Stupid patch for python3-memcached. Key must be string not bytes."""
+    """Stupid patch for python3-memcached. Key must be string not bytes. This
+    will be fixed in the next wersion of Werkzeug. After that this code can be
+    removed."""
 
     def __init__(self, *args, **kwargs):
         super(PatchedMemcachedCache, self).__init__(*args, **kwargs)
@@ -45,7 +47,7 @@ class PatchedMemcachedCache(MemcachedCache):
 
 
 def init_app(app):
-    """Call this to init the cache object depending on the app config."""
+    """Call this to init this module with the preferred cache object."""
     global cache
     cache = get_preferred_cache_system(app)
 
@@ -117,10 +119,10 @@ class CachedBlueprint(Blueprint):
         super(CachedBlueprint, self).__init__(*args, **kwargs)
 
     def add_url_rule(self, *args, **kwargs):
-        """Exactly like add_url_rule but adds cache decorator if requested.
+        """Exactly like add_url_rule but adds a cache decorator if desired.
 
         cached: Indicates whether the view should be cached. Defaults to 
-                default_cached.
+                default_cached. Can be used to everride the default setting.
         """
         if kwargs.pop('cached', self.default_cached):
             kwargs['view_func'] = cached(

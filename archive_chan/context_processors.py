@@ -31,8 +31,14 @@ def user():
 
 @bl.app_context_processor
 def board_url_query():
-    """Injects the method used to build the query part of the board url."""
+    """Injects the method used to build the board url."""
     def url_query(parameters, name=None, value=None):
+        """Constructs the query part of the board url.
+        
+        parameters: dict with values of the parameters.
+        name: name of a parameter to which a new value will be assigned
+        value: new value of a parameter
+        """
         parameters = copy.copy(parameters)
         if name:
             parameters[name] = value
@@ -46,14 +52,16 @@ def board_url_query():
             tags = urllib.parse.quote('+'.join(parameters['tag']))
             query += '&tag=%s' % tags
         return query
-
     return dict(board_url_query=url_query)
 
 
 @bl.app_context_processor
 def search_url_query():
-    """Injects the method used to build the query part of the seach url."""
+    """Injects the method used to build the search url."""
     def url_query(parameters, name=None, value=None):
+        """Constructs the query part of the search url. Parameters like
+        board_url_query.
+        """
         parameters = copy.copy(parameters)
         if name:
             parameters[name] = value
@@ -64,5 +72,4 @@ def search_url_query():
             parameters['search']
         )
         return query
-
     return dict(search_url_query=url_query)

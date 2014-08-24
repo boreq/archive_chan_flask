@@ -6,10 +6,17 @@ def create_app(config=None, envvar='ARCHIVE_CHAN_SETTINGS'):
     different settings during unit testing or while deploying multiple
     instances of the archive.
 
+    App objects can be created like this:
+        
+        from archive_chan import create_app
+        app = create_app()
+
     config: values defined in this config will override the ones defined in
             other config files. This can ba a dict or flask.Config object.
     envvar: name of the environment variable containing the path to the
-            config file which will be loaded.
+            config file which will be loaded. If the path is not set or the
+            file does not exist the loading of the config file will fail
+            silently.
 
     Config loading order (the configuration keys defined in previous configs
     are overriden by those defined later):

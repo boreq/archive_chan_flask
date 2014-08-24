@@ -3,7 +3,7 @@
 
     Core functionality is provided by flask-login extension. Bcrypt provided by
     flask-bcrypt extension is used instead of the default password hashing
-    implementation introduced in Werkzeug which uses.
+    implementation introduced in Werkzeug.
 """
 
 
