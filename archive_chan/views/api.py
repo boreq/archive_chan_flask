@@ -4,9 +4,9 @@
 """
 
 
-from datetime import datetime
+from datetime import datetime, timedelta, time
 import json
-from flask import Blueprint, Response, request
+from flask import Blueprint, Response, request, current_app
 from flask.views import View
 from flask.ext.login import current_user
 from sqlalchemy.orm import joinedload
@@ -14,7 +14,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from ..database import db
 from ..cache import CachedBlueprint
 from ..models import Board, Thread, Post, Image, Tag, TagToThread, Update
-from ..lib import stats, helpers
+from ..lib import helpers
 
 
 bl = CachedBlueprint('api', __name__, default_cached=False)
@@ -148,11 +148,71 @@ class Status(ApiView):
 
 
 class Stats(ApiView):
+
     def get_api_response(self, *args, **kwargs):
-        return stats.get_stats(
-            board_name=request.args.get('board'),
-            thread_number=request.args.get('thread')
-        )
+        board_name=request.args.get('board')
+        thread_number=request.args.get('thread')
+
+        criterions = []
+        if board_name is not None:
+            criterions.append(Board.name==board_name)
+        if thread_number is not None:
+            criterions.append(Thread.number==thread_number)
+
+        queryset_posts = Post.query.join(Thread, Board).filter(*criterions)
+        queryset_threads = Thread.query.join(Board).filter(*criterions)
+
+        # Time between the last and first post [hours] used when selecting data
+        # for a chart and recent posts. Prevents displaying unreadable amount
+        # of data. Ensures correct results when calculating posts per hour
+        # (old saved threads which do not get deleted would alter the results).
+        timespan = current_app.config['RECENT_POSTS_AGE']
+
+        # Select all data in the thread mode.
+        if board_name and thread_number:
+            times = db.session.query(
+                db.func.max(Post.time).label('last'), 
+                db.func.min(Post.time).label('first'),
+            ).join(Thread, Board).filter(*criterions).first()
+            timespan = (times.last - times.first).total_seconds() / 3600
+
+        # Calculate the time of the oldest post to select using the time of
+        # the newest matched post. It would possible to get an empty chart
+        # in the old threads if this wouid based on the current time.
+        last_post_time = queryset_posts.order_by(Post.time.desc()).first().time
+        first_post_time = last_post_time - timedelta(hours=timespan)
+
+        posts = db.session.query(
+            db.func.count(Post.id).label('amount'),
+            db.func.date(Post.time).label('date'),
+            db.func.extract('hour', Post.time).label('hour')
+        ).join(Thread, Board).group_by('date', 'hour').filter(
+            Post.time>first_post_time,
+            *criterions
+        ).order_by('date', 'hour').all()
+
+        context = {
+            'total_threads': queryset_threads.count(),
+            'total_posts': queryset_posts.count(),
+            'total_image_posts': queryset_posts.join(Image).count(),
+            'recent_posts': queryset_posts.filter(Post.time>first_post_time).count(),
+            'recent_posts_timespan': timespan,
+            'chart_data': self.get_posts_chart_data(posts),
+        }
+        return context
+
+
+    def get_posts_chart_data(self, queryset):
+        """Creates data structured as required by charts."""
+        chart_data = []
+        for entry in queryset:
+            date = datetime.combine(
+                entry.date,
+                time(hour=int(entry.hour))
+            )
+            date = date.timestamp() * 1000
+            chart_data.append([date, entry.amount])
+        return chart_data
 
 
 class Gallery(ApiView):
