@@ -333,8 +333,7 @@ class AddTag(ApiView):
             
         if not exists:
             tag, created_new_tag = helpers.get_or_create(db.session, Tag,
-                name=tag_name
-            )
+                                                         name=tag_name)
             thread.tags.append(tag)
             db.session.commit()
             added = True

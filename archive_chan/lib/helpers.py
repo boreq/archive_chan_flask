@@ -18,6 +18,8 @@ def get_or_create(session, model, **kwargs):
     else:
         instance = model(**kwargs)
         session.add(instance)
+        session.flush()
+        session.refresh(instance)
         return instance, True
 
 
