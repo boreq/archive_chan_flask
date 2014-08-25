@@ -7,7 +7,7 @@ from flask import current_app
 from flask.ext.admin import Admin
 from flask.ext.admin.contrib import sqla
 from flask.ext.login import current_user
-from wtforms import PasswordField, SelectField
+from wtforms import TextField, PasswordField, SelectField
 from . import models
 from .auth import generate_password_hash
 from .database import db
@@ -37,9 +37,13 @@ class DebugModelView(ModelView):
 
 class BoardView(ModelView):
     model = models.Board
-    form_create_rules = ('active', 'store_threads_for', 'replies_threshold')
     column_list = ('name', 'active', 'store_threads_for', 'replies_threshold')
     form_excluded_columns = ('updates', 'threads',)
+
+    def scaffold_form(self):
+        form_class = super(BoardView, self).scaffold_form()
+        form_class.name = TextField('Name')
+        return form_class
 
 
 class UserView(ModelView):
