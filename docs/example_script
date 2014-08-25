@@ -1,0 +1,4 @@
+#!/bin/bash
+cd /directory/containing/run.py/
+source /path/to/virtualenv/bin/activate
+ARCHIVE_CHAN_SETTINGS="/path/to/custom/settings.py" python run.py update
