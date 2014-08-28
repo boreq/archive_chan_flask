@@ -47,8 +47,10 @@ SCRAPER_THREADS_NUMBER = 4
 # [seconds]
 CACHE_TIMEOUT = 60 * 5
 
-# Memcached url. Set to None to disable. Must be a tuple or a list.
-MEMCACHED_URL = ['127.0.0.1:11211']
+# List of memcached servers. Set to None to disable. Must be a tuple
+# or a list.
+#MEMCACHED_URL = ['127.0.0.1:11211']
+MEMCACHED_URL = None
 
 # Database URI.
 # https://pythonhosted.org/Flask-SQLAlchemy/config.html#configuration-keys
