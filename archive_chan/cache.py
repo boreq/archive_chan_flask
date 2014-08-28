@@ -3,46 +3,43 @@
 """
 
 
+import re
 import hashlib
-import memcache
 from functools import wraps
 from flask import request, Blueprint
 from flask.ext.login import current_user
+from werkzeug._compat import to_native
 from werkzeug.contrib.cache import MemcachedCache, NullCache
 
 
 cache = None
 
 
+_test_memcached_key = re.compile(r'[^\x00-\x21\xff]{1,250}$').match
 class PatchedMemcachedCache(MemcachedCache):
-    """Stupid patch for python3-memcached. Key must be string not bytes. This
-    will be fixed in the next wersion of Werkzeug. After that this code can be
-    removed."""
+    """Stupid patch for python3-memcached. This will be fixed in the next
+    wersion of Werkzeug. This code can be removed after its release.
+    """
 
     def __init__(self, *args, **kwargs):
         super(PatchedMemcachedCache, self).__init__(*args, **kwargs)
-        if self.client_is_memcached:
-            self.key_prefix = self.key_prefix.decode()
+        self.key_prefix = to_native(self.key_prefix)
 
-    @property
-    def client_is_memcached(self):
-        """True if python[3]-memcached module is used."""
-        return (type(self._client) is memcache.Client)
+    def _normalize_key(self, key):
+        key = to_native(key, 'utf-8')
+        if self.key_prefix:
+            key = self.key_prefix + key
+        return key
 
     def get(self, key):
-        if not self.client_is_memcached:
-            return super(MemcachedCache, self).get(key)
-        if self.key_prefix:
-            key = self.key_prefix + key
-        return self._client.get(key)
+        key = self._normalize_key(key)
+        if _test_memcached_key(key):
+            return self._client.get(key)
 
     def set(self, key, value, timeout=None):
-        if not self.client_is_memcached:
-            return super(MemcachedCache, self).set(key, value, timeout)
         if timeout is None:
             timeout = self.default_timeout
-        if self.key_prefix:
-            key = self.key_prefix + key
+        key = self._normalize_key(key)
         return self._client.set(key, value, timeout)
 
 
@@ -54,13 +51,12 @@ def init_app(app):
 
 def get_preferred_cache_system(app):
     """Returns an initialized cache object."""
-    if not (app.config['DEBUG'] or app.config['TESTING']):
-        if app.config['MEMCACHED_URL']:
-            return PatchedMemcachedCache(
-                app.config['MEMCACHED_URL'],
-                default_timeout=app.config['CACHE_TIMEOUT'],
-                key_prefix='archive_chan'
-            )
+    if app.config['MEMCACHED_URL']:
+        return PatchedMemcachedCache(
+            app.config['MEMCACHED_URL'],
+            default_timeout=app.config['CACHE_TIMEOUT'],
+            key_prefix='archive_chan'
+        )
     return NullCache()
 
 
