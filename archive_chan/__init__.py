@@ -15,8 +15,7 @@ def create_app(config=None, envvar='ARCHIVE_CHAN_SETTINGS'):
             other config files. This can ba a dict or flask.Config object.
     envvar: name of the environment variable containing the path to the
             config file which will be loaded. If the path is not set or the
-            file does not exist the loading of the config file will fail
-            silently.
+            file does not exist the archive will not be launched.
 
     Config loading order (the configuration keys defined in previous configs
     are overriden by those defined later):
@@ -28,7 +27,7 @@ def create_app(config=None, envvar='ARCHIVE_CHAN_SETTINGS'):
 
     # Load config.
     app.config.from_object('archive_chan.settings')
-    app.config.from_envvar(envvar, True)
+    app.config.from_envvar(envvar)
     if config is not None:
         app.config.update(config)
 
