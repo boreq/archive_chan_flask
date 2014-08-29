@@ -73,18 +73,18 @@ class Command(script.Command):
     def run(self, progress):
         # Prevent multiple instances.
         me = singleton.SingleInstance()
-        boards = Board.query.filter(Board.active==True).all()
+        # Mark previous updates which weren't completed as failed.
+        db.session.query(Update).filter(Update.status==Update.CURRENT) \
+                                .update({'status': Update.FAILED})
 
+        boards = Board.query.filter(Board.active==True).all()
         for board in boards:
             update_info = UpdateInfo(board)
             scraper = BoardScraper(board, progress=progress)
-
             try:
                 scraper.update()
-
             except Exception as e:
                 update_info.encoutered_error(e)
                 sys.stderr.write('%s\n' % e)
-
             finally:
                 update_info.end(scraper)
