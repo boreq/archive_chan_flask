@@ -56,17 +56,14 @@ function drawData(data) {
 
     for (var i = 0; i < length; i++){
         var entry = data.last_updates[i];
-
         var date = null;
 
-        if (entry.status > 0){
+        if (entry.status == 2)
             date = entry.end;
-        }else{
+        else
             date = entry.start;
-        }
 
         var css_class = ['started', 'failed', 'completed'];
-
         $('#value-last-updates').append('<li class="update ' + css_class[entry.status] + '">' + entry.board + ' ' + entry.status_verbose.toLowerCase() + ' <time class="timeago" datetime="' + date + '">' + date + '</time></li>');
     }
 
