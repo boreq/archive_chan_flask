@@ -136,7 +136,7 @@ class BoardView(BodyIdMixin, TemplateView):
                                .options(joinedload('first_post')) \
                                .filter(Board.name==self.kwargs['board'],
                                        Thread.replies>1)
-                                           
+
 
         for key, modifier in self.modifiers.items():
             queryset = modifier.execute(queryset)

@@ -79,7 +79,7 @@ def get_cache_key(vary_on_auth):
 
 def cached(timeout=None, vary_on_auth=False):
     """Simple cache decorator taken from Flask docs.
-    
+
     timeout: Cache timeout in seconds. Defaults to the default timeout set for
              the cache system if None.
     vary_on_auth: Indicates whether a different cache should be served to
@@ -117,7 +117,7 @@ class CachedBlueprint(Blueprint):
     def add_url_rule(self, *args, **kwargs):
         """Exactly like add_url_rule but adds a cache decorator if desired.
 
-        cached: Indicates whether the view should be cached. Defaults to 
+        cached: Indicates whether the view should be cached. Defaults to
                 default_cached. Can be used to everride the default setting.
         """
         if kwargs.pop('cached', self.default_cached):

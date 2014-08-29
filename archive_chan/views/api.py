@@ -62,7 +62,7 @@ class NotFoundApiError(ApiError):
 
 
 class ApiView(View):
-    """Base api view. It automatically calls the function named 
+    """Base api view. It automatically calls the function named
     <method>_api_response, e.g.: get_api_response.
     """
 
@@ -171,7 +171,7 @@ class Stats(ApiView):
         # Select all data in the thread mode.
         if board_name and thread_number:
             times = db.session.query(
-                db.func.max(Post.time).label('last'), 
+                db.func.max(Post.time).label('last'),
                 db.func.min(Post.time).label('first'),
             ).join(Thread, Board).filter(*criterions).first()
             timespan = (times.last - times.first).total_seconds() / 3600
@@ -302,7 +302,7 @@ class SuggestTag(ApiView):
         query = request.args['query']
         tags = Tag.query.filter(Tag.name.like('%' + query + '%')).limit(5)
         return {
-            'query': query, 
+            'query': query,
             'suggestions': [tag.name for tag in tags]
         }
 
@@ -320,7 +320,7 @@ class AddTag(ApiView):
 
         try:
             thread = Thread.query.join(Board).filter(
-                Thread.number==thread_number, 
+                Thread.number==thread_number,
                 Board.name==board_name
             ).one()
         except NoResultFound:
@@ -330,7 +330,7 @@ class AddTag(ApiView):
             TagToThread.thread==thread,
             Tag.name==tag_name
         ).first() is not None
-            
+
         if not exists:
             tag, created_new_tag = helpers.get_or_create(db.session, Tag,
                                                          name=tag_name)
@@ -358,7 +358,7 @@ class RemoveTag(ApiView):
         tag_name = request.form['tag']
 
         tagtothread = TagToThread.query.join(Thread, Board, Tag).filter(
-            Thread.number==thread_number, 
+            Thread.number==thread_number,
             Board.name==board_name,
             Tag.name==tag_name
         ).one()

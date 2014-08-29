@@ -34,7 +34,7 @@ def board_url_query():
     """Injects the method used to build the board url."""
     def url_query(parameters, name=None, value=None):
         """Constructs the query part of the board url.
-        
+
         parameters: dict with values of the parameters.
         name: name of a parameter to which a new value will be assigned
         value: new value of a parameter
@@ -42,7 +42,7 @@ def board_url_query():
         parameters = copy.copy(parameters)
         if name:
             parameters[name] = value
-        query =  '?sort=%s&saved=%s&last_reply=%s&tagged=%s' % (
+        query = '?sort=%s&saved=%s&last_reply=%s&tagged=%s' % (
             parameters['sort_with_operator'],
             parameters['saved'],
             parameters['last_reply'],
@@ -65,7 +65,7 @@ def search_url_query():
         parameters = copy.copy(parameters)
         if name:
             parameters[name] = value
-        query =  '?saved=%s&type=%s&created=%s&search=%s' % (
+        query = '?saved=%s&type=%s&created=%s&search=%s' % (
             parameters['saved'],
             parameters['type'],
             parameters['created'],

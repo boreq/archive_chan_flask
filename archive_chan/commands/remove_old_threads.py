@@ -16,7 +16,7 @@ class Command(script.Command):
         for board in boards:
             processing_start = datetime.now()
 
-            # Get the posts older than the amount specified in the board settings.
+            # Get the posts older than specified in the board settings.
             time_threshold =  utc_now() - timedelta(hours=board.store_threads_for)
             queryset = Thread.query.filter(
                 Thread.board==board,

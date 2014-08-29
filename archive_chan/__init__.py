@@ -7,7 +7,7 @@ def create_app(config=None, envvar='ARCHIVE_CHAN_SETTINGS'):
     instances of the archive.
 
     App objects can be created like this:
-        
+
         from archive_chan import create_app
         app = create_app()
 
@@ -79,7 +79,8 @@ def load_debug(app):
         toolbar = DebugToolbarExtension(app)
     except ImportError as e:
         import sys
-        sys.stderr.write('Flask Debug Toolbar was not loaded. You can install it with `pip install flask-debugtoolbar`.\nError: %s\n' % e)
+        sys.stderr.write('Flask Debug Toolbar was not loaded. You can install '
+            'it with `pip install flask-debugtoolbar`. Error: %s\n' % e)
 
     # SQLAlchemy logging (for API debug)
     if app.config.get('LOG_QUERIES'):

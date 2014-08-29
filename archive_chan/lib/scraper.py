@@ -24,9 +24,9 @@ class ScrapError(Exception):
 class ThreadInfo:
     """Class used for storing information about the thread."""
 
-    def __init__(self, thread_json): 
+    def __init__(self, thread_json):
         self.number = int(thread_json['no'])
-        
+
         # Get the time of the last reply or thread creation time.
         if 'last_replies' in thread_json and len(thread_json['last_replies']) > 0:
             last_reply_time = int(thread_json['last_replies'][-1]['time'])
@@ -63,7 +63,7 @@ class PostData:
 
         return text
 
-    def __init__(self, post_json): 
+    def __init__(self, post_json):
         """Loads the data from JSON retrieved from the thread API."""
         self.number = int(post_json['no'])
         self.time = timestamp_to_datetime(int(post_json['time']))
@@ -105,7 +105,7 @@ class Triggers:
             return False
 
         return True
-    
+
     def check_event(self, trigger, post_data):
         """True if event terms are fulfilled, false otherwise."""
         field_value = str(getattr(post_data, trigger.field))
@@ -146,7 +146,7 @@ class Triggers:
         """Returns a set of actions to execute based on one trigger."""
         if not self.check_post_type(trigger, thread, post_data):
             return None
-        
+
         actions = set()
 
         if self.check_event(trigger, post_data):
@@ -274,7 +274,7 @@ class Stats:
             'downloaded_thumbnails': 0,
             'downloaded_threads': 0,
         }
-        
+
         self.lock = threading.Lock()
 
     def add(self, name, value):
@@ -288,7 +288,7 @@ class Stats:
             return self.parameters[name]
 
     def add_to_record(self, record, total_time, **kwargs):
-        """Set the values of the models.Update object to those present in this 
+        """Set the values of the models.Update object to those present in this
         class.
         """
         used_threads = kwargs.get('used_threads',
@@ -371,7 +371,7 @@ class Scraper(object):
         self.queuer = kwargs.get('queuer', Queuer())
         self.triggers = kwargs.get('triggers', Triggers())
         self.show_progress = kwargs.get('progress', False)
-        
+
     def get_url(self, url):
         """Download data from an url."""
         download_start = datetime.datetime.now()
@@ -412,7 +412,7 @@ class ThreadScraper(Scraper):
         self.queuer.api_wait()
         self.stats.add('downloaded_threads', 1)
         return self.get_url(url).json()
-    
+
     def get_thread_number(self):
         """Get the number of a thread scrapped by this instance."""
         return self.thread_info.number
@@ -480,7 +480,7 @@ class ThreadScraper(Scraper):
             if instance_state(image).transient:
                 db.session.add(image)
 
-        # Just to give something to look at. 
+        # Just to give something to look at.
         # "_" is a post without an image, "-" is a post with an image
         if self.show_progress:
             print('-' if post_data.filename else '_', end='', flush=True)
@@ -631,7 +631,7 @@ class BoardScraper(Scraper):
         try:
             self.stats.merge(thread_scraper.stats)
             self.stats.add('processed_threads', 1)
-        
+
         except Exception as e:
             sys.stderr.write('%s\n' % e)
 
@@ -682,7 +682,7 @@ class BoardScraper(Scraper):
         # Populate queue.
         for thread_data in self.thread_generator():
             self.add_to_queue(queue, thread_data)
-        
+
         # Wait for all tasks to finish.
         queue.join()
 

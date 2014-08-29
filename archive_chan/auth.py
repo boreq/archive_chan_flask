@@ -27,7 +27,7 @@ def load_user(user_id):
 def login(username, password, remember=False):
     """Logs in the user. Returns True on success or False on failure (in case of
     invalid username or password).
-    
+
     username: String containing an username.
     password: String containing a password.
     remember: Bool indicating whether the user should be remembered after his

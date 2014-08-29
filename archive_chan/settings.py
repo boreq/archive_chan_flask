@@ -6,7 +6,7 @@
     overwrite values present in this file. If you want to run multiple
     instances of the archive with different configs you can change the name
     of the environment variable by passing the parameter to the application
-    factory. See the source code in __init__.py for more details. To set the 
+    factory. See the source code in __init__.py for more details. To set the
     environment variable use the export command:
 
     export ARCHIVE_CHAN_SETTINGS=/path/to/settings.py
@@ -35,7 +35,7 @@ CONNECTION_TIMEOUT = 10
 # Used for calculating statistics (e.g. posts per hour).
 # Read more in lib.stats
 # [hours]
-RECENT_POSTS_AGE = 48 
+RECENT_POSTS_AGE = 48
 
 # Number of additional scraper threads running at the same time.
 # In other words that many 4chan threads will be updated concurrently.
@@ -59,5 +59,5 @@ SQLALCHEMY_DATABASE_URI = 'postgresql://user:password@localhost/archive_chan'
 # Directory to which the images will be downloaded.
 MEDIA_ROOT = '/path/to/media/directory/'
 
-# Secret key is used by Flask to handle sessions. Set it to random value. 
+# Secret key is used by Flask to handle sessions. Set it to random value.
 SECRET_KEY = 'dev_key'

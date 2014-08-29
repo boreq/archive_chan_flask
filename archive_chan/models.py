@@ -318,7 +318,7 @@ class Trigger(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    
+
     field = db.Column(db.String(10), nullable=False)
     event = db.Column(db.String(10), nullable=False)
     phrase = db.Column(db.String(255), nullable=False)
@@ -374,7 +374,7 @@ class Update(db.Model):
     downloaded_images = db.Column(db.Integer, nullable=False, default=0)
     downloaded_thumbnails = db.Column(db.Integer, nullable=False, default=0)
     downloaded_threads = db.Column(db.Integer, nullable=False, default=0)
-        
+
     def get_status_display(self):
         return dict(self.STATUS_CHOICES)[self.status]
 

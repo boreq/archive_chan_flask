@@ -7,7 +7,7 @@ from ..models import User
 
 class Command(script.Command):
     """Creates a new user. Should be used to create first user account in order
-    to access the admin panel. 
+    to access the admin panel.
     """
 
     def run(self):
