@@ -1,9 +1,11 @@
 var statsData, timeout;
 
+
 // This is necessary to make the chart responsive.
 $(window).resize(function(){
     drawChart(statsData);
 });
+
 
 // Trigger the update manually.
 $(document).ready(function(){
@@ -13,6 +15,7 @@ $(document).ready(function(){
         update();
     });
 });
+
 
 // Main function updating the data.
 function update(){
@@ -44,6 +47,7 @@ function update(){
     });
 }
 
+
 // Function filling in the statistics.
 function drawData(data) {
     $('#value-last-updates').empty();
@@ -69,6 +73,7 @@ function drawData(data) {
     $('#value-last-updates li time').data("timeago", null).timeago();
 }
 
+
 // Function drawing the chart.
 function drawChart(data) {
     var series = {
@@ -80,7 +85,8 @@ function drawChart(data) {
     $.plot('#chart', [series], {
         bars: {
             show: true,
-            lineWidth: 10
+            lineWidth: 1,
+            barWidth: 24 * 60 * 60 * 1000
         },
         legend: {
             show: false
