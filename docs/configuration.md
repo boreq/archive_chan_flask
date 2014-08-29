@@ -1,11 +1,11 @@
-### Required software versions
-Application was written with Python 3.3+ in mind. At this point it does not
-support Python 2.
-
-
 # Configuration
 This is the basic installation and configuration guide for users experienced
 with web applications running on Flask, Django or similar frameworks.
+
+
+### Required software versions
+Application was written with Python 3.3+ in mind. At this point it does not
+support Python 2.
 
 
 ## Settings
