@@ -27,7 +27,8 @@ def create_app(config=None, envvar='ARCHIVE_CHAN_SETTINGS'):
 
     # Load config.
     app.config.from_object('archive_chan.settings')
-    app.config.from_envvar(envvar)
+    if envvar is not None:
+        app.config.from_envvar(envvar)
     if config is not None:
         app.config.update(config)
 

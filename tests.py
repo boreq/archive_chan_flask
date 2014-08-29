@@ -85,14 +85,18 @@ _sample_post_json_minimal = json.loads("""
 
 
 class BaseTestCase(unittest.TestCase):
+    
+    def get_config(self, db_path):
+        config = {
+            'TESTING': True,
+            'SQLALCHEMY_DATABASE_URI': 'sqlite:///' + db_path,
+        }
+        return config
 
     def setUp(self):
         self.db_fd, self.db_path = tempfile.mkstemp()
-        config = {
-            'TESTING': True,
-            'SQLALCHEMY_DATABASE_URI': 'sqlite:///' + self.db_path,
-        }
-        self.app = create_app(config)
+        config = self.get_config(self.db_path)
+        self.app = create_app(config=config, envvar=None)
         self.client = self.app.test_client()
         self.ctx = self.app.app_context()
         self.ctx.push()
@@ -458,6 +462,19 @@ class TriggersTest(BaseTestCase):
                          msg='Trigger failed to save the thread.')
         self.assertTrue(models.TagToThread.query.first().automatically_added, 
                          msg='Tag was not marked as automatically added.')
+
+
+class MemcachedCacheTest(BaseTestCase):
+    
+    def get_config(self, *args, **kwargs):
+        config = BaseTestCase.get_config(self, *args, **kwargs)
+        config['MEMCACHED_URL'] = ['127.0.0.1:11211']
+        return config
+
+    def test_memcached(self):
+        from archive_chan.cache import cache
+        self.assertTrue(cache.set('key', 'value'))
+        self.assertEqual(cache.get('key'), 'value')
 
 
 if __name__ == '__main__':
