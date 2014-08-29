@@ -1,23 +1,25 @@
-from flask.ext.script import Manager
-from archive_chan import create_app
+from inspect import isclass
+from flask.ext.script import Manager, Command
+from archive_chan import create_app, commands
+
+
+commands = [
+    'create_user', 'update', 'remove_orphaned_files', 'remove_old_threads',
+    'recount_denormalized', 'sql', 'init_db'
+]
+
+
+def add_commands(names, manager):
+    pack = __import__('archive_chan.commands', fromlist=names)
+    for name in commands:
+        mod = getattr(pack, name)
+        command = getattr(mod, 'Command')
+        manager.add_command(name, command)
 
 
 app = create_app()
 manager = Manager(app)
-
-
-from archive_chan.commands import update
-from archive_chan.commands import remove_old_threads
-from archive_chan.commands import remove_orphaned_files
-from archive_chan.commands import recount_denormalized
-from archive_chan.commands import sql
-from archive_chan.commands import create_user
-manager.add_command('update', update.Command)
-manager.add_command('remove_old_threads', remove_old_threads.Command)
-manager.add_command('remove_orphaned_files', remove_orphaned_files.Command)
-manager.add_command('recount_denormalized', recount_denormalized.Command)
-manager.add_command('sql', sql.Command)
-manager.add_command('create_user', create_user.Command)
+add_commands(commands, manager)
 
 
 if __name__ == "__main__":
