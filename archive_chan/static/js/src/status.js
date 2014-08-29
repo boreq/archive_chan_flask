@@ -93,8 +93,7 @@ function drawChart(data) {
         },
         xaxis: {
             mode: 'time',
-            minTickSize: [1, 'day'],
-            autoscaleMargin: 0.02
+            minTickSize: [1, 'day']
         }
     });
 }
