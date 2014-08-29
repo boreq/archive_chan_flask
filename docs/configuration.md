@@ -26,7 +26,7 @@ You have to run your WSGI server with the path to that settings file set in the
 
 
 ## Database
-To create all required database tables run `script`.
+To create all required database tables run `python run.py init_db`.
 
 
 ## Deployment
