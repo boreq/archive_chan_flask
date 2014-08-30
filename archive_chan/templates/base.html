@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <meta name="viewport" content="width=device-width,initial-scale=1.0">
         <meta charset="utf-8">
-        <meta name="Robots" content="INDEX,FOLLOW">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
         <script src="{{ url_for('static', filename='js/main.js') }}"></script>
         <title>{% block title %}Archive Chan{% endblock %}</title>
@@ -17,13 +15,17 @@
                     {# Main nav. #}
                     <a href="{{ url_for('core.index') }}">ARCHIVE CHAN</a>
                     {% block main_nav %}
-                        {% if board_name %}<a href="{{ url_for('core.board', board=board_name) }}">/{{ board_name }}/</a>{% endif %}
-                        {% if thread_number %}<a href="{{ url_for('core.thread', board=board_name, thread=thread_number) }}">#{{ thread_number }}</a>{% endif %}
+                        {% if board_name %}
+                            <a href="{{ url_for('core.board', board=board_name) }}">/{{ board_name }}/</a>
+                        {% endif %}
+                        {% if thread_number %}
+                            <a href="{{ url_for('core.thread', board=board_name, thread=thread_number) }}">#{{ thread_number }}</a>
+                        {% endif %}
                     {% endblock %}
 
                     {# Context sensitive nav. #}
-                    {% from 'snippets/nav.html' import nav %}
                     <ul class="nav">
+                        {% from 'snippets/nav.html' import nav %}
                         {{ nav(board_name, thread_number) }}
                     </ul>
                 </div>
