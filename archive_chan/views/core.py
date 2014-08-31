@@ -170,7 +170,8 @@ class ThreadView(UniversalViewMixin, TemplateView):
         return Post.query.join(Thread, Board) \
                          .filter(Thread.number==self.kwargs['thread'],
                                  Board.name==self.kwargs['board']) \
-                         .order_by(Post.number)
+                         .order_by(Post.number) \
+                         .all()
 
     def get_context_data(self, *args, **kwargs):
         context = super(ThreadView, self).get_context_data(*args, **kwargs)
