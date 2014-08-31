@@ -23,6 +23,8 @@
             <ul id="posts">
                 {% for post in post_list %}
                     {{ post_macro(post, user) }}
+                {% else %}
+                    <li>No posts.</li>
                 {% endfor %}
             </ul>
         </div>

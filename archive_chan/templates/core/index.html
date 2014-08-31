@@ -8,6 +8,8 @@
                     <li>
                         <a href="{{ board.get_absolute_url() }}">{{ board }}</a>
                     </li>
+                {% else %}
+                    <li>No boards.</li>
                 {% endfor %}
             </ul>
         </div>
