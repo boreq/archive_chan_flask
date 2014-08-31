@@ -4,7 +4,8 @@ import os
 import tempfile
 import unittest
 from flask import url_for
-from archive_chan import create_app, models, database
+from flask.ext.login import current_user
+from archive_chan import create_app, models, database, auth
 from archive_chan.lib import scraper, modifiers
 from archive_chan.lib.helpers import utc_now, timestamp_to_datetime
 
@@ -94,32 +95,36 @@ class BaseTestCase(unittest.TestCase):
         return config
 
     def setUp(self):
+        # Database tmp file.
         self.db_fd, self.db_path = tempfile.mkstemp()
+        # App and test client.
         config = self.get_config(self.db_path)
         self.app = create_app(config=config, envvar=None)
         self.client = self.app.test_client()
-        self.ctx = self.app.app_context()
-        self.ctx.push()
+        # App context.
+        self.app_ctx = self.app.app_context()
+        self.app_ctx.push()
+        # Init database.
         database.init_db()
-        self.set_up()
+        # Request context.
+        self.request_ctx = self.app.test_request_context()
+        self.request_ctx.push()
+        self.setup()
 
     def tearDown(self):
-        self.tear_down()
-        self.ctx.pop()
+        self.teardown()
+        self.request_ctx.pop()
+        self.app_ctx.pop()
         os.close(self.db_fd)
         os.unlink(self.db_path)
 
-    def set_up(self):
+    def setup(self):
         """Custom setup here."""
         pass
 
-    def tear_down(self):
+    def teardown(self):
         """Custom teardown here."""
         pass
-
-    def url_for(self, name, **kwargs):
-        with self.app.test_request_context():
-            return url_for(name, **kwargs)
 
     def add_model(self, model, **kwargs):
         item = model(**kwargs)
@@ -143,7 +148,7 @@ class BaseTestCase(unittest.TestCase):
 
 class SimpleFilterTest(BaseTestCase):
 
-    def set_up(self):
+    def setup(self):
         self.parameters = (
             ('default', ('Default', None)),
             ('option', ('Option', {'field': True})),
@@ -180,7 +185,7 @@ class SimpleFilterTest(BaseTestCase):
 
 class SimpleSortTest(BaseTestCase):
 
-    def set_up(self):
+    def setup(self):
         self.parameters = (
             ('default', ('Last reply', 'field', None)),
             ('option', ('Creation date', 'other_field', None)),
@@ -226,7 +231,7 @@ class ViewsTest(BaseTestCase):
 
     def check_list(self, blueprint_name, view_list):
         for view in view_list:
-            url = self.url_for('%s.%s' % (blueprint_name, view[0]), **view[1])
+            url = url_for('%s.%s' % (blueprint_name, view[0]), **view[1])
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
 
@@ -272,7 +277,7 @@ class ViewsTest(BaseTestCase):
 
 class ThreadScraperTest(BaseTestCase):
 
-    def set_up(self):
+    def setup(self):
         self.thread_info = scraper.ThreadInfo(self.sample_thread_json)
         self.thread_scraper = scraper.ThreadScraper(None, self.thread_info)
         self.thread = models.Thread(last_reply=self.thread_info.last_reply_time,
@@ -475,6 +480,33 @@ class MemcachedCacheTest(BaseTestCase):
         from archive_chan.cache import cache
         self.assertTrue(cache.set('key', 'value'))
         self.assertEqual(cache.get('key'), 'value')
+
+
+class AuthTest(BaseTestCase):
+    
+    def setup(self):
+        password = auth.generate_password_hash('pass')
+        self.add_model(models.User, username='user',
+                       password=password)
+        self.assertFalse(current_user.is_authenticated())
+    
+    def test_logout_not_auth(self):
+        self.assertTrue(auth.logout())
+
+    def test_login_failed(self):
+        self.assertFalse(auth.login('wronguser', 'pass'))
+        self.assertFalse(auth.login('user', 'wrongpass'))
+
+    def test_login_logout(self):
+        self.assertTrue(auth.login('user', 'pass'))
+        self.assertTrue(current_user.is_authenticated())
+
+        self.assertTrue(auth.logout())
+        self.assertFalse(current_user.is_authenticated())
+    
+    def test_hashing(self):
+        password = auth.generate_password_hash('pass')
+        self.assertTrue(auth.check_password_hash(password, 'pass'))
 
 
 if __name__ == '__main__':
