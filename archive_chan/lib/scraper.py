@@ -363,14 +363,20 @@ class Scraper(object):
 
         **kwargs:
         progress: bool value, indicates if the progress should be displayed.
-        queuer: Queuer object
-        triggers: Triggers object
+        queuer: Queuer object.
+        triggers: Triggers object.
         """
         self.board = board
         self.stats = Stats()
-        self.queuer = kwargs.get('queuer', Queuer())
-        self.triggers = kwargs.get('triggers', Triggers())
-        self.show_progress = kwargs.get('progress', False)
+        self.show_progress = kwargs.pop('progress', False)
+
+        self.queuer = kwargs.pop('queuer', None)
+        if self.queuer is None:
+            self.queuer = Queuer()
+
+        self.triggers = kwargs.pop('triggers', None)
+        if self.triggers is None:
+            self.triggers = Triggers()
 
     def get_url(self, url):
         """Download data from an url."""
@@ -385,7 +391,6 @@ class ThreadScraper(Scraper):
     """Scraps the data from a single thread."""
 
     def __init__(self, board, thread_info, **kwargs):
-        """Accepted kwargs: Triggers triggers + base class kwargs"""
         super(ThreadScraper, self).__init__(board, **kwargs)
         self.thread_info = thread_info
         self.modified = False
