@@ -278,10 +278,10 @@ class ViewsTest(BaseTestCase):
 class ThreadScraperTest(BaseTestCase):
 
     def setup(self):
-        self.thread_info = scraper.ThreadInfo(self.sample_thread_json)
-        self.thread_scraper = scraper.ThreadScraper(None, self.thread_info)
-        self.thread = models.Thread(last_reply=self.thread_info.last_reply_time,
-                                    replies=self.thread_info.replies + 1)
+        self.thread_data = scraper.ThreadData(self.sample_thread_json)
+        self.thread_scraper = scraper.ThreadScraper(None, self.thread_data)
+        self.thread = models.Thread(last_reply=self.thread_data.last_reply_time,
+                                    replies=self.thread_data.replies + 1)
         
     def test_should_update_same(self):
         self.assertFalse(self.thread_scraper.should_be_updated(self.thread))
@@ -299,22 +299,22 @@ class ThreadScraperTest(BaseTestCase):
         self.assertTrue(self.thread_scraper.should_be_updated(broken_thread))
 
 
-class ThreadInfoTest(BaseTestCase):
+class ThreadDataTest(BaseTestCase):
 
     def test_basics(self):
         """Test if all properties are populated correctly."""
-        thread_info = scraper.ThreadInfo(self.sample_thread_json)
+        thread_data = scraper.ThreadData(self.sample_thread_json)
         # number
-        self.assertEqual(thread_info.number, self.sample_thread_json['no'])
-        self.assertEqual(type(thread_info.number), int)
+        self.assertEqual(thread_data.number, self.sample_thread_json['no'])
+        self.assertEqual(type(thread_data.number), int)
         # replies
-        self.assertEqual(thread_info.replies, self.sample_thread_json['replies'])
-        self.assertEqual(type(thread_info.replies), int)
+        self.assertEqual(thread_data.replies, self.sample_thread_json['replies'])
+        self.assertEqual(type(thread_data.replies), int)
         # last_reply_time
         last_reply_time = self.sample_thread_json['last_replies'][-1]['time']
         last_reply_time = timestamp_to_datetime(last_reply_time)
-        self.assertEqual(thread_info.last_reply_time, last_reply_time)
-        self.assertEqual(type(thread_info.last_reply_time), datetime.datetime)
+        self.assertEqual(thread_data.last_reply_time, last_reply_time)
+        self.assertEqual(type(thread_data.last_reply_time), datetime.datetime)
 
     def test_last_reply_time_gone(self):
         """Test that there is no exception if the last_replies list doesn't
@@ -322,13 +322,13 @@ class ThreadInfoTest(BaseTestCase):
         """
         thread_json = self.sample_thread_json
         thread_json.pop('last_replies')
-        thread_info = scraper.ThreadInfo(thread_json)
+        thread_data = scraper.ThreadData(thread_json)
 
     def test_last_reply_time_empty(self):
         """Test that there is no exception if the last_replies list is empty."""
         thread_json = self.sample_thread_json
         thread_json['last_replies'] = []
-        thread_info = scraper.ThreadInfo(thread_json)
+        thread_data = scraper.ThreadData(thread_json)
 
 
 class PostDataTest(BaseTestCase):
