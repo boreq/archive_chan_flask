@@ -14,7 +14,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import FileStorage
 from ..database import db
 from .helpers import timestamp_to_datetime
-from ..models import Board, Thread, Post, Image, Trigger, TagToThread, Update, Tag
+from ..models import Board, Thread, Post, Image, Trigger, TagToThread, Update, \
+    Tag
 
 
 class ScrapError(Exception):
@@ -90,7 +91,9 @@ class Triggers:
 
     def __init__(self):
         # Prepare a list, there is no need to get it every time.
-        self.triggers = Trigger.query.outerjoin(Tag).filter(Trigger.active==True).all()
+        self.triggers = Trigger.query.outerjoin(Tag) \
+                                     .filter(Trigger.active==True) \
+                                     .all()
 
     def check_post_type(self, trigger, thread, post_data):
         """True if the type of the post is correct, false otherwise.
@@ -331,7 +334,10 @@ class Stats:
             wait_percent = 0
             downloading_percent = 0
 
-        return 'Time passed: %s seconds (%s%% waiting, %s%% downloading files) Processed threads: %s Added posts: %s Removed posts: %s Downloaded images: %s Downloaded thumbnails: %s Downloaded threads: %s' % (
+        return ('Time passed: %s seconds (%s%% waiting, %s%% downloading files) '
+                'Processed threads: %s Added posts: %s Removed posts: %s '
+                'Downloaded images: %s Downloaded thumbnails: %s '
+                'Downloaded threads: %s' % (
             round(total_time.total_seconds(), 2),
             wait_percent,
             downloading_percent,
@@ -341,7 +347,7 @@ class Stats:
             self.get('downloaded_images'),
             self.get('downloaded_thumbnails'),
             self.get('downloaded_threads'),
-        )
+        ))
 
     def merge(self, stats):
         """Merge the data from other instance of this class."""
@@ -503,7 +509,7 @@ class ThreadScraper(Scraper):
         db.session.delete(post)
         self.stats.add('removed_posts', 1)
 
-    def get_or_create_thread(self, board_name, thread_number):
+    def get_thread(self, board_name, thread_number):
         """Get the existing entry for this thread from the database or create
         a new record for it.
         """
@@ -528,7 +534,7 @@ class ThreadScraper(Scraper):
         if self.thread_data.replies < self.board.replies_threshold:
             return
 
-        thread = self.get_or_create_thread(self.board.name, self.thread_data.number)
+        thread = self.get_thread(self.board.name, self.thread_data.number)
         if not self.should_be_updated(thread):
             return
         last_post_number = self.get_last_post_number(thread)
@@ -537,7 +543,8 @@ class ThreadScraper(Scraper):
         try:
             thread_json = self.get_thread_json(self.thread_data.number)
         except:
-            raise ScrapError('Unable to download the thread data. It might not exist anymore.')
+            raise ScrapError('Unable to download the thread data. It might not '
+                             'exist anymore.')
 
         # Create a list of downloaded post numbers. Items present in
         # the database but missing here will be removed.
@@ -646,8 +653,7 @@ class BoardScraper(Scraper):
         # to pass a real object, not the LocalProxy used to access it.
         worker = ThreadScraperWorker(current_app._get_current_object(),
                                      self.board, self, queue,
-                                     queuer=self.queuer,
-                                     triggers=self.triggers,
+                                     queuer=self.queuer, triggers=self.triggers,
                                      progress=self.show_progress)
         worker.daemon = True
         worker.start()
@@ -676,7 +682,8 @@ class BoardScraper(Scraper):
         try:
             self.catalog = self.get_catalog_json()
         except:
-            raise ScrapError('Unable to download or parse the catalog data. Board update stopped.')
+            raise ScrapError('Unable to download or parse the catalog data. '
+                             'Board update stopped.')
 
         queue = Queue()
 
