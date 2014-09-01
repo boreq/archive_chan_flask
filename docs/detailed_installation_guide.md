@@ -43,11 +43,11 @@ available. Just remember that you need Python 3. To check your Python version
 run `python --version`.
 
 ### pip
-`pip` is a tool for installing Python packages easily.  
+`pip` is a tool for installing Python packages easily.
 [Official installation guide][pip_installation].
 
 ### virtualenv
-`virtualenv` is a tool for creating isolated Python environments.  
+`virtualenv` is a tool for creating isolated Python environments.
 [Official installation guide][virtualenv_installation].
 
 

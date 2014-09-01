@@ -38,8 +38,8 @@ Application object is created in `runserver.py` and called `app`. Example:
     gunicorn runserver:app
 
 You have to directly serve static files located in `archive_chan/static/`
-directory under `/static/` url and image files located in your `MEDIA_ROOT` under
-`/media/`.
+directory under `/static/` url and image files located in your `MEDIA_ROOT`
+under `/media/`.
 
 
 ## Usage
