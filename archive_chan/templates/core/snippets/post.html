@@ -61,7 +61,11 @@
                 </li>
 
                 <li class="post-number">
-                    <a href="{{ post.get_anchor() }}">{{ post }}</a>
+                    {% if not search %}
+                        <a href="{{ post.get_anchor() }}">{{ post }}</a>
+                    {% else %}
+                        <a href="{{ post.get_absolute_url() }}">{{ post }}</a>
+                    {% endif %}
                 </li>
             </ul>
 
