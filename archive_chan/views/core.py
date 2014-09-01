@@ -1,4 +1,5 @@
 import operator
+from collections import defaultdict
 from flask import Blueprint, render_template, request
 from flask.views import View
 from sqlalchemy import or_
@@ -14,8 +15,8 @@ bl = CachedBlueprint('core', __name__, vary_on_auth=True)
 
 
 class TemplateView(View):
-    """Base view which renders a template with context returned by get_context_data
-    method.
+    """Base view which renders a template with context returned by
+    get_context_data method.
     """
 
     def get_context_data(self, *args, **kwargs):
@@ -137,7 +138,6 @@ class BoardView(BodyIdMixin, TemplateView):
                                .filter(Board.name==self.kwargs['board'],
                                        Thread.replies>1)
 
-
         for key, modifier in self.modifiers.items():
             queryset = modifier.execute(queryset)
 
@@ -146,7 +146,21 @@ class BoardView(BodyIdMixin, TemplateView):
         self.pagination = Pagination(request.args.get('page'), 20, total_count)
         self.parameters['page'] = self.pagination.page
 
-        return queryset.slice(*self.pagination.get_slice())
+        return queryset.slice(*self.pagination.get_slice()).all()
+
+    def get_tags(self, queryset):
+        """Gets all TagToThreads in one query and creates a dictionary 
+        thread.id -> [Tag, ...]
+        Threads without tags are missing.
+        """
+        thread_ids = [thread.id for thread in queryset]
+        tagtothreads = TagToThread.query.filter(TagToThread.thread_id.in_(thread_ids)) \
+                                  .options(joinedload('thread')) \
+                                  .all()
+        tag_dict = defaultdict(lambda: [])
+        for tagtothread in tagtothreads:
+            tag_dict[tagtothread.thread_id].append(tagtothread.tag)
+        return tag_dict
 
     def get_context_data(self, *args, **kwargs):
         self.parameters = self.get_parameters()
@@ -154,6 +168,7 @@ class BoardView(BodyIdMixin, TemplateView):
         context = super(BoardView, self).get_context_data(*args, **kwargs)
         context['board_name'] = self.kwargs['board']
         context['thread_list'] = self.get_queryset()
+        context['tags'] = self.get_tags(context['thread_list'])
         context['pagination'] = self.pagination
         context['parameters'] = self.parameters
         context['available_parameters'] = self.available_parameters
@@ -274,7 +289,7 @@ class SearchView(UniversalViewMixin, TemplateView):
         self.pagination = Pagination(request.args.get('page'), 20, total_count)
         self.parameters['page'] = self.pagination.page
 
-        return queryset.slice(*self.pagination.get_slice())
+        return queryset.slice(*self.pagination.get_slice()).all()
 
     def get_context_data(self, *args, **kwargs):
         self.parameters = self.get_parameters()

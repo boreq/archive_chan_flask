@@ -34,7 +34,7 @@
                             </div>
 
                             <div class="thread-tags">
-                                {% for tag in thread.tags %}
+                                {% for tag in tags[thread.id] %}
                                     <div>{{ tag.name }}</div>
                                 {% endfor %}
                             </div>
