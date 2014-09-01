@@ -476,10 +476,16 @@ class MemcachedCacheTest(BaseTestCase):
         config['MEMCACHED_URL'] = ['127.0.0.1:11211']
         return config
 
+    def test_system(self):
+        from archive_chan.cache import cache
+        from werkzeug.contrib.cache import MemcachedCache
+        self.assertIsInstance(cache, MemcachedCache)
+
     def test_memcached(self):
         from archive_chan.cache import cache
-        self.assertTrue(cache.set('key', 'value'))
-        self.assertEqual(cache.get('key'), 'value')
+        msg = 'Is memcached daemon running?'
+        self.assertTrue(cache.set('key', 'value'), msg)
+        self.assertEqual(cache.get('key'), 'value', msg)
 
 
 class AuthTest(BaseTestCase):
