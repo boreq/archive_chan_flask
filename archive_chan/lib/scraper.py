@@ -21,7 +21,7 @@ class ScrapError(Exception):
     pass
 
 
-class ThreadInfo:
+class ThreadData:
     """Class used for storing information about the thread."""
 
     def __init__(self, thread_json):
@@ -390,9 +390,9 @@ class Scraper(object):
 class ThreadScraper(Scraper):
     """Scraps the data from a single thread."""
 
-    def __init__(self, board, thread_info, **kwargs):
+    def __init__(self, board, thread_data, **kwargs):
         super(ThreadScraper, self).__init__(board, **kwargs)
-        self.thread_info = thread_info
+        self.thread_data = thread_data
         self.modified = False
 
     def get_image(self, filename, extension):
@@ -420,7 +420,7 @@ class ThreadScraper(Scraper):
 
     def get_thread_number(self):
         """Get the number of a thread scrapped by this instance."""
-        return self.thread_info.number
+        return self.thread_data.number
 
     def should_be_updated(self, thread):
         """Determine if the thread should be updated."""
@@ -431,8 +431,8 @@ class ThreadScraper(Scraper):
             # Thread has to have new replies or different number of replies.
             # Note: use count_replies because 4chan does not count the first
             # post as a reply.
-            if (self.thread_info.last_reply_time <= thread.last_reply
-                and self.thread_info.replies == thread.count_replies()):
+            if (self.thread_data.last_reply_time <= thread.last_reply
+                and self.thread_data.replies == thread.count_replies()):
                 return False
         return True
 
@@ -525,17 +525,17 @@ class ThreadScraper(Scraper):
         """Download/update the thread if necessary."""
         # Download only above a certain number of posts.
         # (seriously it is wise do let the moderators do their job first)
-        if self.thread_info.replies < self.board.replies_threshold:
+        if self.thread_data.replies < self.board.replies_threshold:
             return
 
-        thread = self.get_or_create_thread(self.board.name, self.thread_info.number)
+        thread = self.get_or_create_thread(self.board.name, self.thread_data.number)
         if not self.should_be_updated(thread):
             return
         last_post_number = self.get_last_post_number(thread)
 
         # Download the thread data.
         try:
-            thread_json = self.get_thread_json(self.thread_info.number)
+            thread_json = self.get_thread_json(self.thread_data.number)
         except:
             raise ScrapError('Unable to download the thread data. It might not exist anymore.')
 
@@ -568,7 +568,7 @@ class ThreadScraper(Scraper):
 
 
 class ThreadScraperWorker(Scraper, threading.Thread):
-    """Worker which processes threads. While running it gets the ThreadInfo
+    """Worker which processes threads. While running it gets the ThreadData
     objects from the queue and creates the ThreadScraper to processes them.
     It inherits from scraper because it must hold similar properties like
     Triggers or Queuer to pass them to created ThreadScraper objects.
@@ -590,19 +590,19 @@ class ThreadScraperWorker(Scraper, threading.Thread):
     def on_task_end(self):
         db.session.remove()
 
-    def get_thread_scraper(self, thread_info):
+    def get_thread_scraper(self, thread_data):
         """ThreadScraper factory."""
-        return ThreadScraper(self.board, thread_info, queuer=self.queuer,
+        return ThreadScraper(self.board, thread_data, queuer=self.queuer,
                              triggers=self.triggers, progress=self.show_progress)
 
     def run(self):
         """Main method which gets the items from the queue and processes them."""
         while True:
-            thread_info = self.queue.get()
+            thread_data = self.queue.get()
             try:
                 with self.app.app_context():
                     self.on_task_start()
-                    thread_scraper = self.get_thread_scraper(thread_info)
+                    thread_scraper = self.get_thread_scraper(thread_data)
                     try:
                         thread_scraper.handle_thread()
                     finally:
@@ -660,13 +660,13 @@ class BoardScraper(Scraper):
             for thread in page['threads']:
                 yield thread
 
-    def add_to_queue(self, queue, thread_data):
-        """Converts the data downloaded from the API to ThreadInfo and adds it
+    def add_to_queue(self, queue, thread_json):
+        """Converts the data downloaded from the API to ThreadData and adds it
         to the queue.
         """
         try:
-            thread_info = ThreadInfo(thread_data)
-            queue.put(thread_info)
+            thread_data = ThreadData(thread_json)
+            queue.put(thread_data)
         except:
             pass
 
@@ -685,8 +685,8 @@ class BoardScraper(Scraper):
             self.launch_worker(queue)
 
         # Populate queue.
-        for thread_data in self.thread_generator():
-            self.add_to_queue(queue, thread_data)
+        for thread_json in self.thread_generator():
+            self.add_to_queue(queue, thread_json)
 
         # Wait for all tasks to finish.
         queue.join()
