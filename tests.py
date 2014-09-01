@@ -2,10 +2,11 @@ import datetime
 import json
 import os
 import tempfile
+import time
 import unittest
 from flask import url_for
 from flask.ext.login import current_user
-from archive_chan import create_app, models, database, auth
+from archive_chan import create_app, models, database, auth, cache
 from archive_chan.lib import scraper, modifiers
 from archive_chan.lib.helpers import utc_now, timestamp_to_datetime
 
@@ -145,6 +146,14 @@ class BaseTestCase(unittest.TestCase):
     def sample_post_json_minimal(self):
         return _sample_post_json_minimal.copy()
 
+    def assertRises(self, exception, callable, *args, **kwargs):
+        try:
+            callable(*args, **kwargs)
+        except exception as e:
+            return
+        except Exception as e:
+            self.fail('%s was risen instead of %s' % (repr(e), exception))
+        self.fail('%s was not risen' % exception)
 
 class SimpleFilterTest(BaseTestCase):
 
@@ -469,23 +478,67 @@ class TriggersTest(BaseTestCase):
                          msg='Tag was not marked as automatically added.')
 
 
-class MemcachedCacheTest(BaseTestCase):
+class CacheTestMixin(object):
+    """Contains general tests for all cache systems."""
+
+    cache_class = None
+    fail_message = 'Failed.'
+
+    def setup(self):
+        super(CacheTestMixin, self).setup()
+        self.assertIsNotNone(self.cache_class, 'Set cache_class in this class.')
+        self.cache = cache.cache
+
+    def test_system(self):
+        self.assertIsInstance(self.cache._client, self.cache_class)
+
+    def test_key(self):
+        key1 = cache.get_cache_key(False)
+        key2 = cache.get_cache_key(True)
+        self.assertNotEqual(key1, key2)
+
+    def test_set_get(self):
+        self.assertTrue(self.cache.set('key', 'value'), self.fail_message)
+        self.assertEqual(self.cache.get('key'), 'value', self.fail_message)
+    
+    def test_wrapper_expire(self):
+        now = cache.cached(timeout=1)(utc_now)
+        value = now()
+        time.sleep(2)
+        self.assertNotEqual(now(), value)
+
+    def test_wrapper(self):
+        now = cache.cached(timeout=2)(utc_now)
+        value = now()
+        time.sleep(1)
+        self.assertEqual(now(), value, self.fail_message)
+
+
+class NoCacheTest(CacheTestMixin, BaseTestCase):
+    """Caching should not occur."""
+
+    from werkzeug.contrib.cache import NullCache
+    cache_class = NullCache
+
+    def test_set_get(self):
+        self.assertRises(AssertionError,
+                         super(NoCacheTest, self).test_set_get)
+
+    def test_wrapper(self):
+        self.assertRises(AssertionError,
+                         super(NoCacheTest, self).test_wrapper)
+
+
+class MemcachedCacheTest(CacheTestMixin, BaseTestCase):
+
+    from werkzeug.contrib.cache import MemcachedCache
+    cache_class = MemcachedCache
+    fail_message = 'Is memcached daemon running?'
 
     def get_config(self, *args, **kwargs):
         config = BaseTestCase.get_config(self, *args, **kwargs)
         config['MEMCACHED_URL'] = ['127.0.0.1:11211']
         return config
-
-    def test_system(self):
-        from archive_chan.cache import cache
-        from werkzeug.contrib.cache import MemcachedCache
-        self.assertIsInstance(cache, MemcachedCache)
-
-    def test_memcached(self):
-        from archive_chan.cache import cache
-        msg = 'Is memcached daemon running?'
-        self.assertTrue(cache.set('key', 'value'), msg)
-        self.assertEqual(cache.get('key'), 'value', msg)
 
 
 class AuthTest(BaseTestCase):
