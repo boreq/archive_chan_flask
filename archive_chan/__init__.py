@@ -52,7 +52,7 @@ def init_app(app):
     from .database import db
     from .admin import admin
     from .auth import login_manager, bcrypt
-    from . import cache
+    from .cache import cache
     db.init_app(app)
     admin.init_app(app)
     login_manager.init_app(app)

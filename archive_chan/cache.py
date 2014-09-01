@@ -12,9 +12,6 @@ from werkzeug._compat import to_native
 from werkzeug.contrib.cache import MemcachedCache, NullCache
 
 
-cache = None
-
-
 _test_memcached_key = re.compile(r'[^\x00-\x21\xff]{1,250}$').match
 class PatchedMemcachedCache(MemcachedCache):
     """Stupid patch for python3-memcached. This will be fixed in the next
@@ -43,24 +40,39 @@ class PatchedMemcachedCache(MemcachedCache):
         return self._client.set(key, value, timeout)
 
 
-def init_app(app):
-    """Call this to init this module with the preferred cache object."""
-    global cache
-    cache = get_preferred_cache_system(app)
+class Cache(object):
+    """Used as an interface to the Werkzeug cache systems. It picks the cache
+    system depending on the app configuration.
+    
+    app: Flask application object. If not passed you must initialize the
+         instance later by calling init_app.
+    """
+
+    def __init__(self, app=None):
+        if app is not None:
+            self.init_app(app)
+        
+    def init_app(self, app):
+        """Call this to init this class with a right cache system."""
+        self._client = self._get_preferred_cache_system(app.config)
+
+    def _get_preferred_cache_system(self, config):
+        """Returns an initialized cache system object."""
+        if config['MEMCACHED_URL']:
+            return PatchedMemcachedCache(
+                config['MEMCACHED_URL'],
+                default_timeout=config['CACHE_TIMEOUT'],
+                key_prefix='archive_chan'
+            )
+        return NullCache()
+
+    __getattr__ = lambda s, n: getattr(s._client, n)
 
 
-def get_preferred_cache_system(app):
-    """Returns an initialized cache object."""
-    if app.config['MEMCACHED_URL']:
-        return PatchedMemcachedCache(
-            app.config['MEMCACHED_URL'],
-            default_timeout=app.config['CACHE_TIMEOUT'],
-            key_prefix='archive_chan'
-        )
-    return NullCache()
+cache = Cache()
 
 
-def get_md5(string):
+def _get_md5(string):
     """Returns a hash of a string."""
     m = hashlib.md5()
     m.update(string.encode('utf-8'))
@@ -69,9 +81,9 @@ def get_md5(string):
 
 def get_cache_key(vary_on_auth):
     """Construct a cache key."""
-    # Query url part matters in board view (catalog and the entire url can be
-    # very long and may contain weird characters it is better to hash it).
-    cache_key = get_md5(request.url)
+    # Url query matters in the board view and the entire url can be quite
+    # long so it might be better to hash it.
+    cache_key = _get_md5(request.full_path)
     if vary_on_auth:
         cache_key += 'auth-%s' % current_user.is_authenticated()
     return cache_key
