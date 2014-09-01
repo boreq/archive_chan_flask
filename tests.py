@@ -86,7 +86,7 @@ _sample_post_json_minimal = json.loads("""
 
 
 class BaseTestCase(unittest.TestCase):
-    
+
     def get_config(self, db_path):
         config = {
             'TESTING': True,
@@ -282,7 +282,7 @@ class ThreadScraperTest(BaseTestCase):
         self.thread_scraper = scraper.ThreadScraper(None, self.thread_data)
         self.thread = models.Thread(last_reply=self.thread_data.last_reply_time,
                                     replies=self.thread_data.replies + 1)
-        
+
     def test_should_update_same(self):
         self.assertFalse(self.thread_scraper.should_be_updated(self.thread))
 
@@ -332,7 +332,7 @@ class ThreadDataTest(BaseTestCase):
 
 
 class PostDataTest(BaseTestCase):
-    
+
     def test_basics(self):
         """Test if all properties are populated correctly."""
         post_data = scraper.PostData(self.sample_post_json)
@@ -418,7 +418,7 @@ class TriggersTest(BaseTestCase):
         def check(trigger_true, trigger_false):
             self.assertTrue(triggers.check_event(trigger_true, post_data))
             self.assertFalse(triggers.check_event(trigger_false, post_data))
-            
+
         triggers = scraper.Triggers()
         post_data = scraper.PostData(self.sample_post_json)
 
@@ -463,14 +463,14 @@ class TriggersTest(BaseTestCase):
 
         self.assertEqual(len(models.TagToThread.query.all()), 1,
                          msg='Trigger failed to add the tag.')
-        self.assertTrue(models.Thread.query.first().saved, 
+        self.assertTrue(models.Thread.query.first().saved,
                          msg='Trigger failed to save the thread.')
-        self.assertTrue(models.TagToThread.query.first().automatically_added, 
+        self.assertTrue(models.TagToThread.query.first().automatically_added,
                          msg='Tag was not marked as automatically added.')
 
 
 class MemcachedCacheTest(BaseTestCase):
-    
+
     def get_config(self, *args, **kwargs):
         config = BaseTestCase.get_config(self, *args, **kwargs)
         config['MEMCACHED_URL'] = ['127.0.0.1:11211']
@@ -483,13 +483,13 @@ class MemcachedCacheTest(BaseTestCase):
 
 
 class AuthTest(BaseTestCase):
-    
+
     def setup(self):
         password = auth.generate_password_hash('pass')
         self.add_model(models.User, username='user',
                        password=password)
         self.assertFalse(current_user.is_authenticated())
-    
+
     def test_logout_not_auth(self):
         self.assertTrue(auth.logout())
 
@@ -503,7 +503,7 @@ class AuthTest(BaseTestCase):
 
         self.assertTrue(auth.logout())
         self.assertFalse(current_user.is_authenticated())
-    
+
     def test_hashing(self):
         password = auth.generate_password_hash('pass')
         self.assertTrue(auth.check_password_hash(password, 'pass'))
