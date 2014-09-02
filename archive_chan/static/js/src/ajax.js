@@ -12,8 +12,8 @@ function ajax_save(clicked_button){
     $.ajax({
         url: info_data.ajax_url_save,
         data: {
-            thread: info_data.thread_number, // Those are set in the template 
-            board: info_data.board_name,     // to make things easier.
+            thread: info_data.thread_number,
+            board: info_data.board_name,
             state: state
         },
         type: 'POST',
@@ -45,15 +45,18 @@ function ajax_add_tag(input){
     $.ajax({
         url: info_data.ajax_url_add_tag,
         data: {
-            thread: info_data.thread_number, // Those are set in the template
-            board: info_data.board_name,     // to make things easier.
+            thread: info_data.thread_number,
+            board: info_data.board_name,
             tag: input.value
         },
         type: 'POST',
         cache: false
     }).done(function(response){
         if (response['added']){
-            $('.tags').append('<li><i class="fa fa-fw fa-tag" title="Tag added by the user"></i><a class="tag-link" href="' + info_data.board_url + '?tag=' + input.value + '">' + input.value + '</a><a class="remove-tag" title="Remove the tag"><i class="fa fa-times"></i></a></li>'); // :(
+            $('.tags').append('<li><i class="fa fa-fw fa-tag" title="Tag added by the user"></i><a class="tag-link" href="'
+                + info_data.board_url + '?tag=' + input.value + '">'
+                + input.value
+                + '</a><a class="remove-tag" title="Remove the tag"><i class="fa fa-times"></i></a></li>'); // :(
             $('#add-tag-input').val('');
         }
     }).fail(function(jqXHR){
@@ -69,8 +72,8 @@ function ajax_remove_tag(sender){
     $.ajax({
         url: info_data.ajax_url_remove_tag,
         data: {
-            thread: info_data.thread_number, // Those are set in the template
-            board: info_data.board_name,     // to make things easier.
+            thread: info_data.thread_number,
+            board: info_data.board_name,
             tag: $(sender).closest('li').find('.tag-link').text().trim()
         },
         type: 'POST',

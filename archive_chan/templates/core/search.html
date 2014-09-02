@@ -1,14 +1,6 @@
 {% extends "base.html" %}
 {% from "core/snippets/post.html" import post_macro %}
 
-{% block inner_head %}
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    <script>
-        var chartData = {{ chart_data|safe }};
-    </script>
-    <script src="{{ url_for('static', filename='js/search.js') }}"></script>
-{% endblock %}
-
 {% block content %}
     <div class="content">
         <div class="wrapper">

@@ -101,7 +101,10 @@ function addBacklink(sourcePostObject, targetPostObject){
     if (!$(backlinks).find("[href='" + sourcePostObject.id + "']").length){
 
         // Create backlink.
-        $(backlinks).append('<li><a href="' + sourcePostObject.id+ '" post_id="' + sourcePostObject.number + '" class="post-link">&gt;&gt;' + sourcePostObject.number + '</a></li>');
+        $(backlinks).append('<li><a href="' + sourcePostObject.id
+            + '" post_id="' + sourcePostObject.number
+            + '" class="post-link">&gt;&gt;' + sourcePostObject.number
+            + '</a></li>');
     }
 }
 

@@ -57,7 +57,9 @@ function popup(){
             titleSrc: function(item){
                 var par = item.el.closest('li');
                 var link = $(par).find('.post-link');
-                return '<a class="post-link gallery-post-link" href="' + link.attr('href') + '">&gt;&gt;/' + $(par).attr('board')  + '/' + $(par).attr('post')  + '</a>';
+                return '<a class="post-link gallery-post-link" href="'
+                    + link.attr('href') + '">&gt;&gt;/' + $(par).attr('board') + '/'
+                    + $(par).attr('post') + '</a>';
             }
         }
     });
@@ -178,5 +180,7 @@ function createImage(image){
         imageHtml = '<a class="gallery-image" href="' + image.image_url + '"><img src="' + image.image_url + '"></a>';
     }
 
-    return '<li style="display: none" board="' + image.board + '" post="' + image.post  + '"><div>' + imageHtml + '<a class="post-link" href="' + image.post_url  + '">&gt;&gt;/' + image.board + '/' + image.post + '</a></div></li>';
+    return '<li style="display: none" board="' + image.board + '" post="' + image.post  + '"><div>'
+        + imageHtml + '<a class="post-link" href="' + image.post_url
+        + '">&gt;&gt;/' + image.board + '/' + image.post + '</a></div></li>';
 }
