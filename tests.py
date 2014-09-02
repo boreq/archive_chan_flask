@@ -497,6 +497,7 @@ class AuthTest(BaseTestCase):
         self.assertFalse(current_user.is_authenticated())
 
     def test_logout_not_auth(self):
+        """It should be possible to log out even when not logged in."""
         self.assertTrue(auth.logout())
 
     def test_login_failed(self):
