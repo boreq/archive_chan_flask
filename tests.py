@@ -7,7 +7,7 @@ import unittest
 from flask import url_for
 from flask.ext.login import current_user
 from archive_chan import create_app, models, database, auth, cache
-from archive_chan.lib import scraper, modifiers
+from archive_chan.lib import scraper, modifiers, helpers
 from archive_chan.lib.helpers import utc_now, timestamp_to_datetime
 
 
@@ -155,41 +155,41 @@ class BaseTestCase(unittest.TestCase):
             self.fail('%s was risen instead of %s' % (repr(e), exception))
         self.fail('%s was not risen' % exception)
 
+
 class SimpleFilterTest(BaseTestCase):
 
     def setup(self):
         self.parameters = (
             ('default', ('Default', None)),
-            ('option', ('Option', {'field': True})),
+            ('option', ('Option', (models.Thread.saved==True,))),
         )
 
-    def test_none(self):
-        modifier = modifiers.SimpleFilter(
-            self.parameters,
-            None
-        )
+    def get_modifier(self, parameter):
+        return modifiers.SimpleFilter(self.parameters, parameter)
+
+    def test_parameter(self):
+        modifier = self.get_modifier(None)
         self.assertEqual(modifier.get(), 'default')
 
-    def test_default(self):
-        modifier = modifiers.SimpleFilter(
-            self.parameters,
-            'default'
-        )
+        modifier = self.get_modifier('default')
         self.assertEqual(modifier.get(), 'default')
 
-    def test_option(self):
-        modifier = modifiers.SimpleFilter(
-            self.parameters,
-            'option'
-        )
+        modifier = self.get_modifier('option')
         self.assertEqual(modifier.get(), 'option')
 
-    def test_wrong(self):
-        modifier = modifiers.SimpleFilter(
-            self.parameters,
-            'wrong_value'
-        )
+        modifier = self.get_modifier('wrong_value')
         self.assertEqual(modifier.get(), 'default')
+
+    def test_execute(self):
+        board = self.add_model(models.Board, name='g')
+        self.add_model(models.Thread, number=1, board=board, saved=True)
+        self.add_model(models.Thread, number=2, board=board, saved=False)
+
+        modifier = self.get_modifier('option')
+        query1 = models.Thread.query
+        query2 = modifier.execute(query1)
+        self.assertEqual(len(query1.all()), 2)
+        self.assertEqual(len(query2.all()), 1)
 
 
 class SimpleSortTest(BaseTestCase):
@@ -200,39 +200,23 @@ class SimpleSortTest(BaseTestCase):
             ('option', ('Creation date', 'other_field', None)),
         )
 
-    def test_none(self):
-        modifier = modifiers.SimpleSort(
-            self.parameters,
-            None
-        )
+    def get_modifier(self, parameter):
+        return modifiers.SimpleSort(self.parameters, parameter)
+
+    def test_parameter(self):
+        modifier = self.get_modifier(None)
         self.assertEqual(modifier.get(), ('default', True))
 
-    def test_default(self):
-        modifier = modifiers.SimpleSort(
-            self.parameters,
-            'default'
-        )
+        modifier = self.get_modifier('default')
         self.assertEqual(modifier.get(), ('default', False))
 
-    def test_option(self):
-        modifier = modifiers.SimpleSort(
-            self.parameters,
-            'option'
-        )
+        modifier = self.get_modifier('option')
         self.assertEqual(modifier.get(), ('option', False))
 
-    def test_option_reverse(self):
-        modifier = modifiers.SimpleSort(
-            self.parameters,
-            '-option'
-        )
+        modifier = self.get_modifier('-option')
         self.assertEqual(modifier.get(), ('option', True))
 
-    def test_wrong(self):
-        modifier = modifiers.SimpleSort(
-            self.parameters,
-            'wrong_value'
-        )
+        modifier = self.get_modifier('wrong_value')
         self.assertEqual(modifier.get(), ('default', True))
 
 
@@ -568,6 +552,26 @@ class AuthTest(BaseTestCase):
         password = auth.generate_password_hash('pass')
         self.assertTrue(auth.check_password_hash(password, 'pass'))
 
+
+class HelpersTest(BaseTestCase):
+
+    def test_get_or_create(self):
+        get_board = lambda: helpers.get_or_create(database.db.session, models.Board,
+                                                  name='g')
+        board, created = get_board()
+        self.assertTrue(created)
+        self.assertIsInstance(board, models.Board)
+
+        board, created = get_board()
+        self.assertFalse(created)
+        self.assertIsInstance(board, models.Board)
+
+    def test_utc_now(self):
+        self.assertIsNotNone(helpers.utc_now().tzinfo)
+    
+    def test_timestamp_to_datetime(self):
+        self.assertIsNotNone(helpers.timestamp_to_datetime(0).tzinfo)
+    
 
 if __name__ == '__main__':
     unittest.main()
