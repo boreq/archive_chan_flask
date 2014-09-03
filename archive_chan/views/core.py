@@ -8,7 +8,6 @@ from ..cache import CachedBlueprint
 from ..models import Board, Thread, Post, Image, TagToThread
 from ..lib import modifiers
 from ..lib.pagination import Pagination
-from ..lib.helpers import get_object_or_404
 
 
 bl = CachedBlueprint('core', __name__, vary_on_auth=True)
@@ -149,7 +148,7 @@ class BoardView(BodyIdMixin, TemplateView):
         return queryset.slice(*self.pagination.get_slice()).all()
 
     def get_tags(self, queryset):
-        """Gets all TagToThreads in one query and creates a dictionary 
+        """Gets all TagToThreads in one query and creates a dictionary
         thread.id -> [Tag, ...]
         Threads without tags are missing.
         """

@@ -70,8 +70,7 @@ def datetimeformat(eval_ctx, datetime, timeago=True):
     if not timeago:
         return readable
     iso_format = datetime.strftime('%Y-%m-%dT%H:%M:%S%z')
-    result = '<time class="timeago" datetime="%s">%s</time>' % (iso_format,
-                                                                readable)
+    result = '<time class="timeago" datetime="%s">%s</time>' % (iso_format, readable)
     if eval_ctx.autoescape:
         result = Markup(result)
     return result
@@ -83,7 +82,7 @@ def highlight(eval_ctx, text, phrase):
     """This filter higlights the specified phrase in the text."""
     text = str(text)
     text = re.sub(
-        r'(' + phrase + ')',
+        '(' + phrase + ')',
         r'<span class="highlight">\1</span>',
         text,
         flags=re.IGNORECASE
