@@ -153,6 +153,8 @@ class BoardView(BodyIdMixin, TemplateView):
         thread.id -> [Tag, ...]
         Threads without tags are missing.
         """
+        if not queryset:
+            return {}
         thread_ids = [thread.id for thread in queryset]
         tagtothreads = TagToThread.query.filter(TagToThread.thread_id.in_(thread_ids)) \
                                   .options(joinedload('thread')) \
